@@ -1,0 +1,19 @@
+# ── Sensitive files (NEVER commit these) ─────────────────────
+api.php
+
+# ── OS files ─────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editor files ─────────────────────────────────────────────
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# ── cPanel files ─────────────────────────────────────────────
+.cpanel/
+.htpasswd
+error_log

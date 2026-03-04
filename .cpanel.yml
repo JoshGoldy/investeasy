@@ -1,0 +1,10 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/$USER/public_html
+    # Copy only the public files (not api.php — that stays on the server)
+    - /bin/cp index.html $DEPLOYPATH/index.html
+    - /bin/cp .htaccess $DEPLOYPATH/.htaccess
+    # Preserve api.php on the server — never overwrite it from git
+    # If api.php doesn't exist yet, copy the example as a reminder
+    - test -f $DEPLOYPATH/api.php || /bin/cp api.example.php $DEPLOYPATH/api.example.php

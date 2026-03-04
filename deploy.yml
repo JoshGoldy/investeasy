@@ -1,0 +1,45 @@
+# ── InvestEasy: Auto-deploy to cPanel via FTP ──────────────────
+#
+# This workflow deploys your site to cPanel every time you push to main.
+# It uses FTP to upload files, which works with ANY cPanel host.
+#
+# SETUP (one-time):
+# 1. In your GitHub repo, go to Settings → Secrets → Actions
+# 2. Add these three secrets:
+#    - FTP_SERVER    → your cPanel hostname (e.g. ftp.yourdomain.com)
+#    - FTP_USERNAME  → your cPanel FTP username
+#    - FTP_PASSWORD  → your cPanel FTP password
+#
+# That's it. Push to main and it auto-deploys.
+# ────────────────────────────────────────────────────────────────
+
+name: Deploy to cPanel
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: FTP Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: /public_html/
+          # Only upload these files (not api.php, README, etc.)
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/README.md
+            **/api.php
+            **/api.example.php
+            **/.github/**
+            **/node_modules/**
