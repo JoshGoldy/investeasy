@@ -330,7 +330,13 @@ button{cursor:pointer}
   <!-- Header -->
   <div class="header">
     <div><h1>InvestEasy<span class="ver">v8</span></h1></div>
-    <div style="display:flex;align-items:center"><span class="live-dot"></span><span class="live-txt">Live</span></div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="display:flex;align-items:center"><span class="live-dot"></span><span class="live-txt">Live</span></div>
+      <div id="header-user" style="display:none;align-items:center;gap:8px">
+        <div id="header-avatar" style="width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;font-family:var(--mono)"></div>
+        <span id="header-username-text" style="font-size:13px;font-weight:700;color:var(--text2)"></span>
+      </div>
+    </div>
   </div>
 
   <!-- Content -->
@@ -572,18 +578,18 @@ const ALLOC_COLORS = ['#10b981','#3b82f6','#8b5cf6','#f59e0b','#ef4444'];
 const CAT_COLORS = { Markets:'#10b981', Economy:'#3b82f6', Tech:'#8b5cf6', Crypto:'#f59e0b' };
 
 const FINBOT_MODES = [
-  { id:'screener', icon:'📊', title:'Stock Screener', sub:'Goldman Sachs', col:'#10b981',
-    desc:'Top 10 tailored picks with P/E analysis, moat ratings, 12-month bull/bear targets, and entry zones.' },
-  { id:'dcf', icon:'📈', title:'DCF Valuation', sub:'Morgan Stanley', col:'#3b82f6',
-    desc:'Full DCF model — 5-year projections, WACC, terminal value, sensitivity table & a clear verdict.' },
-  { id:'risk', icon:'🛡', title:'Risk Assessment', sub:'Bridgewater', col:'#f59e0b',
-    desc:'Portfolio correlation, sector concentration, recession stress test, tail-risk scenarios & hedging.' },
-  { id:'earnings', icon:'📋', title:'Earnings Preview', sub:'JPMorgan Chase', col:'#8b5cf6',
-    desc:'Beat/miss history, consensus estimates, key metrics, options implied move & a clear play.' },
-  { id:'builder', icon:'🏗', title:'Portfolio Builder', sub:'BlackRock', col:'#06b6d4',
-    desc:'Custom asset allocation with specific ETF picks, expected returns, max drawdown & investment plan.' },
-  { id:'technical', icon:'📉', title:'Technical Analysis', sub:'Citadel', col:'#ec4899',
-    desc:'Trend across 3 timeframes, support/resistance, RSI/MACD/Bollinger Bands, chart patterns & trade plan.' },
+  { id:'screener', icon:'📊', title:'Stock Screener', sub:'Jake', col:'#10b981',
+    desc:"I'm Jake — been hunting stocks for 15 years. Tell me your budget and risk appetite and I'll dig through thousands of companies to hand you a shortlist worth your time." },
+  { id:'dcf', icon:'📈', title:'DCF Valuation', sub:'Emily', col:'#3b82f6',
+    desc:"I'm Emily — I live in spreadsheets so you don't have to. Give me a ticker and I'll build the full cash flow model and tell you exactly what it's actually worth." },
+  { id:'risk', icon:'🛡', title:'Risk Assessment', sub:'Marcus', col:'#f59e0b',
+    desc:"I'm Marcus — I've seen every kind of portfolio blow up. Drop your holdings and I'll map every hidden risk before the market finds it for you." },
+  { id:'earnings', icon:'📋', title:'Earnings Preview', sub:'Priya', col:'#8b5cf6',
+    desc:"I'm Priya — earnings season is my favourite time of year. I'll break down the history, set the bar, and tell you exactly how to play the announcement." },
+  { id:'builder', icon:'🏗', title:'Portfolio Builder', sub:'Leo', col:'#06b6d4',
+    desc:"I'm Leo — I build portfolios people actually stick to. Share your goals and I'll put together a real plan with specific ETFs, a timeline, and a strategy that fits your life." },
+  { id:'technical', icon:'📉', title:'Technical Analysis', sub:'Zoe', col:'#ec4899',
+    desc:"I'm Zoe — I read charts the way others read books. Give me a ticker and I'll map the trend, the key levels, and tell you exactly where to get in and out." },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -929,22 +935,22 @@ let finbotForm = {
 
 // Prompt builders
 const prompts = {
-  screener: () => `You are a senior equity analyst at Goldman Sachs with 20 years of experience.\nProvide a complete stock screening framework:\n- Top 10 stocks with ticker symbols\n- P/E ratio vs sector averages\n- Revenue growth trends over 5 years\n- Debt-to-equity health check\n- Competitive moat rating (weak/moderate/strong)\n- Bull and bear price targets for 12 months\n- Risk rating 1-10 with reasoning\n- Entry price zones and stop-loss suggestions\nFormat as a professional equity research report with a summary table.\nInvestment profile: Risk: ${finbotForm.risk}. Amount: ${finbotForm.amount||'flexible'}. Horizon: ${finbotForm.horizon}. Sectors: ${finbotForm.sectors||'any'}.\nUse markdown with headers and tables. Close with a legal disclaimer.`,
-  dcf: () => `You are a VP-level investment banker at Morgan Stanley.\nBuild a full DCF analysis for: ${finbotForm.ticker}\nInclude:\n- 5-year revenue projection\n- Free cash flow year by year\n- WACC estimate\n- Terminal value\n- Sensitivity table\n- DCF value vs current price\n- Verdict: undervalued / fairly valued / overvalued\nFormat as a valuation memo with tables.\nUse markdown. Close with a legal disclaimer.`,
-  risk: () => `You are a senior risk analyst at Bridgewater Associates.\nComplete risk assessment:\n- Correlation analysis\n- Sector concentration risk\n- Recession stress test\n- Tail risk scenarios\n- Hedging strategies\n- Rebalancing suggestions\nPortfolio (total value: ${finbotForm.portVal||'not specified'}): ${finbotForm.portfolio}\nUse markdown with headers and tables. Close with a legal disclaimer.`,
-  earnings: () => `You are a senior equity research analyst at JPMorgan Chase.\nEarnings analysis for: ${finbotForm.company}${finbotForm.earnDate?' (Earnings date: '+finbotForm.earnDate+')':''}${finbotForm.ePos!=='none'?'. My position: '+finbotForm.ePos:''}\nDeliver:\n- Last 4 quarters beat/miss history\n- Revenue and EPS consensus estimates\n- Key metrics\n- Options implied move\n- Recommended play\nUse markdown. Close with a legal disclaimer.`,
-  builder: () => `You are a senior portfolio strategist at BlackRock.\nBuild a custom investment portfolio:\n- Asset allocation percentages\n- Specific ETF recommendations\n- Expected return range\n- Max drawdown estimate\n- Rebalancing schedule\n- Dollar cost averaging plan\nDetails: Age: ${finbotForm.age||'unspecified'}. Income: ${finbotForm.income||'unspecified'}. Savings: ${finbotForm.savings||'unspecified'}. Goal: ${finbotForm.goal}. Risk: ${finbotForm.bRisk}. Account: ${finbotForm.acct}.\nUse markdown. Close with a legal disclaimer.`,
-  technical: () => `You are a senior quantitative trader at Citadel.\nFull technical analysis for: ${finbotForm.techTicker}${finbotForm.techPos!=='none'?'. My position: '+finbotForm.techPos:''}\nAnalyze:\n- Trend on daily, weekly, monthly\n- Support/resistance levels\n- RSI, MACD, Bollinger Bands\n- Chart patterns\n- Entry, stop-loss, profit target\n- Confidence rating\nUse markdown. Close with a legal disclaimer.`,
+  screener: () => `You are Jake, a veteran stock analyst with 15 years of experience hunting high-conviction opportunities.\nProvide a complete stock screening framework:\n- Top 10 stocks with ticker symbols\n- P/E ratio vs sector averages\n- Revenue growth trends over 5 years\n- Debt-to-equity health check\n- Competitive moat rating (weak/moderate/strong)\n- Bull and bear price targets for 12 months\n- Risk rating 1-10 with reasoning\n- Entry price zones and stop-loss suggestions\nFormat as a professional equity research report with a summary table.\nInvestment profile: Risk: ${finbotForm.risk}. Amount: ${finbotForm.amount||'flexible'}. Horizon: ${finbotForm.horizon}. Sectors: ${finbotForm.sectors||'any'}.\nUse markdown with headers and tables. Close with a legal disclaimer.`,
+  dcf: () => `You are Emily, a financial analyst who specialises in company valuations and discounted cash flow modelling.\nBuild a full DCF analysis for: ${finbotForm.ticker}\nInclude:\n- 5-year revenue projection\n- Free cash flow year by year\n- WACC estimate\n- Terminal value\n- Sensitivity table\n- DCF value vs current price\n- Verdict: undervalued / fairly valued / overvalued\nFormat as a valuation memo with tables.\nUse markdown. Close with a legal disclaimer.`,
+  risk: () => `You are Marcus, a risk analyst who has spent his career stress-testing portfolios against every kind of market shock.\nComplete risk assessment:\n- Correlation analysis\n- Sector concentration risk\n- Recession stress test\n- Tail risk scenarios\n- Hedging strategies\n- Rebalancing suggestions\nPortfolio (total value: ${finbotForm.portVal||'not specified'}): ${finbotForm.portfolio}\nUse markdown with headers and tables. Close with a legal disclaimer.`,
+  earnings: () => `You are Priya, an equity research analyst who lives for earnings season and knows how to read the market reaction before it happens.\nEarnings analysis for: ${finbotForm.company}${finbotForm.earnDate?' (Earnings date: '+finbotForm.earnDate+')':''}${finbotForm.ePos!=='none'?'. My position: '+finbotForm.ePos:''}\nDeliver:\n- Last 4 quarters beat/miss history\n- Revenue and EPS consensus estimates\n- Key metrics\n- Options implied move\n- Recommended play\nUse markdown. Close with a legal disclaimer.`,
+  builder: () => `You are Leo, a portfolio strategist who builds long-term investment plans that people actually stick to.\nBuild a custom investment portfolio:\n- Asset allocation percentages\n- Specific ETF recommendations\n- Expected return range\n- Max drawdown estimate\n- Rebalancing schedule\n- Dollar cost averaging plan\nDetails: Age: ${finbotForm.age||'unspecified'}. Income: ${finbotForm.income||'unspecified'}. Savings: ${finbotForm.savings||'unspecified'}. Goal: ${finbotForm.goal}. Risk: ${finbotForm.bRisk}. Account: ${finbotForm.acct}.\nUse markdown. Close with a legal disclaimer.`,
+  technical: () => `You are Zoe, a technical analyst who reads charts the way others read books — spotting patterns and levels before most traders even notice them.\nFull technical analysis for: ${finbotForm.techTicker}${finbotForm.techPos!=='none'?'. My position: '+finbotForm.techPos:''}\nAnalyze:\n- Trend on daily, weekly, monthly\n- Support/resistance levels\n- RSI, MACD, Bollinger Bands\n- Chart patterns\n- Entry, stop-loss, profit target\n- Confidence rating\nUse markdown. Close with a legal disclaimer.`,
 };
 
 const MOCK_RESPONSES = {
-  screener: () => `# Goldman Sachs Equity Screener Report
-*Prepared by: GS Equity Research Division*
+  screener: () => `# Jake's Stock Screener Report
+*Prepared by: Jake — Senior Stock Analyst*
 
 ---
 
 ## Executive Summary
-Based on your investment profile — **Risk: ${finbotForm.risk}**, **Amount: ${finbotForm.amount||'Flexible'}**, **Horizon: ${finbotForm.horizon}**, **Sectors: ${finbotForm.sectors||'Diversified'}** — our proprietary screening framework has identified the following top opportunities.
+Based on your investment profile — **Risk: ${finbotForm.risk}**, **Amount: ${finbotForm.amount||'Flexible'}**, **Horizon: ${finbotForm.horizon}**, **Sectors: ${finbotForm.sectors||'Diversified'}** — I've identified the following top opportunities.
 
 ---
 
@@ -987,14 +993,14 @@ Based on your investment profile — **Risk: ${finbotForm.risk}**, **Amount: ${f
 
 > **Legal Disclaimer:** This report is for educational and informational purposes only. It does not constitute financial advice. Past performance is not indicative of future results. Always consult a licensed financial professional before making investment decisions.`,
 
-  dcf: () => `# Morgan Stanley DCF Valuation Report
+  dcf: () => `# Emily's DCF Valuation Report
 **Subject:** ${finbotForm.ticker || 'AAPL'} — Discounted Cash Flow Analysis
-*Prepared by: MS Investment Banking Division*
+*Prepared by: Emily — Financial Analyst*
 
 ---
 
 ## Company Overview
-**${finbotForm.ticker || 'AAPL'}** is a globally recognized business with durable competitive advantages and consistent free cash flow generation. This analysis applies a rigorous DCF framework consistent with Morgan Stanley's valuation methodology.
+**${finbotForm.ticker || 'AAPL'}** is a globally recognized business with durable competitive advantages and consistent free cash flow generation. This analysis applies a rigorous DCF framework to determine intrinsic value.
 
 ---
 
@@ -1067,8 +1073,8 @@ Based on your investment profile — **Risk: ${finbotForm.risk}**, **Amount: ${f
 
 > **Legal Disclaimer:** This valuation is for educational purposes only and does not constitute financial advice or a solicitation to buy or sell securities.`,
 
-  risk: () => `# Bridgewater Associates Portfolio Risk Report
-*Prepared by: Bridgewater All-Weather Risk Division*
+  risk: () => `# Marcus's Portfolio Risk Report
+*Prepared by: Marcus — Risk Analyst*
 
 ---
 
@@ -1147,11 +1153,11 @@ ${finbotForm.portVal ? `**Total Value:** ${finbotForm.portVal}` : ''}
 
 > **Legal Disclaimer:** This risk assessment is for educational purposes only. It does not constitute financial advice. Consult a licensed investment advisor before making any portfolio changes.`,
 
-  earnings: () => `# JPMorgan Chase Earnings Analysis
+  earnings: () => `# Priya's Earnings Preview
 **Company:** ${finbotForm.company || 'NVIDIA Corporation (NVDA)'}
 ${finbotForm.earnDate ? `**Earnings Date:** ${finbotForm.earnDate}` : ''}
 ${finbotForm.ePos && finbotForm.ePos !== 'none' ? `**Your Position:** ${finbotForm.ePos}` : ''}
-*Prepared by: JPMorgan Equity Research*
+*Prepared by: Priya — Equity Research Analyst*
 
 ---
 
@@ -1222,8 +1228,8 @@ ${finbotForm.ePos === 'Long' ? `
 
 > **Legal Disclaimer:** This analysis is for educational and informational purposes only. Options trading involves significant risk. Consult a licensed financial professional before making investment decisions.`,
 
-  builder: () => `# BlackRock Custom Portfolio Blueprint
-*Prepared by: BlackRock Multi-Asset Strategies*
+  builder: () => `# Leo's Custom Portfolio Blueprint
+*Prepared by: Leo — Portfolio Strategist*
 
 ---
 
@@ -1303,10 +1309,10 @@ ${finbotForm.ePos === 'Long' ? `
 
 > **Legal Disclaimer:** This portfolio blueprint is for educational purposes only. It does not constitute personalized financial advice. Past performance is not indicative of future results. Consult a licensed financial advisor before implementing any investment strategy.`,
 
-  technical: () => `# Citadel Quantitative Technical Analysis
+  technical: () => `# Zoe's Technical Analysis
 **Asset:** ${finbotForm.techTicker || 'NVDA'}
 ${finbotForm.techPos && finbotForm.techPos !== 'none' ? `**Position:** ${finbotForm.techPos}` : '**Position:** None (observing)'}
-*Prepared by: Citadel Quantitative Strategies*
+*Prepared by: Zoe — Technical Analyst*
 
 ---
 
@@ -1496,7 +1502,7 @@ function renderFinBot() {
           <button class="back-btn" onclick="resetFinBot()">←</button>
           <div>
             <p style="font-weight:800;font-size:15px;color:var(--text)">${modeObj.title}</p>
-            <p style="font-size:11px;color:${modeObj.col};font-weight:600">${modeObj.sub} Analysis</p>
+            <p style="font-size:11px;color:${modeObj.col};font-weight:600">by ${modeObj.sub}</p>
           </div>
         </div>
         ${finbotState.result ? '<span class="chip chip-green">✓ Complete</span>' : ''}
@@ -1521,7 +1527,7 @@ function renderFinBot() {
       <button class="back-btn" onclick="resetFinBot()">←</button>
       <div>
         <p style="font-weight:800;font-size:17px;color:var(--text)">${modeObj.title}</p>
-        <p style="font-size:11px;color:${modeObj.col};font-weight:600">${modeObj.sub} Style</p>
+        <p style="font-size:11px;color:${modeObj.col};font-weight:600">with ${modeObj.sub}</p>
       </div>
     </div>
   `;
@@ -2219,13 +2225,28 @@ async function doLogout() {
   currentUser  = null;
   dbPortfolio  = [];
   watchlistSet = new Set();
+  updateHeaderUser();
   document.getElementById('auth-overlay').classList.remove('hidden');
   showAuthTab('login');
 }
 
 // ── Sync after login: pull settings, watchlist, portfolio from DB ─────────────
+function updateHeaderUser() {
+  const el = document.getElementById('header-user');
+  const av = document.getElementById('header-avatar');
+  const un = document.getElementById('header-username-text');
+  if (currentUser) {
+    el.style.display = 'flex';
+    un.textContent = '@' + currentUser.username;
+    av.textContent = (currentUser.name || currentUser.username)[0].toUpperCase();
+  } else {
+    el.style.display = 'none';
+  }
+}
+
 async function syncAfterLogin() {
   await Promise.all([loadSettingsFromDB(), loadWatchlistFromDB(), loadPortfolioFromDB()]);
+  updateHeaderUser();
 }
 
 async function loadSettingsFromDB() {
