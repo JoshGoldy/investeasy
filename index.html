@@ -697,26 +697,471 @@ const prompts = {
   technical: () => `You are a senior quantitative trader at Citadel.\nFull technical analysis for: ${finbotForm.techTicker}${finbotForm.techPos!=='none'?'. My position: '+finbotForm.techPos:''}\nAnalyze:\n- Trend on daily, weekly, monthly\n- Support/resistance levels\n- RSI, MACD, Bollinger Bands\n- Chart patterns\n- Entry, stop-loss, profit target\n- Confidence rating\nUse markdown. Close with a legal disclaimer.`,
 };
 
+const MOCK_RESPONSES = {
+  screener: () => `# Goldman Sachs Equity Screener Report
+*Prepared by: GS Equity Research Division*
+
+---
+
+## Executive Summary
+Based on your investment profile — **Risk: ${finbotForm.risk}**, **Amount: ${finbotForm.amount||'Flexible'}**, **Horizon: ${finbotForm.horizon}**, **Sectors: ${finbotForm.sectors||'Diversified'}** — our proprietary screening framework has identified the following top opportunities.
+
+---
+
+## Top 10 Stock Picks
+
+| # | Ticker | Name | P/E | Rev Growth | D/E | Moat | Bull Target | Bear Target | Risk |
+|---|--------|------|-----|-----------|-----|------|------------|------------|------|
+| 1 | **NVDA** | NVIDIA Corp | 42.1 | +122% YoY | 0.41 | Strong | $1,450 | $920 | 6/10 |
+| 2 | **MSFT** | Microsoft | 31.4 | +17% YoY | 0.37 | Strong | $540 | $380 | 4/10 |
+| 3 | **AMZN** | Amazon | 44.8 | +14% YoY | 0.52 | Strong | $280 | $170 | 5/10 |
+| 4 | **GOOGL** | Alphabet | 22.3 | +15% YoY | 0.08 | Strong | $240 | $150 | 4/10 |
+| 5 | **META** | Meta Platforms | 24.1 | +25% YoY | 0.14 | Strong | $780 | $490 | 5/10 |
+| 6 | **LLY** | Eli Lilly | 58.2 | +36% YoY | 1.82 | Strong | $1,100 | $780 | 5/10 |
+| 7 | **V** | Visa Inc | 28.6 | +10% YoY | 1.67 | Strong | $360 | $260 | 3/10 |
+| 8 | **BRK.B** | Berkshire Hathaway | 23.4 | +8% YoY | 0.26 | Strong | $510 | $380 | 3/10 |
+| 9 | **AAPL** | Apple Inc | 28.1 | +5% YoY | 1.95 | Strong | $280 | $185 | 4/10 |
+| 10 | **PANW** | Palo Alto Networks | 52.7 | +19% YoY | 0.89 | Moderate | $440 | $290 | 6/10 |
+
+---
+
+## Entry Zones & Stop-Loss Suggestions
+
+| Ticker | Current Price | Entry Zone | Stop-Loss | Upside to Bull |
+|--------|--------------|------------|-----------|----------------|
+| NVDA | $1,180 | $1,100–$1,150 | $980 | +22.9% |
+| MSFT | $432 | $420–$435 | $390 | +25.0% |
+| AMZN | $214 | $205–$215 | $185 | +30.8% |
+| GOOGL | $183 | $175–$185 | $160 | +31.1% |
+| META | $598 | $570–$600 | $510 | +30.4% |
+
+---
+
+## Key Themes
+1. **AI Infrastructure** — NVDA, MSFT, GOOGL benefit from multi-year capex supercycle
+2. **Healthcare Innovation** — LLY GLP-1 drugs represent a $100B+ market opportunity
+3. **Digital Payments** — V maintains pricing power with low credit risk exposure
+4. **Cybersecurity** — PANW transitioning to high-margin platformization model
+
+---
+
+> **Legal Disclaimer:** This report is for educational and informational purposes only. It does not constitute financial advice. Past performance is not indicative of future results. Always consult a licensed financial professional before making investment decisions.`,
+
+  dcf: () => `# Morgan Stanley DCF Valuation Report
+**Subject:** ${finbotForm.ticker || 'AAPL'} — Discounted Cash Flow Analysis
+*Prepared by: MS Investment Banking Division*
+
+---
+
+## Company Overview
+**${finbotForm.ticker || 'AAPL'}** is a globally recognized business with durable competitive advantages and consistent free cash flow generation. This analysis applies a rigorous DCF framework consistent with Morgan Stanley's valuation methodology.
+
+---
+
+## 5-Year Revenue Projection
+
+| Year | Revenue ($B) | Growth % | EBITDA Margin | FCF ($B) |
+|------|-------------|----------|--------------|----------|
+| 2025E | 412.5 | +7.2% | 31.4% | 118.3 |
+| 2026E | 445.8 | +8.1% | 32.1% | 131.7 |
+| 2027E | 482.4 | +8.2% | 32.8% | 146.2 |
+| 2028E | 518.9 | +7.6% | 33.2% | 159.8 |
+| 2029E | 553.4 | +6.6% | 33.5% | 171.4 |
+
+---
+
+## WACC Estimation
+
+| Component | Value |
+|-----------|-------|
+| Risk-Free Rate | 4.35% |
+| Equity Risk Premium | 5.50% |
+| Beta | 1.18 |
+| Cost of Equity | 10.84% |
+| After-Tax Cost of Debt | 2.95% |
+| Capital Structure (E/D) | 78% / 22% |
+| **WACC** | **9.12%** |
+
+---
+
+## Terminal Value Calculation
+- Terminal Growth Rate: **3.0%**
+- Terminal FCF: $176.5B
+- Terminal Value: **$2,861B**
+- PV of Terminal Value: **$1,843B**
+
+---
+
+## DCF Summary
+
+| Component | Value ($B) |
+|-----------|-----------|
+| PV of FCFs (5-Year) | 524.6 |
+| PV of Terminal Value | 1,843.2 |
+| Enterprise Value | 2,367.8 |
+| Less: Net Debt | (51.3) |
+| **Equity Value** | **2,419.1** |
+| Shares Outstanding (B) | 15.4 |
+| **Intrinsic Value Per Share** | **$157.09** |
+| Current Price | $178.20 |
+
+---
+
+## Sensitivity Analysis (Intrinsic Value per Share)
+
+| WACC ↓ / Terminal Growth → | 2.0% | 2.5% | 3.0% | 3.5% | 4.0% |
+|---------------------------|------|------|------|------|------|
+| 7.5% | $198 | $214 | $234 | $259 | $292 |
+| 8.5% | $171 | $182 | $196 | $213 | $235 |
+| **9.12%** | **$151** | **$161** | **$157** | **$187** | **$205** |
+| 10.0% | $132 | $139 | $148 | $160 | $174 |
+| 11.0% | $115 | $120 | $127 | $136 | $147 |
+
+---
+
+## Verdict
+
+> **FAIRLY VALUED** — Current price of ~$178 is within a reasonable range of our base-case DCF of $157. The stock appears slightly premium-priced, suggesting limited near-term upside. We recommend **HOLD** with a price target of **$195** based on a blended DCF/comps methodology.
+
+---
+
+> **Legal Disclaimer:** This valuation is for educational purposes only and does not constitute financial advice or a solicitation to buy or sell securities.`,
+
+  risk: () => `# Bridgewater Associates Portfolio Risk Report
+*Prepared by: Bridgewater All-Weather Risk Division*
+
+---
+
+## Portfolio Under Analysis
+${finbotForm.portfolio || 'AAPL 30%, MSFT 25%, NVDA 20%, AMZN 15%, Cash 10%'}
+${finbotForm.portVal ? `**Total Value:** ${finbotForm.portVal}` : ''}
+
+---
+
+## Correlation Matrix
+
+| Asset | AAPL | MSFT | NVDA | AMZN | Cash |
+|-------|------|------|------|------|------|
+| AAPL | 1.00 | 0.78 | 0.71 | 0.65 | 0.00 |
+| MSFT | 0.78 | 1.00 | 0.74 | 0.69 | 0.00 |
+| NVDA | 0.71 | 0.74 | 1.00 | 0.59 | 0.00 |
+| AMZN | 0.65 | 0.69 | 0.59 | 1.00 | 0.00 |
+| Cash | 0.00 | 0.00 | 0.00 | 0.00 | 1.00 |
+
+**Insight:** High correlations across tech holdings — diversification benefit is limited in a risk-off environment.
+
+---
+
+## Sector Concentration Risk
+
+| Sector | Allocation | Benchmark (S&P 500) | Over/Under |
+|--------|-----------|---------------------|-----------|
+| Technology | 75% | 29.3% | **+45.7% overweight** |
+| Consumer Discretionary | 15% | 10.4% | +4.6% |
+| Cash / Fixed Income | 10% | — | — |
+
+⚠️ **Critical:** Extreme concentration in Technology creates single-factor risk.
+
+---
+
+## Recession Stress Test
+
+| Scenario | Est. Portfolio Drawdown | Recovery Period |
+|----------|------------------------|----------------|
+| Mild Recession (2001-style) | -22% | 14 months |
+| Severe Recession (2008-style) | -48% | 36 months |
+| Tech Crash (2000-style) | -61% | 54+ months |
+| COVID-style Shock | -33% | 8 months |
+| Stagflation | -28% | 24 months |
+
+---
+
+## Tail Risk Scenarios
+
+1. **Fed pivot reversal** — Rates rise 150bps: Est. -18% impact
+2. **AI regulation/antitrust** — Tech multiples compress 30%: Est. -22% impact
+3. **China-Taiwan conflict** — Supply chain shock: Est. -25% impact
+
+---
+
+## Hedging Strategies
+
+| Strategy | Instrument | Cost | Protection |
+|----------|-----------|------|-----------|
+| Downside protection | SPY put options (3-month, -10% strike) | ~1.2% annual | Partial |
+| Sector hedge | Short SMH ETF (5-10% portfolio) | Borrowing cost | Tech-specific |
+| Safe haven | Add GLD or TLT (10-15%) | Opportunity cost | Macro tail risk |
+| Volatility hedge | VIX calls | ~0.5% annual | Spike protection |
+
+---
+
+## Rebalancing Suggestions
+
+- **Reduce** Tech exposure from 75% → 50%
+- **Add** Healthcare (LLY, UNH): +10%
+- **Add** Financials (JPM, V): +8%
+- **Add** International developed markets (EFA ETF): +7%
+- **Increase** Cash buffer to 15% given elevated valuations
+
+---
+
+> **Legal Disclaimer:** This risk assessment is for educational purposes only. It does not constitute financial advice. Consult a licensed investment advisor before making any portfolio changes.`,
+
+  earnings: () => `# JPMorgan Chase Earnings Analysis
+**Company:** ${finbotForm.company || 'NVIDIA Corporation (NVDA)'}
+${finbotForm.earnDate ? `**Earnings Date:** ${finbotForm.earnDate}` : ''}
+${finbotForm.ePos && finbotForm.ePos !== 'none' ? `**Your Position:** ${finbotForm.ePos}` : ''}
+*Prepared by: JPMorgan Equity Research*
+
+---
+
+## Beat/Miss History (Last 4 Quarters)
+
+| Quarter | EPS Estimate | EPS Actual | Beat/Miss | Revenue Est | Revenue Actual | Beat/Miss |
+|---------|------------|-----------|-----------|------------|---------------|-----------|
+| Q3 FY25 | $0.71 | **$0.81** | ✅ +14.1% | $32.5B | **$35.1B** | ✅ +8.0% |
+| Q2 FY25 | $0.64 | **$0.68** | ✅ +6.3% | $28.2B | **$30.0B** | ✅ +6.4% |
+| Q1 FY25 | $0.52 | **$0.61** | ✅ +17.3% | $24.6B | **$26.0B** | ✅ +5.7% |
+| Q4 FY24 | $0.41 | **$0.49** | ✅ +19.5% | $20.0B | **$22.1B** | ✅ +10.5% |
+
+**4-Quarter Track Record:** 4/4 beats on both EPS and Revenue
+
+---
+
+## Consensus Estimates (Current Quarter)
+
+| Metric | Bear Case | Consensus | Bull Case |
+|--------|-----------|-----------|-----------|
+| Revenue | $36.8B | $38.2B | $41.5B |
+| EPS (adj.) | $0.84 | $0.89 | $0.98 |
+| Gross Margin | 73.5% | 74.8% | 76.2% |
+| Data Center Rev | $32.0B | $33.5B | $36.2B |
+
+---
+
+## Key Metrics to Watch
+
+1. **Data Center revenue** — Key growth driver; analyst bar is $33.5B+
+2. **Blackwell chip ramp** — Supply commentary will set tone
+3. **Gross margin guidance** — Any compression signals demand risk
+4. **FY26 guidance** — Forward outlook more important than actuals
+5. **China sales impact** — Export restrictions remain a risk factor
+
+---
+
+## Options Market Implied Move
+
+| Expiry | Implied Move | ATM Straddle Cost |
+|--------|-------------|------------------|
+| Weekly (post-earnings) | ±8.4% | $89.20 |
+| Monthly | ±12.1% | $127.50 |
+
+**Historical post-earnings move (avg):** ±7.8% (last 8 quarters)
+
+---
+
+## Recommended Trade Play
+${finbotForm.ePos === 'Long' ? `
+**You are LONG — consider protecting gains:**
+- Buy ATM put (weekly) to hedge downside
+- Or sell OTM call to finance the put (collar strategy)
+- If high conviction: hold through earnings, set mental stop at -10%
+` : finbotForm.ePos === 'Short' ? `
+**You are SHORT — elevated risk into print:**
+- Cover at least 50% before the event
+- Strong beat/raise cycle makes short side dangerous
+- Consider buying calls as a hedge
+` : `
+**No position — speculative options play:**
+- Directional bias: **Bullish** based on beat history
+- Consider OTM call spread: Buy $+5% / Sell $+15% call spread
+- Risk defined, captures upside if stock moves on strong guidance
+`}
+
+---
+
+> **Legal Disclaimer:** This analysis is for educational and informational purposes only. Options trading involves significant risk. Consult a licensed financial professional before making investment decisions.`,
+
+  builder: () => `# BlackRock Custom Portfolio Blueprint
+*Prepared by: BlackRock Multi-Asset Strategies*
+
+---
+
+## Client Profile
+- **Age:** ${finbotForm.age || 'Not specified'}
+- **Income:** ${finbotForm.income || 'Not specified'}
+- **Available to Invest:** ${finbotForm.savings || 'Not specified'}
+- **Goal:** ${finbotForm.goal || 'Wealth Growth'}
+- **Risk Tolerance:** ${finbotForm.bRisk || 'Moderate'}
+- **Account Type:** ${finbotForm.acct || 'Taxable Brokerage'}
+
+---
+
+## Recommended Asset Allocation
+
+| Asset Class | Allocation | ETF Pick | Expense Ratio |
+|-------------|-----------|----------|--------------|
+| US Large Cap Equity | 35% | **VTI** (Vanguard Total Market) | 0.03% |
+| International Equity | 15% | **VXUS** (Vanguard Intl Total) | 0.07% |
+| US Growth / Tech | 15% | **QQQ** (Invesco Nasdaq-100) | 0.20% |
+| US Bonds (Intermediate) | 15% | **BND** (Vanguard Total Bond) | 0.03% |
+| Real Estate (REITs) | 8% | **VNQ** (Vanguard Real Estate) | 0.12% |
+| Commodities / Inflation Hedge | 7% | **PDBC** (Invesco Commodity) | 0.59% |
+| Cash / Money Market | 5% | **SGOV** (iShares T-Bill) | 0.09% |
+
+**Blended Expense Ratio:** ~0.12% annually
+
+---
+
+## Expected Portfolio Metrics
+
+| Metric | Estimate |
+|--------|---------|
+| Expected Annual Return | 7.2% – 9.8% |
+| Standard Deviation (Risk) | 11.4% |
+| Sharpe Ratio (est.) | 0.68 |
+| Max Historical Drawdown | -32% (worst case, 2008-style) |
+| Best-Year Return | +38% (bull market scenario) |
+
+---
+
+## Dollar Cost Averaging Plan
+
+| Contribution Frequency | Suggested Amount | Annual Total |
+|-----------------------|-----------------|-------------|
+| Monthly (recommended) | Based on 15% of income | Variable |
+| Bi-weekly | Align with paycheck | Variable |
+| Annual lump sum | Tax-loss harvest opportunity | Variable |
+
+**Suggested DCA Allocation per Contribution:**
+- VTI: 35% → core holding
+- QQQ: 15% → growth tilt
+- VXUS: 15% → diversification
+- BND: 15% → stability
+- VNQ + PDBC + SGOV: 20% → alternatives
+
+---
+
+## Rebalancing Schedule
+
+| Trigger | Action |
+|---------|--------|
+| Any asset drifts >5% from target | Rebalance to target |
+| Annual (every January) | Full portfolio rebalance |
+| Major life event | Reassess entire allocation |
+| Bear market -20%+ | Consider adding to equity positions |
+
+---
+
+## Tax Optimization Tips
+- Use **Roth IRA** for highest-growth assets (QQQ, individual stocks)
+- Use **Traditional IRA/401k** for bond funds (tax-deferred income)
+- Use **Taxable account** for VTI/VXUS (qualified dividends, tax-loss harvesting)
+- Avoid frequent trading in taxable accounts to minimize capital gains
+
+---
+
+> **Legal Disclaimer:** This portfolio blueprint is for educational purposes only. It does not constitute personalized financial advice. Past performance is not indicative of future results. Consult a licensed financial advisor before implementing any investment strategy.`,
+
+  technical: () => `# Citadel Quantitative Technical Analysis
+**Asset:** ${finbotForm.techTicker || 'NVDA'}
+${finbotForm.techPos && finbotForm.techPos !== 'none' ? `**Position:** ${finbotForm.techPos}` : '**Position:** None (observing)'}
+*Prepared by: Citadel Quantitative Strategies*
+
+---
+
+## Trend Analysis
+
+| Timeframe | Trend | Momentum | Signal |
+|-----------|-------|----------|--------|
+| Daily | ↗ Uptrend | Strong | **Bullish** |
+| Weekly | ↗ Uptrend | Moderate | **Bullish** |
+| Monthly | ↗ Uptrend | Building | **Neutral-Bullish** |
+
+**Overall Trend Bias:** BULLISH — Price is making higher highs and higher lows across all timeframes.
+
+---
+
+## Support & Resistance Levels
+
+| Level | Type | Strength | Notes |
+|-------|------|----------|-------|
+| $1,245 | Resistance | Strong | Recent all-time high zone |
+| $1,198 | Resistance | Moderate | Prior breakout level |
+| **$1,155** | **Key Support** | **Strong** | 50-day EMA confluence |
+| $1,090 | Support | Moderate | Prior consolidation zone |
+| $1,020 | Major Support | Very Strong | 200-day EMA + volume shelf |
+
+---
+
+## Technical Indicators
+
+### RSI (14-period)
+- **Current:** 61.4
+- **Interpretation:** Bullish momentum, not yet overbought
+- **Signal:** Room to run; watch for divergence above 70
+
+### MACD (12/26/9)
+- **MACD Line:** +14.82
+- **Signal Line:** +11.47
+- **Histogram:** +3.35 (expanding)
+- **Signal:** Bullish crossover intact, momentum building
+
+### Bollinger Bands (20-period, 2σ)
+- **Upper Band:** $1,289
+- **Middle Band (20MA):** $1,162
+- **Lower Band:** $1,035
+- **Price Position:** Mid-to-upper band — controlled uptrend
+- **Band Width:** Expanding slightly — increasing volatility ahead
+
+### Volume Analysis
+- 20-day avg volume: 42.3M shares
+- Recent volume trend: +15% above average on up days
+- **Signal:** Institutional accumulation pattern detected
+
+---
+
+## Chart Patterns
+
+| Pattern | Status | Implication |
+|---------|--------|-------------|
+| Bull Flag | ✅ Confirmed | Continuation → target $1,280–$1,320 |
+| Ascending Triangle | Forming | Breakout above $1,245 confirms |
+| No Distribution | ✅ Clean | No head-and-shoulders or topping pattern |
+
+---
+
+## Trade Setup
+
+| Parameter | Value | Notes |
+|-----------|-------|-------|
+| **Entry Zone** | $1,155 – $1,175 | Buy pullback to 50-day EMA |
+| **Stop-Loss** | $1,080 | Below 200-day EMA + structure |
+| **Target 1** | $1,280 | Bull flag measured move |
+| **Target 2** | $1,350 | ATH breakout extension |
+| **Risk/Reward** | 1 : 2.8 | Favorable setup |
+
+---
+
+## Confidence Rating
+
+**7.5 / 10** — Strong multi-timeframe alignment with bullish technicals. Primary risk is broader market correction or negative sector news. Position sizing recommended at 3-5% of portfolio.
+
+---
+
+> **Legal Disclaimer:** Technical analysis is for educational purposes only and does not guarantee future price movements. All trading involves risk of loss. Consult a licensed financial professional before making trading decisions.`,
+};
+
 async function runFinBot(modeId) {
   finbotState.loading = true;
   finbotState.result = null;
   finbotState.error = null;
   renderFinBot();
 
-  try {
-    const fullPrompt = 'You are a world-class financial analyst. Respond with detailed professional analysis using markdown formatting.\n\n' + prompts[modeId]();
-    const response = await fetch('api.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: fullPrompt }),
-    });
-    const data = await response.json();
-    if (!response.ok || data.error) throw new Error(data.error || 'API error ' + response.status);
-    if (!data.text) throw new Error('Empty response. Please try again.');
-    finbotState.result = data.text;
-  } catch (e) {
-    finbotState.error = e.message || 'Something went wrong. Check that api.php is uploaded and your API key is configured.';
-  }
+  // Simulate realistic AI response delay
+  await new Promise(r => setTimeout(r, 1800 + Math.random() * 1200));
+
+  finbotState.result = MOCK_RESPONSES[modeId]();
   finbotState.loading = false;
   renderFinBot();
 }
@@ -739,7 +1184,18 @@ function renderFinBot() {
           <div class="finbot-icon">🤖</div>
           <div>
             <h2>FinBot</h2>
-            <p style="font-size:11px;color:var(--faint)">6 elite analysis modes powered by AI</p>
+            <p style="font-size:11px;color:var(--faint)">6 elite analysis modes</p>
+          </div>
+        </div>
+      </div>
+      <div class="disclaimer-box" style="border-color:#3b82f620;background:linear-gradient(135deg,#1e293b,#0f172a)">
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <span style="font-size:18px;flex-shrink:0">🚀</span>
+          <div>
+            <p style="font-weight:800;font-size:12px;color:#60a5fa;margin-bottom:4px">Demo Mode — Sample Reports</p>
+            <p style="font-size:11.5px;color:var(--faint);line-height:1.65">
+              FinBot is running with <strong style="color:#e2e8f0">pre-built sample reports</strong>. Fill in any form and click "Run Analysis" to see a full professional-grade output. Live AI analysis coming soon.
+            </p>
           </div>
         </div>
       </div>
@@ -749,7 +1205,7 @@ function renderFinBot() {
           <div>
             <p style="font-weight:800;font-size:12px;color:var(--border);margin-bottom:4px">Educational Tool Only</p>
             <p style="font-size:11.5px;color:var(--faint);line-height:1.65">
-              InvestEasy FinBot is an <strong style="color:#e2e8f0">AI-powered educational tool</strong>. It does not constitute financial advice. Always consult a licensed professional before making investment decisions.
+              InvestEasy FinBot is an <strong style="color:#e2e8f0">educational tool</strong>. It does not constitute financial advice. Always consult a licensed professional before making investment decisions.
             </p>
           </div>
         </div>
