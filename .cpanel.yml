@@ -1,7 +1,8 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/$USER/public_html
+    - export DEPLOYPATH=/home/$USER/public_html/investeasy
+    - mkdir -p $DEPLOYPATH
     # Copy public files
     - /bin/cp index.html $DEPLOYPATH/index.html
     - /bin/cp .htaccess  $DEPLOYPATH/.htaccess

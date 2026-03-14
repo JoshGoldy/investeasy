@@ -8,11 +8,11 @@
     Deny from all
 </FilesMatch>
 
-# Block access to example config
-<Files "api.example.php">
+# Block access to example configs
+<FilesMatch "^(api|db)\.example\.php$">
     Order allow,deny
     Deny from all
-</Files>
+</FilesMatch>
 
 # Block access to README and other non-public files
 <FilesMatch "\.(md|gitignore|yml|yaml|json|lock)$">
