@@ -1,5 +1,6 @@
 # ── Sensitive files (NEVER commit these) ─────────────────────
 api.php
+db.php
 
 # ── OS files ─────────────────────────────────────────────────
 .DS_Store

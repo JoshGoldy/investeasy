@@ -2,9 +2,12 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/$USER/public_html
-    # Copy only the public files (not api.php — that stays on the server)
+    # Copy public files
     - /bin/cp index.html $DEPLOYPATH/index.html
-    - /bin/cp .htaccess $DEPLOYPATH/.htaccess
-    # Preserve api.php on the server — never overwrite it from git
-    # If api.php doesn't exist yet, copy the example as a reminder
+    - /bin/cp .htaccess  $DEPLOYPATH/.htaccess
+    - /bin/cp auth.php   $DEPLOYPATH/auth.php
+    - /bin/cp data.php   $DEPLOYPATH/data.php
+    # Preserve secrets on the server — never overwrite from git
+    # If they don't exist yet, drop example files as setup reminders
     - test -f $DEPLOYPATH/api.php || /bin/cp api.example.php $DEPLOYPATH/api.example.php
+    - test -f $DEPLOYPATH/db.php  || /bin/cp db.example.php  $DEPLOYPATH/db.example.php

@@ -210,6 +210,32 @@ button{cursor:pointer}
 .holding-stat .hl{font-size:10px;color:var(--faint)}
 .holding-stat .hv{margin-top:2px;font-family:var(--mono);font-size:12px;font-weight:500;color:#374151}
 
+/* ── AUTH OVERLAY ─────────────────────────────────────────────── */
+.shell{position:relative}
+.auth-overlay{position:absolute;inset:0;z-index:3000;background:var(--bg);display:flex;
+  flex-direction:column;justify-content:center;padding:28px 24px;border-radius:32px;overflow-y:auto}
+.auth-overlay.hidden{display:none}
+.auth-logo{text-align:center;margin-bottom:26px}
+.auth-logo-icon{width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#10b981,#059669);
+  display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;
+  margin:0 auto 12px;letter-spacing:-1px;font-family:var(--mono)}
+.auth-logo h2{font-size:24px;font-weight:800;color:var(--text)}
+.auth-logo p{font-size:12px;color:var(--faint);margin-top:3px}
+.auth-card{background:var(--card);border-radius:22px;padding:20px;box-shadow:var(--shadow-lg)}
+.auth-tabs{display:flex;background:var(--border);border-radius:10px;padding:3px;margin-bottom:18px;gap:3px}
+.auth-tab{flex:1;padding:8px;border-radius:8px;font-size:12px;font-weight:700;color:var(--muted);
+  transition:all 0.2s;text-align:center;cursor:pointer;background:none;border:none}
+.auth-tab.active{background:#fff;color:var(--text);box-shadow:var(--shadow)}
+.auth-field{margin-bottom:12px}
+.auth-error{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;
+  padding:10px 12px;font-size:12px;color:var(--red);margin-bottom:12px;display:none}
+.auth-error.show{display:block}
+.auth-btn{width:100%;padding:15px;border-radius:14px;background:var(--green);color:#fff;
+  font-weight:800;font-size:14px;transition:all 0.2s;margin-top:4px}
+.auth-btn:hover{background:#059669}
+.auth-btn:disabled{background:#e2e8f0;color:var(--faint);cursor:not-allowed}
+.auth-divider{text-align:center;font-size:11px;color:var(--faint);margin:14px 0 0}
+
 /* ── SETTINGS ─────────────────────────────────────────────────── */
 .avatar{width:72px;height:72px;border-radius:22px;display:flex;align-items:center;justify-content:center;
   font-size:26px;font-weight:800;color:#fff;flex-shrink:0;letter-spacing:-1px}
@@ -298,6 +324,90 @@ button{cursor:pointer}
 
   <!-- Stock Detail Overlay -->
   <div id="stock-detail" class="stock-detail hidden"></div>
+
+  <!-- Auth Overlay (shown until logged in) -->
+  <div id="auth-overlay" class="auth-overlay">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">IE</div>
+      <h2>InvestEasy</h2>
+      <p>Smart investing made simple</p>
+    </div>
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login-btn" onclick="showAuthTab('login')">Sign In</button>
+        <button class="auth-tab" id="tab-register-btn" onclick="showAuthTab('register')">Create Account</button>
+      </div>
+      <div id="auth-error" class="auth-error"></div>
+
+      <!-- Login form -->
+      <div id="auth-login-form">
+        <div class="auth-field">
+          <label class="form-label">Email</label>
+          <input id="login-email" class="form-input" type="email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label class="form-label">Password</label>
+          <input id="login-password" class="form-input" type="password" placeholder="••••••••" autocomplete="current-password"
+            onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <button class="auth-btn" id="login-btn" onclick="doLogin()">Sign In</button>
+      </div>
+
+      <!-- Register form -->
+      <div id="auth-register-form" style="display:none">
+        <div class="auth-field">
+          <label class="form-label">Full Name</label>
+          <input id="reg-name" class="form-input" type="text" placeholder="Alex Johnson" maxlength="60" autocomplete="name">
+        </div>
+        <div class="auth-field">
+          <label class="form-label">Email</label>
+          <input id="reg-email" class="form-input" type="email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label class="form-label">Username</label>
+          <input id="reg-username" class="form-input" type="text" placeholder="alexj" maxlength="30" autocomplete="username">
+        </div>
+        <div class="auth-field">
+          <label class="form-label">Password</label>
+          <input id="reg-password" class="form-input" type="password" placeholder="Min. 6 characters" autocomplete="new-password"
+            onkeydown="if(event.key==='Enter')doRegister()">
+        </div>
+        <button class="auth-btn" id="register-btn" onclick="doRegister()">Create Account</button>
+      </div>
+
+      <p class="auth-divider" id="auth-footer-text">
+        Don't have an account? <span class="auth-link" onclick="showAuthTab('register')">Sign up free</span>
+      </p>
+    </div>
+  </div>
+
+  <!-- Add Holding Modal -->
+  <div id="add-holding-modal" class="modal-overlay hidden">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <p class="modal-title">Add / Update Holding</p>
+      <div class="modal-field">
+        <label class="form-label">Ticker Symbol</label>
+        <input id="holding-ticker" class="form-input mono" type="text" placeholder="AAPL" maxlength="10"
+          style="text-transform:uppercase">
+      </div>
+      <div class="modal-field">
+        <label class="form-label">Company Name</label>
+        <input id="holding-name" class="form-input" type="text" placeholder="Apple Inc." maxlength="60">
+      </div>
+      <div class="modal-field">
+        <label class="form-label">Shares</label>
+        <input id="holding-shares" class="form-input mono" type="number" placeholder="10" min="0.0001" step="0.0001">
+      </div>
+      <div class="modal-field">
+        <label class="form-label">Average Cost (per share)</label>
+        <input id="holding-cost" class="form-input mono" type="number" placeholder="150.00" min="0" step="0.01">
+      </div>
+      <div id="holding-error" class="auth-error"></div>
+      <button class="modal-save-btn" onclick="saveHolding()">Save Holding</button>
+      <button class="modal-cancel" onclick="closeAddHoldingModal()">Cancel</button>
+    </div>
+  </div>
 
   <!-- Nav -->
   <div class="nav">
@@ -608,10 +718,11 @@ renderNews();
 // ═══════════════════════════════════════════════════════════════════════════
 
 let marketsFilter = 'All';
+let currentMarketsFilter = 'All';
 let miniCharts = [];
 
 function renderMarkets(filter) {
-  if (filter !== undefined) marketsFilter = filter;
+  if (filter !== undefined) { marketsFilter = filter; currentMarketsFilter = filter; }
   miniCharts.forEach(c => c.remove());
   miniCharts = [];
 
@@ -621,11 +732,13 @@ function renderMarkets(filter) {
     Stocks: m => ['Tech','Auto'].includes(m.sector),
     Crypto: m => m.sector === 'Crypto',
     Commodities: m => m.sector === 'Commodity',
+    Watchlist: m => watchlistSet.has(m.ticker),
   };
-  const shown = MARKETS.filter(fmap[marketsFilter]);
+  const shown = MARKETS.filter(fmap[marketsFilter] || (() => true));
   const hero = MARKETS[0];
   const heroUp = hero.chg >= 0;
   const filters = ['All','Indices','Stocks','Crypto','Commodities'];
+  if (currentUser) filters.push('Watchlist');
 
   document.getElementById('tab-markets').innerHTML = `
     <div class="section-title"><h2>Markets</h2><p>Tap any asset for detailed charts & stats</p></div>
@@ -648,12 +761,26 @@ function renderMarkets(filter) {
     <div class="filter-row">
       ${filters.map(f => `<button class="filter-btn ${marketsFilter===f?'active':''}" onclick="renderMarkets('${f}')">${f}</button>`).join('')}
     </div>
+    ${shown.length === 0 && marketsFilter === 'Watchlist' ? `
+      <div style="text-align:center;padding:40px 20px">
+        <p style="font-size:32px;margin-bottom:12px">⭐</p>
+        <p style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:6px">No watchlist items</p>
+        <p style="font-size:12px;color:var(--faint)">Tap the ☆ star on any asset tile to add it to your watchlist.</p>
+      </div>
+    ` : ''}
     <div class="market-grid">
       ${shown.map((m, idx) => {
         const up = m.chg >= 0;
         const globalIdx = MARKETS.indexOf(m);
+        const starred = watchlistSet.has(m.ticker);
+        const starBtn = currentUser
+          ? `<button onclick="event.stopPropagation();toggleWatchlist('${m.ticker}','${m.name.replace(/'/g,"\\'")}')"
+               style="position:absolute;top:8px;right:8px;background:none;font-size:16px;line-height:1;padding:2px"
+               title="${starred?'Remove from watchlist':'Add to watchlist'}">${starred?'⭐':'☆'}</button>`
+          : '';
         return `
-          <div class="market-tile" onclick="openStockDetail(${globalIdx})">
+          <div class="market-tile" onclick="openStockDetail(${globalIdx})" style="position:relative">
+            ${starBtn}
             <p class="ticker">${m.ticker}</p>
             <p class="name">${m.name}</p>
             <p class="price">${fmtPrice(m.val)}</p>
@@ -1474,6 +1601,18 @@ renderFinBot();
 let portChart = null;
 
 function renderPortfolio() {
+  // If logged in and have DB portfolio data, render that instead of demo data
+  if (currentUser && dbPortfolio.length > 0) {
+    renderDBPortfolio();
+    return;
+  }
+  // If logged in but empty portfolio, show onboarding
+  if (currentUser && dbPortfolio.length === 0) {
+    renderEmptyPortfolio();
+    return;
+  }
+
+  // Demo portfolio (not logged in)
   const total = HOLDINGS.reduce((s,h) => s + h.shares * h.cur, 0);
   const cost = HOLDINGS.reduce((s,h) => s + h.shares * h.cost, 0);
   const pnl = total - cost;
@@ -1565,6 +1704,134 @@ function renderPortfolio() {
   });
 }
 
+function renderEmptyPortfolio() {
+  document.getElementById('tab-portfolio').innerHTML = `
+    <div class="section-title"><h2>Portfolio</h2><p>Track your real holdings</p></div>
+    <div style="text-align:center;padding:60px 20px 40px">
+      <div style="font-size:52px;margin-bottom:16px">📊</div>
+      <p style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:8px">No holdings yet</p>
+      <p style="font-size:13px;color:var(--faint);line-height:1.6;margin-bottom:24px">
+        Add your first stock, ETF or crypto holding to start tracking your portfolio.
+      </p>
+      <button onclick="openAddHoldingModal()" style="padding:14px 28px;border-radius:14px;
+        background:var(--green);color:#fff;font-weight:800;font-size:14px">
+        + Add First Holding
+      </button>
+    </div>
+  `;
+}
+
+function renderDBPortfolio() {
+  const COLORS = ['#10b981','#3b82f6','#8b5cf6','#f59e0b','#ec4899','#06b6d4','#ef4444','#f97316'];
+
+  // Enrich holdings with current prices from RAW_MARKETS where possible
+  const holdings = dbPortfolio.map(h => {
+    const mkt = RAW_MARKETS.find(m => m.ticker === h.ticker);
+    const cur = mkt ? mkt.val : h.avg_cost;
+    const val = h.shares * cur;
+    const cost = h.shares * h.avg_cost;
+    const pnl = val - cost;
+    const pnlP = h.avg_cost > 0 ? ((cur - h.avg_cost) / h.avg_cost * 100) : 0;
+    return { ...h, cur, val, cost, pnl, pnlP };
+  });
+
+  const total = holdings.reduce((s, h) => s + h.val, 0);
+  const totalCost = holdings.reduce((s, h) => s + h.cost, 0);
+  const totalPnl = total - totalCost;
+  const totalPnlP = totalCost > 0 ? ((totalPnl / totalCost) * 100).toFixed(2) : '0.00';
+  const up = totalPnl >= 0;
+
+  // Pie chart
+  let cumAngle = 0;
+  const pieSlices = holdings.map((h, i) => {
+    const pct = total > 0 ? (h.val / total) * 100 : 0;
+    const angle = (pct / 100) * 360;
+    const startAngle = cumAngle;
+    cumAngle += angle;
+    const r = 38, cx = 45, cy = 45;
+    const startRad = (startAngle - 90) * Math.PI / 180;
+    const endRad   = (startAngle + angle - 90) * Math.PI / 180;
+    const x1 = cx + r * Math.cos(startRad), y1 = cy + r * Math.sin(startRad);
+    const x2 = cx + r * Math.cos(endRad),   y2 = cy + r * Math.sin(endRad);
+    const large = angle > 180 ? 1 : 0;
+    return `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2} Z" fill="${COLORS[i % COLORS.length]}"/>`;
+  }).join('');
+
+  document.getElementById('tab-portfolio').innerHTML = `
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+      <div><h2>Portfolio</h2><p>Your real holdings</p></div>
+      <button onclick="openAddHoldingModal()" style="padding:9px 16px;border-radius:12px;
+        background:var(--green);color:#fff;font-weight:800;font-size:12px;flex-shrink:0">+ Add</button>
+    </div>
+
+    <!-- Hero -->
+    <div class="port-hero">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <p style="font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.08em">Total Value</p>
+          <p style="font-size:28px;font-weight:800;color:#fff;margin-top:4px;font-family:var(--mono)">${fmtMoney(total)}</p>
+          <p style="margin-top:6px;font-size:13px;font-weight:700;color:${up?'#10b981':'#ef4444'}">
+            ${up?'▲':'▼'} ${fmtMoney(Math.abs(totalPnl))} (${up?'+':''}${totalPnlP}%)
+          </p>
+        </div>
+        <div style="text-align:right">
+          <p style="font-size:10px;color:#64748b">Holdings</p>
+          <p style="font-size:22px;font-weight:800;color:#fff">${holdings.length}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Allocation -->
+    <div class="alloc-card">
+      <p style="font-weight:800;font-size:13px;color:var(--text);margin-bottom:12px">Allocation</p>
+      <div style="display:flex;gap:16px;align-items:center">
+        <svg width="90" height="90" viewBox="0 0 90 90">${pieSlices}</svg>
+        <div style="flex:1">
+          ${holdings.map((h, i) => {
+            const pct = total > 0 ? ((h.val / total) * 100).toFixed(1) : '0.0';
+            return `<div class="alloc-row">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span class="alloc-dot" style="background:${COLORS[i % COLORS.length]}"></span>
+                <span style="font-size:12px;font-weight:600;color:var(--text)">${h.ticker}</span>
+              </div>
+              <span style="font-size:12px;font-weight:700;color:var(--muted)">${pct}%</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Holdings -->
+    <p style="font-weight:700;font-size:11px;color:var(--faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px">Holdings</p>
+    ${holdings.map(h => `
+      <div class="holding-card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <p style="font-weight:800;font-size:14px;color:var(--text);font-family:var(--mono)">${h.ticker}</p>
+            <p style="font-size:11px;color:var(--faint);margin-top:1px">${escHtml(h.name)}</p>
+          </div>
+          <div style="text-align:right">
+            <p style="font-weight:700;font-size:15px;color:var(--text);font-family:var(--mono)">${fmtMoney(h.val)}</p>
+            <p style="font-size:12px;font-weight:700;margin-top:2px;color:${h.pnl>=0?'var(--green)':'var(--red)'}">${h.pnl>=0?'+':''}${h.pnlP.toFixed(2)}%</p>
+          </div>
+        </div>
+        <div class="holding-stats">
+          ${[{l:'Shares',v:h.shares},{l:'Avg Cost',v:'$'+h.avg_cost.toFixed(2)},{l:'Current',v:'$'+h.cur.toFixed(2)}].map(s =>
+            `<div class="holding-stat"><p class="hl">${s.l}</p><p class="hv">${s.v}</p></div>`
+          ).join('')}
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button onclick="openAddHoldingModal('${h.ticker}','${escHtml(h.name).replace(/'/g,"\\'")}')"
+            style="flex:1;padding:8px;border-radius:10px;background:var(--border);font-size:12px;font-weight:700;color:var(--muted)">Edit</button>
+          <button onclick="removeHolding('${h.ticker}')"
+            style="padding:8px 14px;border-radius:10px;background:#fef2f2;font-size:12px;font-weight:700;color:var(--red)">Remove</button>
+        </div>
+      </div>
+    `).join('')}
+    <div style="height:8px"></div>
+  `;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // SETTINGS
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1595,6 +1862,7 @@ function saveSettings(updates) {
   const current = loadSettings();
   const next = Object.assign(current, updates);
   localStorage.setItem('ie_settings', JSON.stringify(next));
+  saveSettingsToDB(updates); // sync to DB in background when logged in
   renderSettings();
 }
 
@@ -1620,11 +1888,20 @@ function closeEditModal() {
   document.getElementById('edit-profile-modal').classList.add('hidden');
 }
 
-function saveProfile() {
-  const name = document.getElementById('modal-name').value.trim();
-  const email = document.getElementById('modal-email').value.trim();
+async function saveProfile() {
+  const name     = document.getElementById('modal-name').value.trim();
+  const email    = document.getElementById('modal-email').value.trim();
   const username = document.getElementById('modal-username').value.trim();
   if (!name) { document.getElementById('modal-name').focus(); return; }
+
+  // Try DB first if logged in
+  if (currentUser) {
+    const result = await saveProfileToDB(name, email, username);
+    if (result !== true) {
+      alert(result); // show DB error (e.g. email taken)
+      return;
+    }
+  }
   saveSettings({ name, email, username });
   closeEditModal();
 }
@@ -1636,8 +1913,12 @@ document.getElementById('edit-profile-modal').addEventListener('click', function
 
 function renderSettings() {
   const s = loadSettings();
-  const initials = getInitials(s.name);
-  const avatarCol = getAvatarColor(s.name);
+  // Use live DB user data for name/email when logged in
+  const displayName  = currentUser ? currentUser.name     : s.name;
+  const displayEmail = currentUser ? currentUser.email    : s.email;
+  const displayUser  = currentUser ? '@' + currentUser.username : s.username;
+  const initials  = getInitials(displayName);
+  const avatarCol = getAvatarColor(displayName);
 
   document.getElementById('tab-settings').innerHTML = `
     <div class="section-title"><h2>Settings</h2><p>Manage your profile & preferences</p></div>
@@ -1646,9 +1927,10 @@ function renderSettings() {
     <div class="profile-card">
       <div class="avatar" style="background:linear-gradient(135deg,${avatarCol},${avatarCol}cc)">${initials}</div>
       <div class="profile-info">
-        <p class="profile-name">${s.name}</p>
-        <p class="profile-email">${s.email}</p>
-        <div class="profile-badge"><span class="live-dot" style="width:6px;height:6px"></span><span>Pro Member</span></div>
+        <p class="profile-name">${escHtml(displayName)}</p>
+        <p class="profile-email">${escHtml(displayEmail)}</p>
+        <div class="profile-badge"><span class="live-dot" style="width:6px;height:6px"></span>
+          <span>${currentUser ? escHtml(displayUser) : 'Demo Mode'}</span></div>
       </div>
       <button class="edit-profile-btn" onclick="openEditModal()">Edit</button>
     </div>
@@ -1779,10 +2061,11 @@ function renderSettings() {
       </div>
     </div>
 
-    <!-- Danger Zone -->
+    <!-- Account -->
     <div class="settings-section">
       <p class="settings-section-label">Account</p>
       <div class="settings-group" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+        ${currentUser ? `<button class="modal-save-btn" style="background:#1e293b" onclick="doLogout()">Sign Out</button>` : `<button class="modal-save-btn" onclick="document.getElementById('auth-overlay').classList.remove('hidden')">Sign In / Create Account</button>`}
         <button class="danger-btn" onclick="resetAllSettings()">Reset All Settings</button>
       </div>
     </div>
@@ -1804,11 +2087,244 @@ function resetAllSettings() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// AUTH & DATABASE SYNC
+// ═══════════════════════════════════════════════════════════════════════════
+
+let currentUser   = null;
+let dbPortfolio   = [];          // [{ticker,name,shares,avg_cost}]
+let watchlistSet  = new Set();   // Set of tickers on watchlist
+
+// ── Low-level fetch wrapper ───────────────────────────────────────────────────
+async function apiCall(url, method = 'GET', body = null) {
+  const opts = { method, credentials: 'include', headers: {} };
+  if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  const r = await fetch(url, opts);
+  return r.json();
+}
+
+// ── Auth overlay helpers ──────────────────────────────────────────────────────
+function showAuthTab(mode) {
+  const isLogin = mode === 'login';
+  document.getElementById('tab-login-btn').classList.toggle('active', isLogin);
+  document.getElementById('tab-register-btn').classList.toggle('active', !isLogin);
+  document.getElementById('auth-login-form').style.display    = isLogin ? '' : 'none';
+  document.getElementById('auth-register-form').style.display = isLogin ? 'none' : '';
+  document.getElementById('auth-footer-text').innerHTML = isLogin
+    ? 'Don\'t have an account? <span class="auth-link" onclick="showAuthTab(\'register\')">Sign up free</span>'
+    : 'Already have an account? <span class="auth-link" onclick="showAuthTab(\'login\')">Sign in</span>';
+  clearAuthError();
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function clearAuthError() {
+  const el = document.getElementById('auth-error');
+  el.textContent = '';
+  el.classList.remove('show');
+}
+function setAuthLoading(loading) {
+  document.getElementById('login-btn').disabled    = loading;
+  document.getElementById('register-btn').disabled = loading;
+}
+
+// ── Session check on load ─────────────────────────────────────────────────────
+async function checkAuth() {
+  try {
+    const d = await apiCall('auth.php?action=me');
+    if (d.success) {
+      currentUser = d.user;
+      await syncAfterLogin();
+      document.getElementById('auth-overlay').classList.add('hidden');
+      return;
+    }
+  } catch(e) { /* db.php not set up yet — run in demo mode */ }
+  // Show auth overlay (DB may not be configured — still show login)
+  document.getElementById('auth-overlay').classList.remove('hidden');
+}
+
+// ── Login ─────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) { showAuthError('Please enter your email and password.'); return; }
+  clearAuthError();
+  setAuthLoading(true);
+  try {
+    const d = await apiCall('auth.php?action=login', 'POST', { email, password });
+    if (d.success) {
+      currentUser = d.user;
+      await syncAfterLogin();
+      document.getElementById('auth-overlay').classList.add('hidden');
+    } else {
+      showAuthError(d.error || 'Login failed. Please try again.');
+    }
+  } catch(e) {
+    showAuthError('Connection error. Check that auth.php and db.php are on the server.');
+  }
+  setAuthLoading(false);
+}
+
+// ── Register ──────────────────────────────────────────────────────────────────
+async function doRegister() {
+  const name     = document.getElementById('reg-name').value.trim();
+  const email    = document.getElementById('reg-email').value.trim();
+  const username = document.getElementById('reg-username').value.trim();
+  const password = document.getElementById('reg-password').value;
+  if (!name || !email || !username || !password) { showAuthError('All fields are required.'); return; }
+  clearAuthError();
+  setAuthLoading(true);
+  try {
+    const d = await apiCall('auth.php?action=register', 'POST', { name, email, username, password });
+    if (d.success) {
+      currentUser = d.user;
+      await syncAfterLogin();
+      document.getElementById('auth-overlay').classList.add('hidden');
+    } else {
+      showAuthError(d.error || 'Registration failed. Please try again.');
+    }
+  } catch(e) {
+    showAuthError('Connection error. Check that auth.php and db.php are on the server.');
+  }
+  setAuthLoading(false);
+}
+
+// ── Logout ────────────────────────────────────────────────────────────────────
+async function doLogout() {
+  try { await apiCall('auth.php?action=logout', 'POST'); } catch(e) {}
+  currentUser  = null;
+  dbPortfolio  = [];
+  watchlistSet = new Set();
+  document.getElementById('auth-overlay').classList.remove('hidden');
+  showAuthTab('login');
+}
+
+// ── Sync after login: pull settings, watchlist, portfolio from DB ─────────────
+async function syncAfterLogin() {
+  await Promise.all([loadSettingsFromDB(), loadWatchlistFromDB(), loadPortfolioFromDB()]);
+}
+
+async function loadSettingsFromDB() {
+  try {
+    const d = await apiCall('data.php?action=settings');
+    if (d.success && d.settings) {
+      // Merge into localStorage so existing helpers keep working
+      const merged = Object.assign(loadSettings(), d.settings);
+      localStorage.setItem('ie_settings', JSON.stringify(merged));
+    }
+  } catch(e) {}
+}
+
+async function loadWatchlistFromDB() {
+  try {
+    const d = await apiCall('data.php?action=watchlist');
+    if (d.success) {
+      watchlistSet = new Set(d.watchlist.map(w => w.ticker));
+    }
+  } catch(e) {}
+}
+
+async function loadPortfolioFromDB() {
+  try {
+    const d = await apiCall('data.php?action=portfolio');
+    if (d.success) dbPortfolio = d.portfolio;
+  } catch(e) {}
+}
+
+// ── Settings DB save (called by saveSettings in background) ──────────────────
+function saveSettingsToDB(updates) {
+  if (!currentUser) return;
+  apiCall('data.php?action=settings', 'POST', updates).catch(() => {});
+}
+
+// ── Profile save: update DB if logged in ─────────────────────────────────────
+async function saveProfileToDB(name, email, username) {
+  if (!currentUser) return true;
+  try {
+    const d = await apiCall('auth.php?action=update-profile', 'POST', { name, email, username });
+    if (d.success) { currentUser = Object.assign(currentUser, d.user); return true; }
+    return d.error || 'Failed to update profile.';
+  } catch(e) { return 'Connection error.'; }
+}
+
+// ── Watchlist helpers ─────────────────────────────────────────────────────────
+async function toggleWatchlist(ticker, name) {
+  if (!currentUser) return;
+  if (watchlistSet.has(ticker)) {
+    watchlistSet.delete(ticker);
+    apiCall('data.php?action=watchlist', 'DELETE', { ticker }).catch(() => {});
+  } else {
+    watchlistSet.add(ticker);
+    apiCall('data.php?action=watchlist', 'POST', { ticker, name }).catch(() => {});
+  }
+  renderMarkets(currentMarketsFilter);
+}
+
+// ── Add / Remove Portfolio Holdings ──────────────────────────────────────────
+function openAddHoldingModal(ticker = '', name = '') {
+  document.getElementById('holding-ticker').value = ticker;
+  document.getElementById('holding-name').value   = name;
+  document.getElementById('holding-shares').value = '';
+  document.getElementById('holding-cost').value   = '';
+  const e = document.getElementById('holding-error');
+  e.textContent = ''; e.classList.remove('show');
+  document.getElementById('add-holding-modal').classList.remove('hidden');
+}
+function closeAddHoldingModal() {
+  document.getElementById('add-holding-modal').classList.add('hidden');
+}
+document.getElementById('add-holding-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeAddHoldingModal();
+});
+
+async function saveHolding() {
+  const ticker  = document.getElementById('holding-ticker').value.trim().toUpperCase();
+  const name    = document.getElementById('holding-name').value.trim() || ticker;
+  const shares  = parseFloat(document.getElementById('holding-shares').value);
+  const avgCost = parseFloat(document.getElementById('holding-cost').value);
+  const errEl   = document.getElementById('holding-error');
+
+  if (!ticker || isNaN(shares) || shares <= 0 || isNaN(avgCost) || avgCost < 0) {
+    errEl.textContent = 'Please fill in all fields correctly.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  try {
+    const d = await apiCall('data.php?action=portfolio', 'POST', { ticker, name, shares, avg_cost: avgCost });
+    if (d.success) {
+      await loadPortfolioFromDB();
+      closeAddHoldingModal();
+      renderPortfolio();
+    } else {
+      errEl.textContent = d.error || 'Failed to save.';
+      errEl.classList.add('show');
+    }
+  } catch(e) {
+    errEl.textContent = 'Connection error.';
+    errEl.classList.add('show');
+  }
+}
+
+async function removeHolding(ticker) {
+  if (!confirm('Remove ' + ticker + ' from your portfolio?')) return;
+  try {
+    await apiCall('data.php?action=portfolio', 'DELETE', { ticker });
+    await loadPortfolioFromDB();
+    renderPortfolio();
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════════════════
 
 // Pre-render the default tab
 renderNews();
+// Check auth — shows login overlay if not logged in, syncs data if session exists
+checkAuth();
 </script>
 </body>
 </html>
