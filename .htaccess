@@ -1,5 +1,10 @@
 # ── InvestEasy .htaccess ─────────────────────────────────────
 
+# ── PHP HANDLER (required for PHP to execute in subfolders) ──
+<FilesMatch "\.php$">
+    SetHandler application/x-httpd-php
+</FilesMatch>
+
 # ── SECURITY ─────────────────────────────────────────────────
 
 # Block access to hidden files (.git, .env, .htpasswd, etc.)
