@@ -187,24 +187,25 @@ button{cursor:pointer}
 .mini-chart{width:64px;height:32px}
 
 /* ── STOCK DETAIL ─────────────────────────────────────────────── */
-.stock-detail{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;
+.stock-detail{position:fixed;inset:0;z-index:1000;background:#0c1320;display:flex;
   flex-direction:column;overflow:auto}
 .stock-detail.hidden{display:none}
-.sd-header{padding:16px 20px 10px;border-bottom:1px solid var(--dark2);display:flex;
-  justify-content:space-between;align-items:center;background:var(--dark)}
-.sd-back{background:var(--dark2);border-radius:10px;width:36px;height:36px;color:var(--faint);
-  font-size:18px;display:flex;align-items:center;justify-content:center}
-.sd-subinfo{padding:8px 20px 4px;display:flex;gap:16px;background:var(--dark)}
-.sd-chart{height:300px;padding:4px 4px 0;background:var(--dark);flex-shrink:0}
-.sd-timeframes{display:flex;justify-content:center;gap:8px;padding:12px 20px 10px}
+.sd-header{padding:16px 20px 12px;border-bottom:1px solid #ffffff0a;display:flex;
+  justify-content:space-between;align-items:center;background:#0f172a}
+.sd-back{background:#1e293b;border-radius:10px;width:36px;height:36px;color:#94a3b8;
+  font-size:18px;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer}
+.sd-subinfo{padding:8px 20px 4px;display:flex;gap:16px;background:#0f172a}
+.sd-chart{height:300px;padding:4px 4px 0;background:#0f172a;flex-shrink:0}
+.sd-timeframes{display:flex;justify-content:center;gap:8px;padding:12px 20px 12px;
+  background:#0f172a;border-bottom:1px solid #ffffff0a}
 .tf-btn{padding:7px 18px;border-radius:10px;font-family:var(--mono);font-size:12px;font-weight:600;
-  background:var(--dark2);color:var(--muted);transition:all 0.2s}
+  background:#1e293b;color:#64748b;transition:all 0.2s;border:none;cursor:pointer}
 .tf-btn.active-up{background:var(--green);color:#fff}
 .tf-btn.active-dn{background:var(--red);color:#fff}
-.sd-stats{padding:0 20px 20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.stat-box{background:var(--dark2);border-radius:var(--radius-sm);padding:10px 8px;text-align:center}
-.stat-box .label{font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em}
-.stat-box .val{margin-top:4px;font-family:var(--mono);font-size:12px;font-weight:500;color:var(--border)}
+.sd-stats{padding:6px 20px 4px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.stat-box{background:#1e293b;border:1px solid #ffffff0a;border-radius:var(--radius-sm);padding:12px 8px;text-align:center}
+.stat-box .label{font-size:9px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em}
+.stat-box .val{margin-top:5px;font-family:var(--mono);font-size:13px;font-weight:600;color:#e2e8f0}
 
 /* ── FINBOT ───────────────────────────────────────────────────── */
 .finbot-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
@@ -1516,30 +1517,30 @@ function openStockDetail(idx) {
     </div>
 
     <!-- 52-week range bar -->
-    <div style="padding:14px 16px;background:#0c1320;border-bottom:1px solid #ffffff08">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-        <span style="font-size:10px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.06em">52-Week Range</span>
-        <span style="font-size:10px;font-weight:700;color:var(--muted)">${rangePct}% of range</span>
+    <div style="padding:16px 20px 12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">52-Week Range</span>
+        <span style="font-size:10px;font-weight:700;color:#94a3b8;font-family:var(--mono)">${rangePct}% of range</span>
       </div>
-      <div style="height:4px;background:#1e293b;border-radius:4px;position:relative">
-        <div style="position:absolute;left:0;width:${rangePct}%;height:100%;background:linear-gradient(90deg,${color}80,${color});border-radius:4px"></div>
-        <div style="position:absolute;left:${rangePct}%;transform:translateX(-50%);top:-3px;width:10px;height:10px;background:${color};border-radius:50%;border:2px solid #0c1320"></div>
+      <div style="height:5px;background:#1e293b;border-radius:4px;position:relative">
+        <div style="position:absolute;left:0;width:${rangePct}%;height:100%;background:linear-gradient(90deg,${color}50,${color});border-radius:4px"></div>
+        <div style="position:absolute;left:${rangePct}%;transform:translateX(-50%);top:-4px;width:12px;height:12px;background:${color};border-radius:50%;border:2px solid #0c1320;box-shadow:0 0 6px ${color}80"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;margin-top:5px">
-        <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">${stock.lo52}</span>
-        <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">${stock.hi52}</span>
+      <div style="display:flex;justify-content:space-between;margin-top:6px">
+        <span style="font-size:11px;color:#64748b;font-family:var(--mono)">${stock.lo52}</span>
+        <span style="font-size:11px;color:#64748b;font-family:var(--mono)">${stock.hi52}</span>
       </div>
     </div>
 
     <!-- Key stats grid -->
     <div class="sd-stats">
       ${[
-        {l:'Market Cap',  v:stock.mktcap, c:''},
-        {l:'P/E Ratio',   v:stock.pe,     c:''},
-        {l:'Volume',      v:stock.vol,    c:''},
-        {l:'52W High',    v:stock.hi52,   c:'#10b981'},
-        {l:'52W Low',     v:stock.lo52,   c:'#ef4444'},
-        {l:'Day Change',  v:(stock.chg>0?'+':'')+stock.chg+'%', c: color},
+        {l:'Market Cap',  v:stock.mktcap || '—', c:''},
+        {l:'P/E Ratio',   v:stock.pe     || '—', c:''},
+        {l:'Volume',      v:stock.vol    || '—', c:''},
+        {l:'52W High',    v:stock.hi52,           c:'#10b981'},
+        {l:'52W Low',     v:stock.lo52,           c:'#ef4444'},
+        {l:'Day Change',  v:(stock.chg>0?'+':'')+stock.chg+'%', c:color},
       ].map(s => `<div class="stat-box">
         <p class="label">${s.l}</p>
         <p class="val" style="${s.c?'color:'+s.c:''}">${s.v}</p>
@@ -1547,25 +1548,25 @@ function openStockDetail(idx) {
     </div>
 
     <!-- Timeframe performance -->
-    <div style="padding:14px 16px;border-top:1px solid #ffffff08">
-      <p style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Performance</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <div style="padding:10px 20px 16px">
+      <p style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Performance</p>
+      <div style="display:flex;gap:8px">
         ${returns.map(({tf, r}) => {
           if (r === null) return '';
           const pos = parseFloat(r) >= 0;
-          return `<div style="flex:1;min-width:48px;background:#0c1320;border:1px solid #ffffff08;border-radius:10px;padding:8px;text-align:center">
-            <p style="font-size:10px;color:var(--faint);margin-bottom:3px">${tf}</p>
-            <p style="font-size:12px;font-weight:800;color:${pos?'#10b981':'#ef4444'}">${pos?'+':''}${r}%</p>
+          return `<div style="flex:1;background:#1e293b;border:1px solid #ffffff0a;border-radius:10px;padding:10px 6px;text-align:center">
+            <p style="font-size:10px;color:#64748b;margin-bottom:4px;font-weight:600">${tf}</p>
+            <p style="font-size:12px;font-weight:800;font-family:var(--mono);color:${pos?'#10b981':'#ef4444'}">${pos?'+':''}${r}%</p>
           </div>`;
         }).join('')}
       </div>
     </div>
 
     <!-- Add to watchlist -->
-    ${currentUser ? `<div style="padding:12px 16px 16px">
+    ${currentUser ? `<div style="padding:0 20px 20px">
       <button onclick="toggleWatchlist('${stock.ticker}','${stock.name.replace(/'/g,"\\'")}')"
-        style="width:100%;padding:12px;border-radius:13px;background:${watchlistSet.has(stock.ticker)?'#10b98120':'var(--border)'};border:1.5px solid ${watchlistSet.has(stock.ticker)?'#10b981':'transparent'};font-size:13px;font-weight:700;color:${watchlistSet.has(stock.ticker)?'#10b981':'var(--muted)'};cursor:pointer">
-        ${watchlistSet.has(stock.ticker) ? '⭐ In Watchlist' : '☆ Add to Watchlist'}
+        style="width:100%;padding:13px;border-radius:13px;background:${watchlistSet.has(stock.ticker)?'#10b98118':'#1e293b'};border:1.5px solid ${watchlistSet.has(stock.ticker)?'#10b981':'#ffffff0a'};font-size:13px;font-weight:700;color:${watchlistSet.has(stock.ticker)?'#10b981':'#64748b'};cursor:pointer;transition:all .2s">
+        ${watchlistSet.has(stock.ticker) ? '★ In Watchlist' : '☆ Add to Watchlist'}
       </button>
     </div>` : ''}
   `;
