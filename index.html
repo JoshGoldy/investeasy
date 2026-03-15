@@ -221,11 +221,18 @@ button{cursor:pointer}
 .holding-stat .hl{font-size:10px;color:var(--faint)}
 .holding-stat .hv{margin-top:2px;font-family:var(--mono);font-size:12px;font-weight:500;color:#374151}
 
-/* ── AUTH OVERLAY ─────────────────────────────────────────────── */
-.auth-overlay{position:fixed;inset:0;z-index:3000;background:var(--bg);display:flex;
-  flex-direction:column;justify-content:center;align-items:center;padding:28px 24px;overflow-y:auto}
-.auth-overlay .auth-logo,.auth-overlay .auth-card{max-width:420px;width:100%}
+/* ── AUTH POPUP ───────────────────────────────────────────────── */
+.auth-overlay{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.45);
+  backdrop-filter:blur(6px);display:flex;justify-content:center;align-items:center;padding:24px}
 .auth-overlay.hidden{display:none}
+.auth-popup{position:relative;background:var(--bg);border-radius:24px;padding:28px 24px 24px;
+  width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,0.28);
+  animation:popIn 0.18s ease;overflow-y:auto;max-height:calc(100vh - 48px)}
+@keyframes popIn{from{transform:scale(0.96);opacity:0}to{transform:scale(1);opacity:1}}
+.auth-close{position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:8px;
+  background:var(--border);color:var(--muted);font-size:15px;display:flex;
+  align-items:center;justify-content:center;transition:background 0.15s;z-index:1}
+.auth-close:hover{background:var(--border2)}
 .auth-logo{text-align:center;margin-bottom:26px}
 .auth-logo-icon{width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#10b981,#059669);
   display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;
@@ -359,59 +366,62 @@ button{cursor:pointer}
   <!-- Stock Detail Overlay -->
   <div id="stock-detail" class="stock-detail hidden"></div>
 
-  <!-- Auth Overlay (shown until logged in) -->
-  <div id="auth-overlay" class="auth-overlay hidden">
-    <div class="auth-logo">
-      <div class="auth-logo-icon">IE</div>
-      <h2>InvestEasy</h2>
-      <p>Smart investing made simple</p>
-    </div>
-    <div class="auth-card">
-      <div class="auth-tabs">
-        <button class="auth-tab active" id="tab-login-btn" onclick="showAuthTab('login')">Sign In</button>
-        <button class="auth-tab" id="tab-register-btn" onclick="showAuthTab('register')">Create Account</button>
+  <!-- Auth Popup -->
+  <div id="auth-overlay" class="auth-overlay hidden" onclick="if(event.target===this)this.classList.add('hidden')">
+    <div class="auth-popup">
+      <button class="auth-close" onclick="document.getElementById('auth-overlay').classList.add('hidden')">✕</button>
+      <div class="auth-logo">
+        <div class="auth-logo-icon">IE</div>
+        <h2>InvestEasy</h2>
+        <p>Smart investing made simple</p>
       </div>
-      <div id="auth-error" class="auth-error"></div>
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tab-login-btn" onclick="showAuthTab('login')">Sign In</button>
+          <button class="auth-tab" id="tab-register-btn" onclick="showAuthTab('register')">Create Account</button>
+        </div>
+        <div id="auth-error" class="auth-error"></div>
 
-      <!-- Login form -->
-      <div id="auth-login-form">
-        <div class="auth-field">
-          <label class="form-label">Email</label>
-          <input id="login-email" class="form-input" type="email" placeholder="you@example.com" autocomplete="email">
+        <!-- Login form -->
+        <div id="auth-login-form">
+          <div class="auth-field">
+            <label class="form-label">Email</label>
+            <input id="login-email" class="form-input" type="email" placeholder="you@example.com" autocomplete="email">
+          </div>
+          <div class="auth-field">
+            <label class="form-label">Password</label>
+            <input id="login-password" class="form-input" type="password" placeholder="••••••••" autocomplete="current-password"
+              onkeydown="if(event.key==='Enter')doLogin()">
+          </div>
+          <button class="auth-btn" id="login-btn" onclick="doLogin()">Sign In</button>
         </div>
-        <div class="auth-field">
-          <label class="form-label">Password</label>
-          <input id="login-password" class="form-input" type="password" placeholder="••••••••" autocomplete="current-password"
-            onkeydown="if(event.key==='Enter')doLogin()">
+
+        <!-- Register form -->
+        <div id="auth-register-form" style="display:none">
+          <div class="auth-field">
+            <label class="form-label">Full Name</label>
+            <input id="reg-name" class="form-input" type="text" placeholder="Alex Johnson" maxlength="60" autocomplete="name">
+          </div>
+          <div class="auth-field">
+            <label class="form-label">Email</label>
+            <input id="reg-email" class="form-input" type="email" placeholder="you@example.com" autocomplete="email">
+          </div>
+          <div class="auth-field">
+            <label class="form-label">Username</label>
+            <input id="reg-username" class="form-input" type="text" placeholder="alexj" maxlength="30" autocomplete="username">
+          </div>
+          <div class="auth-field">
+            <label class="form-label">Password</label>
+            <input id="reg-password" class="form-input" type="password" placeholder="Min. 6 characters" autocomplete="new-password"
+              onkeydown="if(event.key==='Enter')doRegister()">
+          </div>
+          <button class="auth-btn" id="register-btn" onclick="doRegister()">Create Account</button>
         </div>
-        <button class="auth-btn" id="login-btn" onclick="doLogin()">Sign In</button>
+
+        <p class="auth-divider" id="auth-footer-text">
+          Don't have an account? <span class="auth-link" onclick="showAuthTab('register')">Sign up free</span>
+        </p>
       </div>
-
-      <!-- Register form -->
-      <div id="auth-register-form" style="display:none">
-        <div class="auth-field">
-          <label class="form-label">Full Name</label>
-          <input id="reg-name" class="form-input" type="text" placeholder="Alex Johnson" maxlength="60" autocomplete="name">
-        </div>
-        <div class="auth-field">
-          <label class="form-label">Email</label>
-          <input id="reg-email" class="form-input" type="email" placeholder="you@example.com" autocomplete="email">
-        </div>
-        <div class="auth-field">
-          <label class="form-label">Username</label>
-          <input id="reg-username" class="form-input" type="text" placeholder="alexj" maxlength="30" autocomplete="username">
-        </div>
-        <div class="auth-field">
-          <label class="form-label">Password</label>
-          <input id="reg-password" class="form-input" type="password" placeholder="Min. 6 characters" autocomplete="new-password"
-            onkeydown="if(event.key==='Enter')doRegister()">
-        </div>
-        <button class="auth-btn" id="register-btn" onclick="doRegister()">Create Account</button>
-      </div>
-
-      <p class="auth-divider" id="auth-footer-text">
-        Don't have an account? <span class="auth-link" onclick="showAuthTab('register')">Sign up free</span>
-      </p>
     </div>
   </div>
 
