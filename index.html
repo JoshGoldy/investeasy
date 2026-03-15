@@ -171,10 +171,11 @@ button{cursor:pointer}
 .news-card .cta{margin-top:6px;font-size:12px;color:var(--faint)}
 
 /* ── MARKETS ──────────────────────────────────────────────────── */
-.hero-card{background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:22px;padding:18px;
-  margin-bottom:14px;cursor:pointer;transition:transform 0.2s}
-.hero-card:hover{transform:scale(1.01)}
-.hero-chart{height:56px;margin-top:12px}
+.featured-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.featured-card{background:linear-gradient(135deg,#0c1320,#1e293b);border:1px solid #ffffff0a;border-radius:18px;padding:14px 14px 10px;cursor:pointer;transition:transform .18s,border-color .18s;position:relative;overflow:hidden}
+.featured-card:hover{transform:translateY(-2px);border-color:#ffffff18}
+.featured-card:active{transform:scale(0.98)}
+.featured-chart{height:62px;margin-top:10px;border-radius:8px;overflow:hidden}
 .market-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
 .market-tile{background:var(--card);border-radius:var(--radius);padding:14px 14px 10px;
   box-shadow:var(--shadow);cursor:pointer;transition:all 0.2s;border:2px solid transparent}
@@ -840,21 +841,28 @@ const RAW_MARKETS = [
 ];
 
 const TF_CONFIG = {
-  '1D': { pts: 78, lbl: dayLabels },
-  '1W': { pts: 35, lbl: weekLabels },
-  '1M': { pts: 30, lbl: monthLabels },
-  '3M': { pts: 90, lbl: monthLabels },
-  '1Y': { pts: 12, lbl: () => yearLabels() },
+  '1D': { pts: 78,  lbl: dayLabels },
+  '1W': { pts: 35,  lbl: weekLabels },
+  '1M': { pts: 30,  lbl: monthLabels },
+  '3M': { pts: 90,  lbl: monthLabels },
+  '1Y': { pts: 12,  lbl: () => yearLabels() },
 };
+// Seconds between each generated data point per timeframe
+const TF_STEP = { '1D': 300, '1W': 3600, '1M': 86400, '3M': 86400, '1Y': 2592000 };
 const TIMEFRAMES = ['1D','1W','1M','3M','1Y'];
 
 const MARKETS = RAW_MARKETS.map(m => {
   const charts = {};
+  const nowSec = Math.floor(Date.now() / 1000);
   TIMEFRAMES.forEach(tf => {
-    const c = TF_CONFIG[tf];
+    const c    = TF_CONFIG[tf];
+    const step = TF_STEP[tf];
     const prices = genPrices(m.val, c.pts, tf === '1D' ? 0.003 : 0.015);
-    const labels = c.lbl(c.pts);
-    charts[tf] = prices.map((v, i) => ({ time: i, value: v, label: labels[i] || '' }));
+    // Use real Unix timestamps so the chart time axis shows correct dates
+    charts[tf] = prices.map((v, i) => ({
+      time:  nowSec - (c.pts - 1 - i) * step,
+      value: v,
+    }));
   });
   return { ...m, charts };
 });
@@ -987,7 +995,7 @@ function createMiniChart(container, data, color, height = 32) {
     crosshairMarkerVisible: false, priceLineVisible: false,
     lastValueVisible: false,
   });
-  series.setData(data.map((d, i) => ({ time: i + 1, value: d.value })));
+  series.setData(data.map((d, i) => ({ time: d.time ?? (i + 1), value: d.value })));
   chart.timeScale().fitContent();
   return chart;
 }
@@ -995,28 +1003,45 @@ function createMiniChart(container, data, color, height = 32) {
 function createFullChart(container, data, color, height = 300) {
   if (!container || !data.length) return null;
   container.innerHTML = '';
-  const isDark = true;
   const chart = LightweightCharts.createChart(container, {
     width: container.clientWidth, height,
-    layout: { background: { type: 'solid', color: '#0f172a' }, textColor: '#334155', fontFamily: 'DM Mono' },
-    grid: { vertLines: { color: '#1e293b' }, horzLines: { color: '#1e293b' } },
-    crosshair: { mode: 1, vertLine: { color: color + '60' }, horzLine: { color: color + '60' } },
-    rightPriceScale: { borderVisible: false, textColor: '#475569' },
-    timeScale: { borderVisible: false, timeVisible: false },
+    layout: { background: { type: 'solid', color: '#0c1320' }, textColor: '#64748b', fontFamily: 'DM Mono, monospace' },
+    grid: { vertLines: { color: '#ffffff08' }, horzLines: { color: '#ffffff08' } },
+    crosshair: {
+      mode: 1,
+      vertLine: { color: color + '80', width: 1, style: 0, labelBackgroundColor: color },
+      horzLine: { color: color + '80', width: 1, style: 0, labelBackgroundColor: color },
+    },
+    rightPriceScale: { borderVisible: false, textColor: '#475569', scaleMargins: { top: 0.12, bottom: 0.08 } },
+    timeScale: {
+      borderVisible: false, timeVisible: true, secondsVisible: false,
+      tickMarkFormatter: (t) => {
+        const d = new Date(t * 1000);
+        const now = new Date();
+        const diffDays = Math.round((now - d) / 86400000);
+        if (diffDays < 1) return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+        if (diffDays < 60) return d.toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+        return d.toLocaleDateString('en-GB', { month:'short', year:'2-digit' });
+      },
+    },
+    handleScroll: { mouseWheel: false, pressedMouseMove: true },
+    handleScale:  { mouseWheel: false, pinch: true },
   });
   const series = chart.addAreaSeries({
-    lineColor: color, lineWidth: 2.5,
-    topColor: color + '30', bottomColor: color + '00',
-    priceLineVisible: false, lastValueVisible: true,
+    lineColor: color, lineWidth: 2,
+    topColor: color + '28', bottomColor: color + '00',
+    priceLineVisible: true, lastValueVisible: true,
+    priceLineColor: color, priceLineWidth: 1, priceLineStyle: 2,
     crosshairMarkerRadius: 5, crosshairMarkerBackgroundColor: color,
+    crosshairMarkerBorderColor: '#0c1320',
   });
   const baseline = data[0].value;
   chart.addLineSeries({
-    color: '#334155', lineWidth: 1, lineStyle: 2,
+    color: '#334155', lineWidth: 1, lineStyle: 3,
     priceLineVisible: false, lastValueVisible: false,
     crosshairMarkerVisible: false,
-  }).setData(data.map((d, i) => ({ time: i + 1, value: baseline })));
-  series.setData(data.map((d, i) => ({ time: i + 1, value: d.value })));
+  }).setData(data.map((d, i) => ({ time: d.time ?? (i + 1), value: baseline })));
+  series.setData(data.map((d, i) => ({ time: d.time ?? (i + 1), value: d.value })));
   chart.timeScale().fitContent();
   return chart;
 }
@@ -1298,23 +1323,35 @@ function renderMarkets(filter) {
   const topGain   = sorted.slice(0, 4);
   const topLoss   = sorted.slice(-4).reverse();
 
+  // Featured assets (always show these 6 regardless of filter)
+  const FEATURED_TICKERS = ['SPX','NDX','BTC','XAU','NVDA','ETH'];
+  const featuredAssets = FEATURED_TICKERS.map(t => MARKETS.find(m => m.ticker === t)).filter(Boolean);
+
   document.getElementById('tab-markets').innerHTML = `
     <div class="section-title"><h2>Markets</h2><p>Tap any asset for detailed charts & stats</p></div>
-    <div class="hero-card" onclick="openStockDetail(0)">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div>
-          <p class="mono" style="font-size:11px;color:var(--muted);letter-spacing:0.08em">${hero.ticker}</p>
-          <p class="mono" style="font-size:30px;font-weight:500;color:#fff;margin:4px 0 2px">${hero.val.toLocaleString()}</p>
-          <span class="chip ${heroUp?'chip-green':'chip-red'}" style="font-size:13px;font-weight:700;font-family:var(--mono)">
-            ${heroUp?'▲':'▼'} ${Math.abs(hero.chg)}%
-          </span>
-        </div>
-        <div style="background:#10b98118;border-radius:14px;padding:8px 14px;text-align:center">
-          <p style="font-size:10px;color:var(--muted)">Tap to view</p>
-          <p style="font-size:12px;font-weight:700;color:var(--green)">Full Chart →</p>
-        </div>
-      </div>
-      <div class="hero-chart" id="hero-chart"></div>
+
+    <!-- Featured multi-chart grid -->
+    <p style="font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Featured</p>
+    <div class="featured-grid">
+      ${featuredAssets.map(m => {
+        const up  = m.chg >= 0;
+        const col = up ? '#10b981' : '#ef4444';
+        const idx = MARKETS.indexOf(m);
+        return `
+        <div class="featured-card" onclick="openStockDetail(${idx})">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <p style="font-size:10px;font-weight:700;color:var(--muted);font-family:var(--mono);letter-spacing:.06em">${m.ticker}</p>
+              <p style="font-size:11px;color:var(--faint);margin-top:1px;white-space:nowrap;overflow:hidden;max-width:90px;text-overflow:ellipsis">${m.name}</p>
+            </div>
+            <div style="text-align:right">
+              <p style="font-size:13px;font-weight:800;color:#fff;font-family:var(--mono)">${m.val >= 1000 ? m.val.toLocaleString() : m.val.toFixed(m.val < 10 ? 3 : 2)}</p>
+              <p style="font-size:11px;font-weight:700;color:${col};margin-top:1px">${up?'▲':'▼'} ${Math.abs(m.chg)}%</p>
+            </div>
+          </div>
+          <div class="featured-chart" id="fc-${m.ticker}"></div>
+        </div>`;
+      }).join('')}
     </div>
     <!-- Top Movers strip -->
     <div style="margin-bottom:16px">
@@ -1370,11 +1407,16 @@ function renderMarkets(filter) {
 
   // Render charts after DOM update
   requestAnimationFrame(() => {
-    const heroEl = document.getElementById('hero-chart');
-    if (heroEl) {
-      const c = createMiniChart(heroEl, hero.charts['1D'], '#10b981', 56);
-      if (c) miniCharts.push(c);
-    }
+    // Featured cards
+    featuredAssets.forEach(m => {
+      const el = document.getElementById('fc-' + m.ticker);
+      if (el) {
+        const col = m.chg >= 0 ? '#10b981' : '#ef4444';
+        const c = createMiniChart(el, m.charts['1D'], col, 62);
+        if (c) miniCharts.push(c);
+      }
+    });
+    // Market grid mini-charts
     shown.forEach(m => {
       const el = document.getElementById('mini-' + m.ticker);
       if (el) {
@@ -1426,10 +1468,29 @@ async function fetchLiveChart(ticker, tf, callback) {
 
 function openStockDetail(idx) {
   const stock = MARKETS[idx];
-  const up = stock.chg >= 0;
+  const up    = stock.chg >= 0;
   const color = up ? '#10b981' : '#ef4444';
   const overlay = document.getElementById('stock-detail');
   overlay.classList.remove('hidden');
+
+  // Compute simulated timeframe returns from generated chart data
+  function tfReturn(tf) {
+    const pts = stock.charts[tf];
+    if (!pts || pts.length < 2) return null;
+    const ret = ((pts[pts.length - 1].value - pts[0].value) / pts[0].value * 100);
+    return ret.toFixed(2);
+  }
+  const returns = TIMEFRAMES.map(tf => ({ tf, r: tfReturn(tf) }));
+
+  // 52-week range position (0–100%)
+  const hi52n = parseFloat(stock.hi52);
+  const lo52n = parseFloat(stock.lo52);
+  const rangePct = hi52n > lo52n ? Math.round((stock.val - lo52n) / (hi52n - lo52n) * 100) : 50;
+
+  // Sector-specific label
+  const assetLabel = { Crypto:'Cryptocurrency', Commodity:'Commodity', Index:'Market Index',
+    Tech:'Technology', Finance:'Financial', Healthcare:'Healthcare', Energy:'Energy',
+    Consumer:'Consumer', Industrial:'Industrial', Auto:'Automotive' }[stock.sector] || stock.sector;
 
   overlay.innerHTML = `
     <div class="sd-header">
@@ -1437,31 +1498,76 @@ function openStockDetail(idx) {
         <button class="sd-back" onclick="closeStockDetail()">←</button>
         <div>
           <div style="display:flex;align-items:center;gap:8px">
-            <span class="mono" style="font-weight:500;font-size:18px;color:#fff">${stock.ticker}</span>
-            <span style="background:var(--dark2);color:var(--muted);font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;font-family:var(--mono)">${stock.sector}</span>
+            <span class="mono" style="font-weight:800;font-size:18px;color:#fff">${stock.ticker}</span>
+            <span style="background:${color}20;color:${color};font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px">${assetLabel}</span>
           </div>
-          <p style="font-size:12px;color:var(--muted)">${stock.name}</p>
+          <p style="font-size:12px;color:var(--muted);margin-top:2px">${stock.name}</p>
         </div>
       </div>
       <div style="text-align:right">
-        <p class="mono" style="font-size:22px;font-weight:500;color:#fff">${fmtPrice(stock.val)}</p>
-        <span style="font-size:13px;font-weight:700;color:${color}">${up?'▲':'▼'} ${Math.abs(stock.chg).toFixed(2)}%</span>
+        <p class="mono" style="font-size:24px;font-weight:700;color:#fff">${fmtPrice(stock.val)}</p>
+        <span style="font-size:13px;font-weight:700;color:${color}">${up?'▲':'▼'} ${Math.abs(stock.chg).toFixed(2)}% today</span>
       </div>
     </div>
-    <div class="sd-subinfo">
-      <span class="mono" style="font-size:12px;color:${color}">${up?'▲':'▼'} ${Math.abs(stock.chg).toFixed(2)}% today</span>
-      <span style="font-size:11px;color:var(--muted)">52W: ${stock.lo52} – ${stock.hi52}</span>
-    </div>
+
     <div class="sd-chart" id="detail-chart"></div>
     <div class="sd-timeframes">
       ${TIMEFRAMES.map(tf => `<button class="tf-btn ${tf==='1D'?(up?'active-up':'active-dn'):''}" onclick="switchDetailTF(${idx},'${tf}')">${tf}</button>`).join('')}
     </div>
+
+    <!-- 52-week range bar -->
+    <div style="padding:14px 16px;background:#0c1320;border-bottom:1px solid #ffffff08">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:10px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.06em">52-Week Range</span>
+        <span style="font-size:10px;font-weight:700;color:var(--muted)">${rangePct}% of range</span>
+      </div>
+      <div style="height:4px;background:#1e293b;border-radius:4px;position:relative">
+        <div style="position:absolute;left:0;width:${rangePct}%;height:100%;background:linear-gradient(90deg,${color}80,${color});border-radius:4px"></div>
+        <div style="position:absolute;left:${rangePct}%;transform:translateX(-50%);top:-3px;width:10px;height:10px;background:${color};border-radius:50%;border:2px solid #0c1320"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:5px">
+        <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">${stock.lo52}</span>
+        <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">${stock.hi52}</span>
+      </div>
+    </div>
+
+    <!-- Key stats grid -->
     <div class="sd-stats">
       ${[
-        {l:'Mkt Cap',v:stock.mktcap},{l:'P/E Ratio',v:stock.pe},{l:'Volume',v:stock.vol},
-        {l:'52W High',v:stock.hi52},{l:'52W Low',v:stock.lo52},{l:'Change',v:(stock.chg>0?'+':'')+stock.chg+'%'},
-      ].map(s => `<div class="stat-box"><p class="label">${s.l}</p><p class="val">${s.v}</p></div>`).join('')}
+        {l:'Market Cap',  v:stock.mktcap, c:''},
+        {l:'P/E Ratio',   v:stock.pe,     c:''},
+        {l:'Volume',      v:stock.vol,    c:''},
+        {l:'52W High',    v:stock.hi52,   c:'#10b981'},
+        {l:'52W Low',     v:stock.lo52,   c:'#ef4444'},
+        {l:'Day Change',  v:(stock.chg>0?'+':'')+stock.chg+'%', c: color},
+      ].map(s => `<div class="stat-box">
+        <p class="label">${s.l}</p>
+        <p class="val" style="${s.c?'color:'+s.c:''}">${s.v}</p>
+      </div>`).join('')}
     </div>
+
+    <!-- Timeframe performance -->
+    <div style="padding:14px 16px;border-top:1px solid #ffffff08">
+      <p style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Performance</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${returns.map(({tf, r}) => {
+          if (r === null) return '';
+          const pos = parseFloat(r) >= 0;
+          return `<div style="flex:1;min-width:48px;background:#0c1320;border:1px solid #ffffff08;border-radius:10px;padding:8px;text-align:center">
+            <p style="font-size:10px;color:var(--faint);margin-bottom:3px">${tf}</p>
+            <p style="font-size:12px;font-weight:800;color:${pos?'#10b981':'#ef4444'}">${pos?'+':''}${r}%</p>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- Add to watchlist -->
+    ${currentUser ? `<div style="padding:12px 16px 16px">
+      <button onclick="toggleWatchlist('${stock.ticker}','${stock.name.replace(/'/g,"\\'")}')"
+        style="width:100%;padding:12px;border-radius:13px;background:${watchlistSet.has(stock.ticker)?'#10b98120':'var(--border)'};border:1.5px solid ${watchlistSet.has(stock.ticker)?'#10b981':'transparent'};font-size:13px;font-weight:700;color:${watchlistSet.has(stock.ticker)?'#10b981':'var(--muted)'};cursor:pointer">
+        ${watchlistSet.has(stock.ticker) ? '⭐ In Watchlist' : '☆ Add to Watchlist'}
+      </button>
+    </div>` : ''}
   `;
 
   requestAnimationFrame(() => {
