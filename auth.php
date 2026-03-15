@@ -32,6 +32,13 @@ if (!file_exists(__DIR__ . '/db.php')) {
 }
 require_once __DIR__ . '/db.php';
 
+// Test DB connection early so we get a useful error instead of a 500
+try {
+    getDB();
+} catch (Exception $e) {
+    fail(503, 'Database connection failed: ' . $e->getMessage());
+}
+
 // ── Schema init (idempotent) ──────────────────────────────────────────────────
 
 function initSchema() {
