@@ -316,6 +316,72 @@ button{cursor:pointer}
 .about-label{font-size:12px;color:var(--faint)}
 .about-val{font-size:12px;font-weight:600;color:var(--text2);font-family:var(--mono)}
 
+/* ── LEARNING HUB ────────────────────────────────────────────── */
+.learn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:12px}
+.learn-topic-card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);
+  cursor:pointer;transition:all 0.2s;border:2px solid transparent;position:relative;overflow:hidden}
+.learn-topic-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.learn-topic-card.completed-card{border-color:var(--green)}
+.learn-topic-icon{width:44px;height:44px;border-radius:var(--radius-sm);display:flex;align-items:center;
+  justify-content:center;font-size:22px;margin-bottom:12px}
+.learn-topic-card h3{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
+.learn-topic-card p{font-size:12px;color:var(--faint);line-height:1.5}
+.learn-topic-meta{display:flex;align-items:center;gap:10px;margin-top:12px}
+.learn-difficulty{padding:3px 10px;border-radius:var(--radius-xs);font-weight:700;font-size:10px;text-transform:uppercase}
+.diff-beginner{background:#10b98118;color:var(--green)}
+.diff-intermediate{background:#3b82f618;color:var(--blue)}
+.diff-advanced{background:#8b5cf618;color:var(--violet)}
+.learn-lesson-count{font-size:11px;color:var(--faint);font-weight:500}
+.learn-progress-bar{width:100%;height:4px;background:var(--border);border-radius:2px;margin-top:10px;overflow:hidden}
+.learn-progress-fill{height:100%;background:var(--green);border-radius:2px;transition:width 0.4s ease}
+
+.learn-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:16px 0}
+.learn-stat-card{background:var(--card);border-radius:var(--radius-sm);padding:16px;box-shadow:var(--shadow);text-align:center}
+.learn-stat-num{font-size:28px;font-weight:800;font-family:var(--mono);color:var(--text)}
+.learn-stat-label{font-size:11px;color:var(--faint);font-weight:500;margin-top:2px}
+
+.learn-detail{animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.learn-back{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius-xs);
+  background:var(--border);color:var(--muted);font-size:12px;font-weight:600;margin-bottom:16px;transition:all 0.2s}
+.learn-back:hover{background:var(--border2);color:var(--text)}
+.learn-section{background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);margin-bottom:16px}
+.learn-section h3{font-size:17px;font-weight:800;color:var(--text);margin-bottom:6px}
+.learn-section p,.learn-section li{font-size:13px;color:var(--text2);line-height:1.75}
+.learn-section ul{padding-left:20px;margin-top:6px}
+.learn-section ul li{margin-bottom:4px}
+.learn-section .term{font-weight:700;color:var(--green)}
+.learn-section .highlight{background:var(--green-bg);padding:12px 16px;border-radius:var(--radius-xs);
+  border-left:3px solid var(--green);margin:12px 0;font-size:13px;color:var(--text2);line-height:1.6}
+.learn-section .warn{background:#f59e0b18;padding:12px 16px;border-radius:var(--radius-xs);
+  border-left:3px solid var(--amber);margin:12px 0;font-size:13px;color:var(--text2);line-height:1.6}
+.learn-nav-btns{display:flex;gap:10px;margin-top:8px}
+.learn-nav-btn{padding:10px 24px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;transition:all 0.2s}
+.learn-nav-btn.primary{background:var(--green);color:#fff}
+.learn-nav-btn.primary:hover{background:#059669}
+.learn-nav-btn.secondary{background:var(--border);color:var(--muted)}
+.learn-nav-btn.secondary:hover{background:var(--border2)}
+
+.quiz-container{background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);margin-top:16px}
+.quiz-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.quiz-progress{font-size:12px;font-weight:600;color:var(--faint);font-family:var(--mono)}
+.quiz-question{font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px;line-height:1.5}
+.quiz-options{display:flex;flex-direction:column;gap:10px}
+.quiz-option{padding:14px 18px;border-radius:var(--radius-sm);background:var(--border);font-size:13px;
+  font-weight:500;color:var(--text2);cursor:pointer;transition:all 0.2s;border:2px solid transparent;text-align:left}
+.quiz-option:hover{background:var(--border2);border-color:var(--border2)}
+.quiz-option.selected{border-color:var(--green);background:var(--green-bg);color:var(--green);font-weight:700}
+.quiz-option.correct{border-color:var(--green);background:var(--green-bg);color:var(--green);font-weight:700}
+.quiz-option.wrong{border-color:var(--red);background:var(--red-bg);color:var(--red);font-weight:700}
+.quiz-option.dimmed{opacity:0.5;pointer-events:none}
+.quiz-feedback{margin-top:14px;padding:14px 18px;border-radius:var(--radius-sm);font-size:13px;line-height:1.6}
+.quiz-feedback.correct-fb{background:var(--green-bg);color:#065f46;border:1px solid #10b98140}
+.quiz-feedback.wrong-fb{background:var(--red-bg);color:#991b1b;border:1px solid #ef444440}
+.quiz-score{text-align:center;padding:30px;animation:fadeIn 0.3s ease}
+.quiz-score h3{font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px}
+.quiz-score .score-num{font-size:48px;font-weight:800;font-family:var(--mono);margin:12px 0}
+.quiz-score p{font-size:13px;color:var(--faint);margin-bottom:20px}
+
 /* ── RESPONSIVE ───────────────────────────────────────────────── */
 @media(max-width:768px){
   body{overflow:auto}
@@ -361,6 +427,7 @@ button{cursor:pointer}
     <div id="tab-markets" class="tab-content"></div>
     <div id="tab-finbot" class="tab-content"></div>
     <div id="tab-portfolio" class="tab-content"></div>
+    <div id="tab-learn" class="tab-content"></div>
     <div id="tab-settings" class="tab-content"></div>
   </div>
 
@@ -475,6 +542,10 @@ button{cursor:pointer}
     <button data-tab="portfolio">
       <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 000 4h4v-4h-4z"/></svg>
       <span>Portfolio</span><div class="nav-dot"></div>
+    </button>
+    <button data-tab="learn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+      <span>Learn</span><div class="nav-dot"></div>
     </button>
     <button data-tab="settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -722,6 +793,7 @@ function switchTab(id) {
   });
   tabPanels.forEach(p => p.classList.toggle('active', p.id === 'tab-' + id));
   if (id === 'markets') renderMarkets();
+  if (id === 'learn') renderLearn();
   if (id === 'portfolio') renderPortfolio();
   if (id === 'settings') renderSettings();
 }
@@ -2424,6 +2496,765 @@ async function removeHolding(ticker) {
     await loadPortfolioFromDB();
     renderPortfolio();
   } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LEARNING HUB
+// ═══════════════════════════════════════════════════════════════════════════
+
+const LEARN_TOPICS = [
+  {
+    id: 'basics',
+    icon: '📊',
+    iconBg: '#10b98118',
+    title: 'Investing Basics',
+    desc: 'Stocks, bonds, ETFs, and how the market works',
+    difficulty: 'beginner',
+    lessons: [
+      {
+        title: 'What is Investing?',
+        content: `
+          <p>Investing is putting your money to work by purchasing assets that have the potential to grow in value over time. Instead of keeping cash idle, investors allocate capital into stocks, bonds, real estate, and other instruments to build wealth.</p>
+          <div class="highlight">Key Principle: Investing is about making your money generate more money — the earlier you start, the more time compound interest has to work its magic.</div>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Why Invest?</h4>
+          <ul>
+            <li><span class="term">Beat inflation</span> — Cash loses purchasing power over time. The average inflation rate is ~3% per year.</li>
+            <li><span class="term">Build wealth</span> — The S&P 500 has returned ~10% annually on average since inception.</li>
+            <li><span class="term">Financial freedom</span> — Investments can generate passive income and fund retirement.</li>
+            <li><span class="term">Achieve goals</span> — Save for a house, education, or any long-term goal more effectively.</li>
+          </ul>
+          <div class="warn">Remember: All investing carries risk. You can lose money. Never invest more than you can afford to lose, and always do your research.</div>
+        `
+      },
+      {
+        title: 'Stocks Explained',
+        content: `
+          <p>A <span class="term">stock</span> (also called a share or equity) represents partial ownership in a company. When you buy a stock, you become a shareholder — you literally own a small piece of that business.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">How Stocks Make You Money</h4>
+          <ul>
+            <li><span class="term">Capital gains</span> — The stock price increases over time, and you sell for a profit.</li>
+            <li><span class="term">Dividends</span> — Some companies pay a portion of profits to shareholders quarterly.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Key Stock Terms</h4>
+          <ul>
+            <li><span class="term">Ticker symbol</span> — The short abbreviation for a stock (e.g., AAPL = Apple).</li>
+            <li><span class="term">Market cap</span> — Total value of all shares (share price × shares outstanding).</li>
+            <li><span class="term">P/E Ratio</span> — Price-to-Earnings ratio. How much investors pay per dollar of earnings.</li>
+            <li><span class="term">Volume</span> — Number of shares traded in a given period.</li>
+            <li><span class="term">Bid/Ask</span> — The highest price a buyer will pay (bid) and lowest a seller will accept (ask).</li>
+          </ul>
+          <div class="highlight">A company with a low P/E ratio might be undervalued, while a high P/E could mean investors expect strong future growth — or that the stock is overpriced.</div>
+        `
+      },
+      {
+        title: 'Bonds & Fixed Income',
+        content: `
+          <p>A <span class="term">bond</span> is essentially a loan you make to a government or corporation. In return, they pay you interest (called a coupon) at regular intervals and return your principal when the bond matures.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Types of Bonds</h4>
+          <ul>
+            <li><span class="term">Treasury Bonds</span> — Issued by the U.S. government. Safest but lowest returns.</li>
+            <li><span class="term">Corporate Bonds</span> — Issued by companies. Higher yield but more risk.</li>
+            <li><span class="term">Municipal Bonds</span> — Issued by state/local governments. Often tax-exempt.</li>
+            <li><span class="term">High-Yield (Junk) Bonds</span> — Lower credit rating, higher returns, more risk of default.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Key Bond Concepts</h4>
+          <ul>
+            <li><span class="term">Yield</span> — The annual return as a percentage of the bond's price.</li>
+            <li><span class="term">Maturity</span> — When the bond's principal is repaid (e.g., 10-year bond).</li>
+            <li><span class="term">Credit rating</span> — AAA (safest) to D (default). Agencies like Moody's and S&P rate bonds.</li>
+          </ul>
+          <div class="highlight">When interest rates rise, existing bond prices fall (and vice versa). This is called interest rate risk.</div>
+        `
+      },
+      {
+        title: 'ETFs & Index Funds',
+        content: `
+          <p>An <span class="term">ETF (Exchange-Traded Fund)</span> is a basket of securities that trades on an exchange like a stock. ETFs let you invest in hundreds of companies at once with a single purchase.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Why ETFs Are Popular</h4>
+          <ul>
+            <li><span class="term">Instant diversification</span> — One share of SPY gives you exposure to 500 companies.</li>
+            <li><span class="term">Low fees</span> — Index ETFs charge as little as 0.03% per year.</li>
+            <li><span class="term">Easy to trade</span> — Buy and sell throughout the day like stocks.</li>
+            <li><span class="term">Tax efficient</span> — Generally more tax-friendly than mutual funds.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Popular ETFs to Know</h4>
+          <ul>
+            <li><span class="term">SPY / VOO</span> — Track the S&P 500 index</li>
+            <li><span class="term">QQQ</span> — Tracks the Nasdaq-100 (tech-heavy)</li>
+            <li><span class="term">VTI</span> — Total U.S. stock market</li>
+            <li><span class="term">BND</span> — Total U.S. bond market</li>
+          </ul>
+          <div class="highlight">Warren Buffett's advice to most investors: "Put 90% of your money into a very low-cost S&P 500 index fund."</div>
+        `
+      }
+    ],
+    quiz: [
+      { q: 'What does a stock represent?', opts: ['A loan to a company', 'Partial ownership in a company', 'A government bond', 'A savings account'], ans: 1, explain: 'A stock represents partial ownership (equity) in a company. When you buy shares, you own a small piece of that business.' },
+      { q: 'What is the P/E ratio?', opts: ['Price to Earnings ratio', 'Profit to Equity ratio', 'Payment to Exchange ratio', 'Portfolio to Expense ratio'], ans: 0, explain: 'The P/E ratio is the Price-to-Earnings ratio — it tells you how much investors are paying for each dollar of a company\'s earnings.' },
+      { q: 'What happens to bond prices when interest rates rise?', opts: ['They go up', 'They go down', 'They stay the same', 'They become worthless'], ans: 1, explain: 'When interest rates rise, existing bond prices fall because new bonds offer higher yields, making older bonds less attractive.' },
+      { q: 'What is an ETF?', opts: ['A type of savings account', 'A basket of securities that trades like a stock', 'A government tax form', 'An insurance product'], ans: 1, explain: 'An ETF (Exchange-Traded Fund) is a basket of securities — stocks, bonds, or commodities — that trades on exchanges just like individual stocks.' },
+      { q: 'Which of these is NOT a reason to invest?', opts: ['Beat inflation', 'Build long-term wealth', 'Guaranteed short-term profits', 'Achieve financial goals'], ans: 2, explain: 'There are no guaranteed profits in investing. All investments carry some risk, and short-term returns are unpredictable.' }
+    ]
+  },
+  {
+    id: 'strategies',
+    icon: '🎯',
+    iconBg: '#3b82f618',
+    title: 'Investment Strategies',
+    desc: 'Value investing, growth, DCA, and portfolio building',
+    difficulty: 'intermediate',
+    lessons: [
+      {
+        title: 'Value Investing',
+        content: `
+          <p><span class="term">Value investing</span> is a strategy of buying stocks that appear underpriced relative to their intrinsic value. Popularized by Benjamin Graham and practiced famously by Warren Buffett.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Core Principles</h4>
+          <ul>
+            <li><span class="term">Intrinsic value</span> — Every company has a true worth based on its fundamentals (earnings, assets, cash flow).</li>
+            <li><span class="term">Margin of safety</span> — Buy well below intrinsic value to cushion against errors in your analysis.</li>
+            <li><span class="term">Mr. Market</span> — The market is emotional. Prices swing above and below fair value, creating opportunities.</li>
+            <li><span class="term">Long-term focus</span> — Be patient. The market eventually recognizes true value.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">What to Look For</h4>
+          <ul>
+            <li>Low P/E ratio compared to industry peers</li>
+            <li>Strong balance sheet (low debt, plenty of cash)</li>
+            <li>Consistent earnings and cash flow growth</li>
+            <li>Durable competitive advantages ("moats")</li>
+          </ul>
+          <div class="highlight">"Price is what you pay. Value is what you get." — Warren Buffett</div>
+        `
+      },
+      {
+        title: 'Growth Investing',
+        content: `
+          <p><span class="term">Growth investing</span> focuses on companies expected to grow revenues and earnings faster than the market average. These stocks often have high P/E ratios because investors are paying a premium for future potential.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Characteristics of Growth Stocks</h4>
+          <ul>
+            <li><span class="term">High revenue growth</span> — Often 20%+ year-over-year revenue increases.</li>
+            <li><span class="term">Market disruption</span> — Companies creating new markets or disrupting existing ones.</li>
+            <li><span class="term">Reinvesting profits</span> — Growth companies often reinvest earnings rather than paying dividends.</li>
+            <li><span class="term">High valuations</span> — Investors accept premium prices for strong growth potential.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Risks</h4>
+          <ul>
+            <li>If growth slows, the stock can drop dramatically</li>
+            <li>High valuations leave little room for error</li>
+            <li>More volatile than value stocks</li>
+          </ul>
+          <div class="warn">Not every high-growth company becomes the next Amazon. Many fail. Diversification is crucial when investing in growth stocks.</div>
+        `
+      },
+      {
+        title: 'Dollar-Cost Averaging (DCA)',
+        content: `
+          <p><span class="term">Dollar-Cost Averaging (DCA)</span> is investing a fixed amount of money at regular intervals, regardless of market conditions. This is one of the simplest and most effective strategies for long-term investors.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">How DCA Works</h4>
+          <p>Say you invest $500 per month into an S&P 500 ETF:</p>
+          <ul>
+            <li>When prices are <strong>high</strong>, your $500 buys fewer shares</li>
+            <li>When prices are <strong>low</strong>, your $500 buys more shares</li>
+            <li>Over time, your average cost per share smooths out</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Why DCA Works</h4>
+          <ul>
+            <li><span class="term">Removes emotion</span> — No trying to time the market.</li>
+            <li><span class="term">Builds discipline</span> — Consistent investing becomes a habit.</li>
+            <li><span class="term">Reduces timing risk</span> — Avoids the danger of investing everything at a market peak.</li>
+            <li><span class="term">Simple to automate</span> — Set up automatic monthly purchases.</li>
+          </ul>
+          <div class="highlight">Studies show that DCA often outperforms lump-sum timing attempts because even professionals can't consistently predict market direction.</div>
+        `
+      },
+      {
+        title: 'Portfolio Diversification',
+        content: `
+          <p><span class="term">Diversification</span> means spreading your investments across different asset classes, sectors, and geographies to reduce risk. It's the investment equivalent of "don't put all your eggs in one basket."</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Types of Diversification</h4>
+          <ul>
+            <li><span class="term">Asset class</span> — Mix of stocks, bonds, real estate, commodities.</li>
+            <li><span class="term">Sector</span> — Spread across tech, healthcare, finance, energy, etc.</li>
+            <li><span class="term">Geographic</span> — U.S., international developed, and emerging markets.</li>
+            <li><span class="term">Company size</span> — Large-cap, mid-cap, and small-cap stocks.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Sample Portfolios by Risk Level</h4>
+          <ul>
+            <li><span class="term">Conservative</span> — 30% stocks, 60% bonds, 10% cash</li>
+            <li><span class="term">Moderate</span> — 60% stocks, 30% bonds, 10% alternatives</li>
+            <li><span class="term">Aggressive</span> — 85% stocks, 10% bonds, 5% crypto/alternatives</li>
+          </ul>
+          <div class="highlight">Diversification can't eliminate all risk, but it can significantly reduce the impact of any single investment's poor performance on your overall portfolio.</div>
+        `
+      }
+    ],
+    quiz: [
+      { q: 'What is the "margin of safety" in value investing?', opts: ['A type of stop-loss order', 'Buying well below intrinsic value to cushion against errors', 'The minimum account balance required', 'Insurance on your portfolio'], ans: 1, explain: 'The margin of safety means buying stocks well below their estimated intrinsic value, giving you a buffer if your analysis is wrong.' },
+      { q: 'What does Dollar-Cost Averaging (DCA) involve?', opts: ['Investing everything at once', 'Investing a fixed amount at regular intervals', 'Only buying stocks when they dip', 'Trading daily based on trends'], ans: 1, explain: 'DCA means investing a fixed dollar amount at regular intervals (e.g., $500/month) regardless of whether the market is up or down.' },
+      { q: 'Which is a characteristic of growth stocks?', opts: ['Low P/E ratios', 'High dividend yields', 'High revenue growth rates', 'Minimal price volatility'], ans: 2, explain: 'Growth stocks are defined by their high revenue and earnings growth rates, often 20%+ year-over-year. They typically have high P/E ratios and low or no dividends.' },
+      { q: 'What is portfolio diversification?', opts: ['Buying only one type of asset', 'Spreading investments across different assets to reduce risk', 'Investing only in the safest bonds', 'Holding only cash'], ans: 1, explain: 'Diversification means spreading investments across different asset classes, sectors, and geographies to reduce the risk of any single position hurting your portfolio.' },
+      { q: 'A conservative portfolio typically has more of what?', opts: ['Cryptocurrency', 'Growth stocks', 'Bonds', 'Penny stocks'], ans: 2, explain: 'Conservative portfolios weight heavily toward bonds (60%+) because they offer more stability and lower volatility than stocks or crypto.' }
+    ]
+  },
+  {
+    id: 'analysis',
+    icon: '🔍',
+    iconBg: '#8b5cf618',
+    title: 'Fundamental Analysis',
+    desc: 'Reading financial statements and evaluating companies',
+    difficulty: 'intermediate',
+    lessons: [
+      {
+        title: 'The Income Statement',
+        content: `
+          <p>The <span class="term">income statement</span> (also called the profit & loss statement or P&L) shows how much money a company earned and spent over a period. It's the report card for a company's profitability.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Key Line Items</h4>
+          <ul>
+            <li><span class="term">Revenue (Sales)</span> — Total money earned from selling products/services. The "top line."</li>
+            <li><span class="term">Cost of Goods Sold (COGS)</span> — Direct costs to produce what was sold.</li>
+            <li><span class="term">Gross Profit</span> — Revenue minus COGS. Shows production efficiency.</li>
+            <li><span class="term">Operating Expenses</span> — R&D, marketing, salaries, rent — costs to run the business.</li>
+            <li><span class="term">Operating Income (EBIT)</span> — Gross profit minus operating expenses.</li>
+            <li><span class="term">Net Income</span> — The "bottom line" — what's left after all expenses, interest, and taxes.</li>
+          </ul>
+          <div class="highlight">Growing revenue is great, but growing net income margins is even better — it means the company is becoming more efficient at converting sales into profit.</div>
+        `
+      },
+      {
+        title: 'The Balance Sheet',
+        content: `
+          <p>The <span class="term">balance sheet</span> is a snapshot of what a company owns (assets), what it owes (liabilities), and what shareholders own (equity) at a specific point in time.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">The Fundamental Equation</h4>
+          <div class="highlight" style="font-weight:700;text-align:center;font-size:15px">Assets = Liabilities + Shareholders' Equity</div>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Key Items</h4>
+          <ul>
+            <li><span class="term">Current Assets</span> — Cash, receivables, inventory — can be converted to cash within a year.</li>
+            <li><span class="term">Long-term Assets</span> — Property, equipment, patents, goodwill.</li>
+            <li><span class="term">Current Liabilities</span> — Bills due within a year (accounts payable, short-term debt).</li>
+            <li><span class="term">Long-term Debt</span> — Loans and bonds due after one year.</li>
+            <li><span class="term">Shareholders' Equity</span> — Net worth. Assets minus all liabilities. Also called book value.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Key Ratios from the Balance Sheet</h4>
+          <ul>
+            <li><span class="term">Debt-to-Equity Ratio</span> — Total debt / shareholders' equity. Lower is generally better.</li>
+            <li><span class="term">Current Ratio</span> — Current assets / current liabilities. Above 1.0 means the company can pay its short-term bills.</li>
+          </ul>
+        `
+      },
+      {
+        title: 'Cash Flow Statement',
+        content: `
+          <p>The <span class="term">cash flow statement</span> tracks actual cash moving in and out of a company. A profitable company on paper can still go bankrupt if it runs out of cash.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Three Sections</h4>
+          <ul>
+            <li><span class="term">Operating Cash Flow</span> — Cash from core business operations. This is the most important. Positive and growing is ideal.</li>
+            <li><span class="term">Investing Cash Flow</span> — Cash spent on or received from investments (buying equipment, acquisitions). Usually negative for growing companies.</li>
+            <li><span class="term">Financing Cash Flow</span> — Cash from issuing debt/stock or paying dividends/buying back shares.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Free Cash Flow (FCF)</h4>
+          <div class="highlight">Free Cash Flow = Operating Cash Flow − Capital Expenditures<br><br>FCF is the cash available for dividends, buybacks, debt payoff, or reinvestment. It's one of the most important metrics for valuing a company.</div>
+          <div class="warn">A company with rising earnings but declining cash flow is a red flag — it may be using accounting tricks to inflate profits.</div>
+        `
+      },
+      {
+        title: 'Valuation Metrics',
+        content: `
+          <p>Valuation metrics help you determine whether a stock is cheap, fair, or expensive relative to its fundamentals.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Essential Metrics</h4>
+          <ul>
+            <li><span class="term">P/E Ratio</span> — Price / Earnings Per Share. A P/E of 20 means you're paying $20 for every $1 of earnings.</li>
+            <li><span class="term">P/B Ratio</span> — Price / Book Value. Useful for asset-heavy companies like banks.</li>
+            <li><span class="term">P/S Ratio</span> — Price / Sales. Useful for unprofitable companies with strong revenue growth.</li>
+            <li><span class="term">EV/EBITDA</span> — Enterprise Value / EBITDA. Accounts for debt, often more accurate than P/E.</li>
+            <li><span class="term">PEG Ratio</span> — P/E / Earnings Growth Rate. A PEG below 1 may indicate an undervalued growth stock.</li>
+            <li><span class="term">Dividend Yield</span> — Annual dividend / stock price. Higher yield = more income.</li>
+          </ul>
+          <div class="highlight">No single metric tells the whole story. Always compare metrics to industry peers and the company's own historical averages.</div>
+        `
+      }
+    ],
+    quiz: [
+      { q: 'What does the income statement show?', opts: ['What a company owns and owes', 'Cash moving in and out', 'Revenue, expenses, and profitability over a period', 'The company\'s stock price history'], ans: 2, explain: 'The income statement shows a company\'s revenues, expenses, and resulting profit or loss over a specific period (quarter or year).' },
+      { q: 'What is the balance sheet equation?', opts: ['Revenue − Expenses = Profit', 'Assets = Liabilities + Equity', 'Cash In − Cash Out = Net Cash', 'Price × Volume = Market Cap'], ans: 1, explain: 'The fundamental accounting equation is Assets = Liabilities + Shareholders\' Equity. Everything a company owns is funded by either debt or equity.' },
+      { q: 'What is Free Cash Flow?', opts: ['Total revenue minus taxes', 'Operating cash flow minus capital expenditures', 'Stock price times shares outstanding', 'Dividends paid to shareholders'], ans: 1, explain: 'Free Cash Flow = Operating Cash Flow − Capital Expenditures. It represents the cash available after maintaining or expanding the asset base.' },
+      { q: 'A PEG ratio below 1 generally suggests what?', opts: ['The stock is overvalued', 'The stock may be undervalued relative to its growth', 'The company is losing money', 'The company has too much debt'], ans: 1, explain: 'A PEG ratio below 1 suggests the stock\'s price may not fully reflect its earnings growth rate, potentially indicating undervaluation.' },
+      { q: 'Which is a red flag in financial analysis?', opts: ['Rising revenue and rising cash flow', 'Consistently growing dividends', 'Rising earnings but declining cash flow', 'Low debt-to-equity ratio'], ans: 2, explain: 'Rising earnings with declining cash flow can indicate aggressive accounting. Real cash generation should support reported profits.' }
+    ]
+  },
+  {
+    id: 'technical',
+    icon: '📈',
+    iconBg: '#f59e0b18',
+    title: 'Technical Analysis',
+    desc: 'Charts, patterns, indicators, and price action',
+    difficulty: 'advanced',
+    lessons: [
+      {
+        title: 'Reading Price Charts',
+        content: `
+          <p><span class="term">Technical analysis</span> studies price movements and trading volume to forecast future price direction. Unlike fundamental analysis (which looks at financials), technical analysis reads the story told by the charts.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Chart Types</h4>
+          <ul>
+            <li><span class="term">Line chart</span> — Simple. Plots closing prices over time.</li>
+            <li><span class="term">Candlestick chart</span> — Shows open, high, low, and close for each period. Green = up, red = down.</li>
+            <li><span class="term">Bar chart</span> — Similar to candlestick but uses horizontal lines instead of bodies.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Timeframes</h4>
+          <ul>
+            <li><span class="term">Intraday</span> — 1-min, 5-min, 15-min, 1-hour candles. For day traders.</li>
+            <li><span class="term">Daily</span> — Each candle = one trading day. Most popular for swing traders.</li>
+            <li><span class="term">Weekly/Monthly</span> — Big picture trends for long-term investors.</li>
+          </ul>
+          <div class="highlight">Candlestick charts are the most popular because they pack four data points (open, high, low, close) into each candle, revealing market sentiment at a glance.</div>
+        `
+      },
+      {
+        title: 'Support & Resistance',
+        content: `
+          <p><span class="term">Support</span> is a price level where buying pressure tends to prevent further decline. <span class="term">Resistance</span> is a price level where selling pressure tends to prevent further advance.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Key Concepts</h4>
+          <ul>
+            <li>Support and resistance form because traders remember previous price levels and act on them.</li>
+            <li>The more times a level is tested, the stronger it becomes.</li>
+            <li>When support breaks, it often becomes resistance (and vice versa).</li>
+            <li><span class="term">Breakout</span> — When price pushes through support or resistance with volume, expect a strong move.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">How to Identify Levels</h4>
+          <ul>
+            <li>Look for areas where price has bounced multiple times</li>
+            <li>Round numbers (e.g., $100, $50) often act as psychological support/resistance</li>
+            <li>Previous highs and lows are natural levels</li>
+            <li>Moving averages can act as dynamic support/resistance</li>
+          </ul>
+          <div class="warn">A "false breakout" occurs when price briefly crosses a level then reverses. Wait for confirmation (strong volume, candle close beyond the level) before trading breakouts.</div>
+        `
+      },
+      {
+        title: 'Moving Averages',
+        content: `
+          <p>A <span class="term">moving average (MA)</span> smooths out price data by calculating the average price over a set number of periods. It helps identify the trend direction and potential support/resistance levels.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Types of Moving Averages</h4>
+          <ul>
+            <li><span class="term">SMA (Simple Moving Average)</span> — Equal weight to all periods. E.g., 50-day SMA = average of last 50 closing prices.</li>
+            <li><span class="term">EMA (Exponential Moving Average)</span> — More weight on recent prices, reacts faster to changes.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Key Moving Average Signals</h4>
+          <ul>
+            <li><span class="term">Golden Cross</span> — 50-day MA crosses above 200-day MA. Bullish long-term signal.</li>
+            <li><span class="term">Death Cross</span> — 50-day MA crosses below 200-day MA. Bearish long-term signal.</li>
+            <li><span class="term">Price above MA</span> — Generally bullish. The MA acts as support.</li>
+            <li><span class="term">Price below MA</span> — Generally bearish. The MA acts as resistance.</li>
+          </ul>
+          <div class="highlight">The 200-day moving average is widely watched by institutional investors. When the S&P 500 is above its 200-day MA, it's generally considered to be in a bullish trend.</div>
+        `
+      },
+      {
+        title: 'Common Indicators',
+        content: `
+          <p>Technical indicators are mathematical calculations based on price and/or volume that help traders make decisions.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Essential Indicators</h4>
+          <ul>
+            <li><span class="term">RSI (Relative Strength Index)</span> — Oscillates 0–100. Above 70 = overbought, below 30 = oversold. Measures momentum.</li>
+            <li><span class="term">MACD</span> — Moving Average Convergence Divergence. Shows trend direction and momentum. Bullish when MACD line crosses above signal line.</li>
+            <li><span class="term">Bollinger Bands</span> — A moving average with upper/lower bands (2 standard deviations). Price touching the bands suggests overextension.</li>
+            <li><span class="term">Volume</span> — Confirms price moves. High volume on a breakout = strong signal. Low volume = weak/suspect move.</li>
+          </ul>
+          <div class="highlight">Don't use too many indicators at once — they often give conflicting signals. Pick 2–3 that complement each other (e.g., one trend indicator + one momentum indicator).</div>
+          <div class="warn">No indicator is perfect. Technical analysis works best when combined with an understanding of market context, news events, and fundamental analysis.</div>
+        `
+      }
+    ],
+    quiz: [
+      { q: 'What does a "Golden Cross" signal?', opts: ['A bearish reversal', 'Short-term MA crosses above long-term MA (bullish)', 'The stock has reached its all-time high', 'Volume has reached a record level'], ans: 1, explain: 'A Golden Cross occurs when the 50-day moving average crosses above the 200-day moving average, signaling a potential long-term bullish trend.' },
+      { q: 'An RSI reading above 70 typically indicates:', opts: ['The stock is oversold', 'The stock is overbought', 'The trend is neutral', 'Volume is increasing'], ans: 1, explain: 'An RSI above 70 indicates the stock may be overbought — it has risen quickly and might be due for a pullback. Below 30 indicates oversold.' },
+      { q: 'What happens when support is broken?', opts: ['It disappears entirely', 'It often becomes resistance', 'The stock always crashes', 'Trading is halted'], ans: 1, explain: 'When a support level is broken, it often flips to become a resistance level — the previous floor becomes a ceiling. This is called a role reversal.' },
+      { q: 'Which chart type shows open, high, low, and close?', opts: ['Line chart', 'Candlestick chart', 'Point and figure chart', 'Pie chart'], ans: 1, explain: 'Candlestick charts display four data points per period: open, high, low, and close, making them the most informative chart type for technical analysis.' },
+      { q: 'What confirms the strength of a price breakout?', opts: ['Low trading volume', 'High trading volume', 'A news announcement', 'The time of day'], ans: 1, explain: 'High volume on a breakout confirms conviction behind the move. Low volume breakouts are more likely to be false breakouts that reverse.' }
+    ]
+  },
+  {
+    id: 'risk',
+    icon: '🛡️',
+    iconBg: '#06b6d418',
+    title: 'Risk Management',
+    desc: 'Protecting your capital and managing downside',
+    difficulty: 'beginner',
+    lessons: [
+      {
+        title: 'Understanding Risk',
+        content: `
+          <p><span class="term">Risk</span> in investing is the possibility that your actual returns will differ from expected returns — including the possibility of losing some or all of your investment.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Types of Risk</h4>
+          <ul>
+            <li><span class="term">Market risk</span> — The entire market declines (recession, crash). Affects nearly all stocks.</li>
+            <li><span class="term">Company-specific risk</span> — Bad earnings, scandal, or bankruptcy at one company. Diversification reduces this.</li>
+            <li><span class="term">Interest rate risk</span> — Rising rates hurt bond prices and can pressure stock valuations.</li>
+            <li><span class="term">Inflation risk</span> — Returns don't keep up with inflation, losing purchasing power.</li>
+            <li><span class="term">Liquidity risk</span> — Can't sell an investment quickly without a major price concession.</li>
+            <li><span class="term">Currency risk</span> — International investments affected by exchange rate changes.</li>
+          </ul>
+          <div class="highlight">Risk and return are related. Higher potential returns generally come with higher risk. There is no such thing as a high-return, no-risk investment.</div>
+        `
+      },
+      {
+        title: 'Position Sizing',
+        content: `
+          <p><span class="term">Position sizing</span> determines how much of your portfolio to allocate to a single investment. It's one of the most important — yet overlooked — aspects of risk management.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Rules of Thumb</h4>
+          <ul>
+            <li><span class="term">The 5% rule</span> — No single stock should be more than 5% of your portfolio.</li>
+            <li><span class="term">The 1% rule</span> — Never risk more than 1% of your portfolio on a single trade (for active traders).</li>
+            <li><span class="term">Conviction-based</span> — Allocate more to your highest-conviction ideas, but still cap exposure.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Why It Matters</h4>
+          <p>If you put 50% of your portfolio in one stock and it drops 40%, your whole portfolio is down 20%. If that same stock were 5% of your portfolio, the impact is only 2%.</p>
+          <div class="warn">The #1 mistake new investors make is concentrating too heavily in a single stock because they're "sure" about it. Even the best analysts are wrong frequently.</div>
+        `
+      },
+      {
+        title: 'Stop Losses & Exit Strategies',
+        content: `
+          <p>A <span class="term">stop-loss</span> is a predetermined price at which you'll sell an investment to limit your losses. Having exit rules before you enter a position is crucial.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Types of Stops</h4>
+          <ul>
+            <li><span class="term">Fixed percentage stop</span> — Sell if the stock drops X% from your purchase price (e.g., 10%).</li>
+            <li><span class="term">Trailing stop</span> — Moves up with the stock price. E.g., always 10% below the highest price reached.</li>
+            <li><span class="term">Support-based stop</span> — Place stop just below a key technical support level.</li>
+            <li><span class="term">Time stop</span> — Sell if the investment hasn't performed within a set timeframe.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Exit Strategy Principles</h4>
+          <ul>
+            <li>Define your exit before you enter the trade</li>
+            <li>Cut losers early, let winners run</li>
+            <li>Don't move your stop loss further away to avoid getting stopped out</li>
+          </ul>
+          <div class="highlight">"The first loss is the best loss." — A small loss today prevents a devastating loss tomorrow. Protecting capital is more important than maximizing gains.</div>
+        `
+      }
+    ],
+    quiz: [
+      { q: 'What is market risk?', opts: ['Risk of one company going bankrupt', 'Risk that the entire market declines', 'Risk of currency fluctuations', 'Risk of high inflation'], ans: 1, explain: 'Market risk (also called systematic risk) affects the entire market — like recessions or major geopolitical events. It cannot be eliminated through diversification.' },
+      { q: 'The 5% rule in position sizing recommends:', opts: ['Saving 5% of income monthly', 'No single stock should exceed 5% of your portfolio', 'Only investing in the top 5 stocks', 'Keeping 5% of your portfolio in cash'], ans: 1, explain: 'The 5% rule suggests limiting any single stock position to no more than 5% of your total portfolio, ensuring adequate diversification.' },
+      { q: 'What is a trailing stop loss?', opts: ['A stop that never changes', 'A stop that moves up with the stock price', 'A stop based on time only', 'A stop that triggers after hours'], ans: 1, explain: 'A trailing stop follows the stock price upward, maintaining a set percentage or dollar distance below the highest price reached, locking in gains as the stock rises.' },
+      { q: 'Which statement about risk is TRUE?', opts: ['Higher returns always mean lower risk', 'Diversification eliminates all risk', 'Higher potential returns generally come with higher risk', 'Bonds have zero risk'], ans: 2, explain: 'Risk and return are fundamentally linked. To achieve higher potential returns, investors must generally accept higher risk. No investment is truly risk-free.' }
+    ]
+  },
+  {
+    id: 'psychology',
+    icon: '🧠',
+    iconBg: '#ec489918',
+    title: 'Investor Psychology',
+    desc: 'Emotional biases, behavioral finance, and discipline',
+    difficulty: 'advanced',
+    lessons: [
+      {
+        title: 'Common Cognitive Biases',
+        content: `
+          <p>Behavioral finance studies how psychological biases lead investors to make irrational decisions. Understanding these biases is the first step to overcoming them.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Key Biases</h4>
+          <ul>
+            <li><span class="term">Confirmation bias</span> — Seeking information that supports your existing beliefs and ignoring contradicting evidence.</li>
+            <li><span class="term">Loss aversion</span> — The pain of losing $100 feels about 2x stronger than the pleasure of gaining $100. This causes investors to hold losers too long.</li>
+            <li><span class="term">Anchoring</span> — Fixating on a specific price (like your purchase price) rather than evaluating current value objectively.</li>
+            <li><span class="term">Recency bias</span> — Overweighting recent events. After a crash, assuming more crashes. After a rally, assuming it will continue.</li>
+            <li><span class="term">Herd mentality</span> — Following the crowd. Buying when everyone is euphoric, selling when everyone is panicking.</li>
+            <li><span class="term">Overconfidence</span> — Overestimating your ability to pick stocks or time the market.</li>
+          </ul>
+          <div class="highlight">"Be fearful when others are greedy, and greedy when others are fearful." — Warren Buffett. The best opportunities often come when emotions run highest.</div>
+        `
+      },
+      {
+        title: 'Emotional Discipline',
+        content: `
+          <p>The difference between successful and unsuccessful investors often isn't knowledge — it's emotional discipline. Markets are designed to exploit your emotions.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Building Discipline</h4>
+          <ul>
+            <li><span class="term">Have a written plan</span> — Define your strategy, criteria for buying/selling, and risk limits before you invest.</li>
+            <li><span class="term">Automate when possible</span> — Automatic DCA removes the temptation to time the market.</li>
+            <li><span class="term">Check less often</span> — Daily portfolio checking increases anxiety and trading. Weekly or monthly is enough.</li>
+            <li><span class="term">Keep a journal</span> — Record why you made each investment decision. Review it to learn from mistakes.</li>
+            <li><span class="term">Accept uncertainty</span> — No one knows what the market will do tomorrow. Focus on process, not outcomes.</li>
+          </ul>
+          <div class="warn">During the 2020 COVID crash, investors who panic-sold at the bottom missed a 70%+ recovery within a year. Emotional selling is the single biggest destroyer of long-term wealth.</div>
+          <div class="highlight">The goal isn't to be emotionless — it's to recognize your emotions and ensure they don't override your strategy.</div>
+        `
+      },
+      {
+        title: 'FOMO & Market Cycles',
+        content: `
+          <p><span class="term">FOMO (Fear of Missing Out)</span> drives investors to chase hot stocks, sectors, or trends after they've already risen significantly. It's one of the most destructive forces in investing.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">The Market Cycle of Emotions</h4>
+          <ul>
+            <li><span class="term">Optimism</span> → <span class="term">Excitement</span> → <span class="term">Thrill</span> → <span class="term">Euphoria</span> (maximum financial risk!)</li>
+            <li><span class="term">Anxiety</span> → <span class="term">Denial</span> → <span class="term">Fear</span> → <span class="term">Panic</span> (maximum financial opportunity!)</li>
+            <li><span class="term">Capitulation</span> → <span class="term">Depression</span> → <span class="term">Hope</span> → <span class="term">Relief</span></li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Protecting Against FOMO</h4>
+          <ul>
+            <li>If everyone is talking about a stock, you're probably late</li>
+            <li>Stick to your investment criteria regardless of hype</li>
+            <li>Remember: there's always another opportunity</li>
+            <li>The best investors spend most of their time waiting, not trading</li>
+          </ul>
+          <div class="highlight">"The stock market is a device for transferring money from the impatient to the patient." — Warren Buffett</div>
+        `
+      }
+    ],
+    quiz: [
+      { q: 'What is loss aversion?', opts: ['Fear of investing at all', 'Losses feel ~2x more painful than equivalent gains feel good', 'A strategy to avoid all losses', 'A type of insurance for investments'], ans: 1, explain: 'Loss aversion means the psychological pain of losing $100 is roughly twice as strong as the pleasure of gaining $100, causing investors to hold losing positions too long.' },
+      { q: 'When is the point of "maximum financial risk" in the emotional cycle?', opts: ['During panic selling', 'At the point of euphoria', 'During depression', 'At the point of hope'], ans: 1, explain: 'Euphoria represents maximum financial risk because everyone is buying and prices are at their highest. It\'s when most people feel the most confident — right before a potential crash.' },
+      { q: 'Which is the BEST approach to emotional discipline in investing?', opts: ['Check your portfolio every hour', 'Follow social media stock tips', 'Have a written investment plan and stick to it', 'Make decisions based on gut feeling'], ans: 2, explain: 'Having a written plan with clear criteria for buying, selling, and risk limits helps prevent emotional decision-making during market turbulence.' },
+      { q: 'What is confirmation bias?', opts: ['Confirming trades before executing', 'Seeking information that supports your existing beliefs', 'Getting a second opinion on investments', 'Verifying stock prices are accurate'], ans: 1, explain: 'Confirmation bias is the tendency to seek out and favor information that confirms what you already believe, while ignoring contradicting evidence.' }
+    ]
+  }
+];
+
+// Learning Hub state — persisted to localStorage
+let learnState = JSON.parse(localStorage.getItem('ie_learn') || '{}');
+function saveLearnState() { localStorage.setItem('ie_learn', JSON.stringify(learnState)); }
+
+function getTopicProgress(topicId) {
+  const data = learnState[topicId] || {};
+  const topic = LEARN_TOPICS.find(t => t.id === topicId);
+  if (!topic) return { lessonsRead: 0, total: topic?.lessons.length || 0, quizScore: null, quizDone: false };
+  const lessonsRead = (data.lessonsRead || []).length;
+  return {
+    lessonsRead,
+    total: topic.lessons.length,
+    quizScore: data.quizScore ?? null,
+    quizDone: data.quizDone || false,
+    pct: Math.round(((lessonsRead + (data.quizDone ? 1 : 0)) / (topic.lessons.length + 1)) * 100)
+  };
+}
+
+function markLessonRead(topicId, lessonIdx) {
+  if (!learnState[topicId]) learnState[topicId] = {};
+  if (!learnState[topicId].lessonsRead) learnState[topicId].lessonsRead = [];
+  if (!learnState[topicId].lessonsRead.includes(lessonIdx)) {
+    learnState[topicId].lessonsRead.push(lessonIdx);
+    saveLearnState();
+  }
+}
+
+function renderLearn() {
+  const el = document.getElementById('tab-learn');
+  // Calculate overall stats
+  let totalLessons = 0, completedLessons = 0, totalQuizzes = LEARN_TOPICS.length, completedQuizzes = 0, totalScore = 0;
+  LEARN_TOPICS.forEach(t => {
+    totalLessons += t.lessons.length;
+    const p = getTopicProgress(t.id);
+    completedLessons += p.lessonsRead;
+    if (p.quizDone) { completedQuizzes++; totalScore += p.quizScore; }
+  });
+  const overallPct = Math.round(((completedLessons + completedQuizzes) / (totalLessons + totalQuizzes)) * 100);
+
+  el.innerHTML = `
+    <div class="section-title"><h2>Learning Hub</h2><p>Master investing concepts at your own pace</p></div>
+    <div class="learn-stats">
+      <div class="learn-stat-card">
+        <div class="learn-stat-num" style="color:var(--green)">${overallPct}%</div>
+        <div class="learn-stat-label">Overall Progress</div>
+      </div>
+      <div class="learn-stat-card">
+        <div class="learn-stat-num">${completedLessons}<span style="font-size:14px;color:var(--faint)">/${totalLessons}</span></div>
+        <div class="learn-stat-label">Lessons Completed</div>
+      </div>
+      <div class="learn-stat-card">
+        <div class="learn-stat-num">${completedQuizzes}<span style="font-size:14px;color:var(--faint)">/${totalQuizzes}</span></div>
+        <div class="learn-stat-label">Quizzes Passed</div>
+      </div>
+      <div class="learn-stat-card">
+        <div class="learn-stat-num">${completedQuizzes > 0 ? Math.round(totalScore / completedQuizzes) + '%' : '—'}</div>
+        <div class="learn-stat-label">Avg Quiz Score</div>
+      </div>
+    </div>
+    <div class="learn-grid">
+      ${LEARN_TOPICS.map(t => {
+        const p = getTopicProgress(t.id);
+        return `
+          <div class="learn-topic-card ${p.pct === 100 ? 'completed-card' : ''}" onclick="openTopic('${t.id}')">
+            <div class="learn-topic-icon" style="background:${t.iconBg}">${t.icon}</div>
+            <h3>${t.title}</h3>
+            <p>${t.desc}</p>
+            <div class="learn-topic-meta">
+              <span class="learn-difficulty diff-${t.difficulty}">${t.difficulty}</span>
+              <span class="learn-lesson-count">${t.lessons.length} lessons + quiz</span>
+            </div>
+            <div class="learn-progress-bar"><div class="learn-progress-fill" style="width:${p.pct}%"></div></div>
+            ${p.pct === 100 ? '<div style="position:absolute;top:12px;right:12px;font-size:18px">✅</div>' : ''}
+          </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function openTopic(topicId, lessonIdx = 0) {
+  const topic = LEARN_TOPICS.find(t => t.id === topicId);
+  if (!topic) return;
+  markLessonRead(topicId, lessonIdx);
+  const lesson = topic.lessons[lessonIdx];
+  const p = getTopicProgress(topicId);
+  const isRead = (learnState[topicId]?.lessonsRead || []).includes(lessonIdx);
+
+  const el = document.getElementById('tab-learn');
+  el.innerHTML = `
+    <div class="learn-detail">
+      <button class="learn-back" onclick="renderLearn()">← Back to Topics</button>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+        <span style="font-size:28px">${topic.icon}</span>
+        <div>
+          <h2 style="font-size:20px;font-weight:800;color:var(--text)">${topic.title}</h2>
+          <p style="font-size:12px;color:var(--faint)">${p.lessonsRead} of ${p.total} lessons completed</p>
+        </div>
+      </div>
+      <div class="learn-progress-bar" style="margin:12px 0 20px"><div class="learn-progress-fill" style="width:${p.pct}%"></div></div>
+
+      <!-- Lesson navigation -->
+      <div class="filter-row" style="margin-bottom:16px">
+        ${topic.lessons.map((l, i) => {
+          const read = (learnState[topicId]?.lessonsRead || []).includes(i);
+          return `<button class="filter-btn ${i === lessonIdx ? 'active' : ''}" onclick="openTopic('${topicId}',${i})" style="position:relative">
+            ${read ? '✓ ' : ''}${i + 1}. ${l.title}
+          </button>`;
+        }).join('')}
+        <button class="filter-btn ${false ? 'active' : ''}" onclick="startQuiz('${topicId}')" style="background:${p.quizDone ? 'var(--green-bg)' : '#f59e0b18'};color:${p.quizDone ? 'var(--green)' : 'var(--amber)'};font-weight:700">
+          ${p.quizDone ? '✓ Quiz ' + p.quizScore + '%' : '📝 Take Quiz'}
+        </button>
+      </div>
+
+      <!-- Lesson content -->
+      <div class="learn-section">
+        <h3>${lesson.title}</h3>
+        ${lesson.content}
+      </div>
+
+      <!-- Navigation buttons -->
+      <div class="learn-nav-btns">
+        ${lessonIdx > 0 ? `<button class="learn-nav-btn secondary" onclick="openTopic('${topicId}',${lessonIdx - 1})">← Previous</button>` : ''}
+        ${lessonIdx < topic.lessons.length - 1
+          ? `<button class="learn-nav-btn primary" onclick="openTopic('${topicId}',${lessonIdx + 1})">Next Lesson →</button>`
+          : `<button class="learn-nav-btn primary" onclick="startQuiz('${topicId}')">Take the Quiz →</button>`
+        }
+      </div>
+    </div>
+  `;
+  el.parentElement.scrollTop = 0;
+}
+
+let quizState = {};
+function startQuiz(topicId) {
+  const topic = LEARN_TOPICS.find(t => t.id === topicId);
+  if (!topic) return;
+  quizState = { topicId, current: 0, answers: [], showingFeedback: false };
+  renderQuizQuestion();
+}
+
+function renderQuizQuestion() {
+  const topic = LEARN_TOPICS.find(t => t.id === quizState.topicId);
+  const el = document.getElementById('tab-learn');
+  const q = topic.quiz[quizState.current];
+  const total = topic.quiz.length;
+  const idx = quizState.current;
+
+  el.innerHTML = `
+    <div class="learn-detail">
+      <button class="learn-back" onclick="openTopic('${quizState.topicId}')">← Back to ${topic.title}</button>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <span style="font-size:28px">📝</span>
+        <div>
+          <h2 style="font-size:20px;font-weight:800;color:var(--text)">${topic.title} Quiz</h2>
+          <p style="font-size:12px;color:var(--faint)">Test your knowledge</p>
+        </div>
+      </div>
+      <div class="learn-progress-bar" style="margin-bottom:20px">
+        <div class="learn-progress-fill" style="width:${Math.round((idx / total) * 100)}%"></div>
+      </div>
+      <div class="quiz-container">
+        <div class="quiz-header">
+          <span class="quiz-progress">Question ${idx + 1} of ${total}</span>
+          <span style="font-size:12px;color:var(--faint)">${topic.difficulty}</span>
+        </div>
+        <div class="quiz-question">${q.q}</div>
+        <div class="quiz-options">
+          ${q.opts.map((opt, i) => `
+            <button class="quiz-option" onclick="answerQuiz(${i})" id="quiz-opt-${i}">${opt}</button>
+          `).join('')}
+        </div>
+        <div id="quiz-feedback"></div>
+        <div id="quiz-next" style="margin-top:16px;display:none">
+          <button class="learn-nav-btn primary" onclick="${idx < total - 1 ? 'nextQuizQuestion()' : 'finishQuiz()'}">${idx < total - 1 ? 'Next Question →' : 'See Results →'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+  el.parentElement.scrollTop = 0;
+}
+
+function answerQuiz(choice) {
+  if (quizState.showingFeedback) return;
+  quizState.showingFeedback = true;
+  const topic = LEARN_TOPICS.find(t => t.id === quizState.topicId);
+  const q = topic.quiz[quizState.current];
+  const correct = choice === q.ans;
+  quizState.answers.push(correct);
+
+  // Highlight selected and correct
+  q.opts.forEach((_, i) => {
+    const btn = document.getElementById('quiz-opt-' + i);
+    if (i === q.ans) btn.classList.add('correct');
+    else if (i === choice && !correct) btn.classList.add('wrong');
+    if (i !== choice && i !== q.ans) btn.classList.add('dimmed');
+  });
+
+  const fb = document.getElementById('quiz-feedback');
+  fb.innerHTML = `
+    <div class="quiz-feedback ${correct ? 'correct-fb' : 'wrong-fb'}">
+      <strong>${correct ? '✓ Correct!' : '✗ Incorrect'}</strong><br>
+      ${q.explain}
+    </div>
+  `;
+  document.getElementById('quiz-next').style.display = 'block';
+}
+
+function nextQuizQuestion() {
+  quizState.current++;
+  quizState.showingFeedback = false;
+  renderQuizQuestion();
+}
+
+function finishQuiz() {
+  const topic = LEARN_TOPICS.find(t => t.id === quizState.topicId);
+  const correct = quizState.answers.filter(a => a).length;
+  const total = topic.quiz.length;
+  const pct = Math.round((correct / total) * 100);
+  const passed = pct >= 60;
+
+  if (passed) {
+    if (!learnState[quizState.topicId]) learnState[quizState.topicId] = {};
+    learnState[quizState.topicId].quizDone = true;
+    learnState[quizState.topicId].quizScore = pct;
+    saveLearnState();
+  }
+
+  const el = document.getElementById('tab-learn');
+  el.innerHTML = `
+    <div class="learn-detail">
+      <button class="learn-back" onclick="renderLearn()">← Back to Topics</button>
+      <div class="quiz-container">
+        <div class="quiz-score">
+          <span style="font-size:48px">${passed ? '🎉' : '📚'}</span>
+          <h3>${topic.title} Quiz</h3>
+          <div class="score-num" style="color:${passed ? 'var(--green)' : 'var(--red)'}">${pct}%</div>
+          <p>${correct} out of ${total} correct — ${passed ? 'Great job! You passed!' : 'You need 60% to pass. Review the lessons and try again!'}</p>
+          <div style="display:flex;gap:10px;justify-content:center">
+            <button class="learn-nav-btn secondary" onclick="openTopic('${quizState.topicId}')">Review Lessons</button>
+            ${!passed ? `<button class="learn-nav-btn primary" onclick="startQuiz('${quizState.topicId}')">Retry Quiz</button>` : ''}
+            <button class="learn-nav-btn primary" onclick="renderLearn()">All Topics</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  el.parentElement.scrollTop = 0;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
