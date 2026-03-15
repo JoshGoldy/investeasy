@@ -702,7 +702,7 @@ button{cursor:pointer}
     </button>
     <button data-tab="saved">
       <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
-      <span>Saved</span><div class="nav-dot" id="saved-badge" style="display:none;width:7px;height:7px;background:#10b981;border-radius:50%;position:absolute;top:8px;right:16px"></div>
+      <span>Saved Reports</span><div class="nav-dot" id="saved-badge" style="display:none;width:7px;height:7px;background:#10b981;border-radius:50%;position:absolute;top:8px;right:16px"></div>
     </button>
     <button data-tab="learn">
       <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
@@ -731,7 +731,8 @@ button{cursor:pointer}
         <label class="form-label">Username</label>
         <input id="modal-username" class="form-input" type="text" placeholder="@username" maxlength="30">
       </div>
-      <button class="modal-save-btn" onclick="saveProfile()">Save Changes</button>
+      <div id="edit-profile-error" class="auth-error"></div>
+      <button class="modal-save-btn" id="edit-profile-save-btn" onclick="saveProfile()">Save Changes</button>
       <button class="modal-cancel" onclick="closeEditModal()">Cancel</button>
     </div>
   </div>
@@ -772,21 +773,70 @@ function monthLabels(n) {
 function yearLabels() { return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; }
 
 const RAW_MARKETS = [
-  { name:'S&P 500', ticker:'SPX', val:5204.34, chg:+0.87, mktcap:'—', pe:'24.1', vol:'3.2B', hi52:'5264.85', lo52:'4103.78', sector:'Index' },
-  { name:'NASDAQ', ticker:'NDX', val:18265.11, chg:+1.23, mktcap:'—', pe:'31.4', vol:'2.8B', hi52:'18465.20', lo52:'12543.86', sector:'Index' },
-  { name:'Dow Jones', ticker:'DJI', val:38906.72, chg:-0.14, mktcap:'—', pe:'20.3', vol:'1.9B', hi52:'39282.00', lo52:'32327.20', sector:'Index' },
-  { name:'FTSE 100', ticker:'UKX', val:7952.62, chg:+0.32, mktcap:'—', pe:'12.8', vol:'890M', hi52:'8047.00', lo52:'7215.76', sector:'Index' },
-  { name:'Apple', ticker:'AAPL', val:189.30, chg:+0.92, mktcap:'$2.93T', pe:'28.4', vol:'58M', hi52:'199.62', lo52:'143.90', sector:'Tech' },
-  { name:'Microsoft', ticker:'MSFT', val:415.80, chg:+1.45, mktcap:'$3.09T', pe:'36.2', vol:'22M', hi52:'430.82', lo52:'309.45', sector:'Tech' },
-  { name:'NVIDIA', ticker:'NVDA', val:880.50, chg:+3.20, mktcap:'$2.17T', pe:'72.1', vol:'45M', hi52:'974.00', lo52:'222.97', sector:'Tech' },
-  { name:'Tesla', ticker:'TSLA', val:178.20, chg:-1.80, mktcap:'$567B', pe:'44.3', vol:'92M', hi52:'299.29', lo52:'152.37', sector:'Auto' },
-  { name:'Amazon', ticker:'AMZN', val:182.70, chg:+0.67, mktcap:'$1.90T', pe:'58.7', vol:'48M', hi52:'189.77', lo52:'118.35', sector:'Tech' },
-  { name:'Gold', ticker:'XAU', val:2312.40, chg:+0.55, mktcap:'—', pe:'—', vol:'182K', hi52:'2431.00', lo52:'1810.46', sector:'Commodity' },
-  { name:'Oil (WTI)', ticker:'CL1', val:82.14, chg:-1.02, mktcap:'—', pe:'—', vol:'1.1M', hi52:'95.03', lo52:'63.64', sector:'Commodity' },
-  { name:'BTC/USD',   ticker:'BTC',  val:67842,   chg:+2.14,  mktcap:'$1.33T', pe:'—', vol:'$32B',  hi52:'73794', lo52:'24930',  sector:'Crypto' },
-  { name:'Ethereum',  ticker:'ETH',  val:3892.10,  chg:+3.45,  mktcap:'$467B',  pe:'—', vol:'$18B',  hi52:'4090',  lo52:'1520',   sector:'Crypto' },
-  { name:'Solana',    ticker:'SOL',  val:172.40,   chg:+5.10,  mktcap:'$80B',   pe:'—', vol:'$4.1B', hi52:'210',   lo52:'19.23',  sector:'Crypto' },
-  { name:'XRP/USD',   ticker:'XRP',  val:0.5240,   chg:+1.23,  mktcap:'$29B',   pe:'—', vol:'$1.2B', hi52:'0.79',  lo52:'0.36',   sector:'Crypto' },
+  // ── Indices ──────────────────────────────────────────────────────────────
+  { name:'S&P 500',      ticker:'SPX',  val:5204.34,  chg:+0.87,  mktcap:'—',      pe:'24.1', vol:'3.2B',  hi52:'5264.85', lo52:'4103.78', sector:'Index' },
+  { name:'NASDAQ 100',   ticker:'NDX',  val:18265.11, chg:+1.23,  mktcap:'—',      pe:'31.4', vol:'2.8B',  hi52:'18465.20',lo52:'12543.86',sector:'Index' },
+  { name:'Dow Jones',    ticker:'DJI',  val:38906.72, chg:-0.14,  mktcap:'—',      pe:'20.3', vol:'1.9B',  hi52:'39282.00',lo52:'32327.20',sector:'Index' },
+  { name:'FTSE 100',     ticker:'UKX',  val:7952.62,  chg:+0.32,  mktcap:'—',      pe:'12.8', vol:'890M',  hi52:'8047.00', lo52:'7215.76', sector:'Index' },
+  { name:'Nikkei 225',   ticker:'N225', val:38487.90, chg:+0.56,  mktcap:'—',      pe:'18.2', vol:'1.4B',  hi52:'41087.75',lo52:'30487.45',sector:'Index' },
+  { name:'DAX',          ticker:'DAX',  val:17837.40, chg:+0.41,  mktcap:'—',      pe:'16.8', vol:'980M',  hi52:'18039.00',lo52:'14630.22',sector:'Index' },
+  { name:'Hang Seng',    ticker:'HSI',  val:16512.92, chg:-0.68,  mktcap:'—',      pe:'9.1',  vol:'1.2B',  hi52:'22700.85',lo52:'14794.16',sector:'Index' },
+  { name:'ASX 200',      ticker:'AXJO', val:7748.20,  chg:+0.28,  mktcap:'—',      pe:'17.4', vol:'740M',  hi52:'7910.50', lo52:'6904.90', sector:'Index' },
+  // ── Tech ─────────────────────────────────────────────────────────────────
+  { name:'Apple',        ticker:'AAPL', val:189.30,   chg:+0.92,  mktcap:'$2.93T', pe:'28.4', vol:'58M',   hi52:'199.62', lo52:'143.90',  sector:'Tech' },
+  { name:'Microsoft',    ticker:'MSFT', val:415.80,   chg:+1.45,  mktcap:'$3.09T', pe:'36.2', vol:'22M',   hi52:'430.82', lo52:'309.45',  sector:'Tech' },
+  { name:'NVIDIA',       ticker:'NVDA', val:880.50,   chg:+3.20,  mktcap:'$2.17T', pe:'72.1', vol:'45M',   hi52:'974.00', lo52:'222.97',  sector:'Tech' },
+  { name:'Amazon',       ticker:'AMZN', val:182.70,   chg:+0.67,  mktcap:'$1.90T', pe:'58.7', vol:'48M',   hi52:'189.77', lo52:'118.35',  sector:'Tech' },
+  { name:'Alphabet',     ticker:'GOOGL',val:178.10,   chg:+1.10,  mktcap:'$2.21T', pe:'26.3', vol:'25M',   hi52:'193.31', lo52:'115.83',  sector:'Tech' },
+  { name:'Meta',         ticker:'META', val:490.30,   chg:+2.05,  mktcap:'$1.25T', pe:'32.8', vol:'18M',   hi52:'531.49', lo52:'274.38',  sector:'Tech' },
+  { name:'Netflix',      ticker:'NFLX', val:627.80,   chg:+0.83,  mktcap:'$270B',  pe:'44.2', vol:'4.2M',  hi52:'700.06', lo52:'344.73',  sector:'Tech' },
+  { name:'AMD',          ticker:'AMD',  val:178.40,   chg:+2.60,  mktcap:'$288B',  pe:'56.3', vol:'58M',   hi52:'227.30', lo52:'93.12',   sector:'Tech' },
+  { name:'Broadcom',     ticker:'AVGO', val:1340.00,  chg:+1.40,  mktcap:'$620B',  pe:'28.1', vol:'3.1M',  hi52:'1438.17',lo52:'629.00',  sector:'Tech' },
+  { name:'Salesforce',   ticker:'CRM',  val:302.40,   chg:-0.55,  mktcap:'$292B',  pe:'42.1', vol:'5.4M',  hi52:'326.38', lo52:'193.61',  sector:'Tech' },
+  { name:'Adobe',        ticker:'ADBE', val:569.20,   chg:+0.78,  mktcap:'$256B',  pe:'28.7', vol:'3.3M',  hi52:'638.25', lo52:'411.07',  sector:'Tech' },
+  { name:'Intel',        ticker:'INTC', val:43.10,    chg:-1.20,  mktcap:'$183B',  pe:'29.4', vol:'48M',   hi52:'51.28',  lo52:'29.30',   sector:'Tech' },
+  { name:'Tesla',        ticker:'TSLA', val:178.20,   chg:-1.80,  mktcap:'$567B',  pe:'44.3', vol:'92M',   hi52:'299.29', lo52:'152.37',  sector:'Auto' },
+  { name:'Toyota',       ticker:'TM',   val:212.60,   chg:+0.34,  mktcap:'$280B',  pe:'10.2', vol:'1.8M',  hi52:'232.04', lo52:'143.48',  sector:'Auto' },
+  // ── Finance ──────────────────────────────────────────────────────────────
+  { name:'JPMorgan',     ticker:'JPM',  val:195.40,   chg:+0.60,  mktcap:'$561B',  pe:'11.8', vol:'9.2M',  hi52:'205.88', lo52:'129.12',  sector:'Finance' },
+  { name:'Goldman Sachs',ticker:'GS',   val:411.80,   chg:+0.43,  mktcap:'$137B',  pe:'14.2', vol:'2.4M',  hi52:'432.07', lo52:'287.28',  sector:'Finance' },
+  { name:'Visa',         ticker:'V',    val:277.50,   chg:+0.55,  mktcap:'$570B',  pe:'30.1', vol:'6.0M',  hi52:'290.96', lo52:'224.76',  sector:'Finance' },
+  { name:'Mastercard',   ticker:'MA',   val:458.20,   chg:+0.72,  mktcap:'$428B',  pe:'36.4', vol:'3.2M',  hi52:'476.60', lo52:'352.87',  sector:'Finance' },
+  { name:'Berkshire B',  ticker:'BRK.B',val:368.10,   chg:+0.18,  mktcap:'$810B',  pe:'8.6',  vol:'3.8M',  hi52:'384.89', lo52:'302.46',  sector:'Finance' },
+  // ── Healthcare ───────────────────────────────────────────────────────────
+  { name:'UnitedHealth',  ticker:'UNH', val:497.30,   chg:+0.30,  mktcap:'$457B',  pe:'22.3', vol:'3.1M',  hi52:'554.42', lo52:'445.12',  sector:'Healthcare' },
+  { name:'J&J',           ticker:'JNJ', val:152.60,   chg:-0.40,  mktcap:'$366B',  pe:'15.4', vol:'7.5M',  hi52:'175.92', lo52:'144.95',  sector:'Healthcare' },
+  { name:'Pfizer',        ticker:'PFE', val:28.40,    chg:-0.70,  mktcap:'$160B',  pe:'13.2', vol:'29M',   hi52:'42.47',  lo52:'25.20',   sector:'Healthcare' },
+  // ── Energy ───────────────────────────────────────────────────────────────
+  { name:'ExxonMobil',   ticker:'XOM',  val:112.80,   chg:+0.45,  mktcap:'$449B',  pe:'12.8', vol:'16M',   hi52:'123.75', lo52:'95.77',   sector:'Energy' },
+  { name:'Chevron',      ticker:'CVX',  val:152.30,   chg:-0.30,  mktcap:'$290B',  pe:'12.1', vol:'9.7M',  hi52:'176.09', lo52:'139.62',  sector:'Energy' },
+  // ── Consumer ─────────────────────────────────────────────────────────────
+  { name:'Walmart',      ticker:'WMT',  val:60.20,    chg:+0.55,  mktcap:'$483B',  pe:'28.4', vol:'18M',   hi52:'67.09',  lo52:'44.97',   sector:'Consumer' },
+  { name:'Coca-Cola',    ticker:'KO',   val:59.40,    chg:-0.15,  mktcap:'$256B',  pe:'22.1', vol:'12M',   hi52:'64.99',  lo52:'51.98',   sector:'Consumer' },
+  { name:"McDonald's",   ticker:'MCD',  val:295.60,   chg:+0.28,  mktcap:'$214B',  pe:'23.7', vol:'3.2M',  hi52:'317.90', lo52:'245.95',  sector:'Consumer' },
+  { name:'Nike',         ticker:'NKE',  val:97.40,    chg:-0.82,  mktcap:'$149B',  pe:'26.5', vol:'9.8M',  hi52:'123.24', lo52:'88.66',   sector:'Consumer' },
+  // ── Industrial ───────────────────────────────────────────────────────────
+  { name:'Boeing',       ticker:'BA',   val:188.40,   chg:-1.40,  mktcap:'$116B',  pe:'—',    vol:'7.6M',  hi52:'267.54', lo52:'159.00',  sector:'Industrial' },
+  { name:'Caterpillar',  ticker:'CAT',  val:348.80,   chg:+0.92,  mktcap:'$175B',  pe:'17.3', vol:'2.3M',  hi52:'386.60', lo52:'219.63',  sector:'Industrial' },
+  // ── Commodities ──────────────────────────────────────────────────────────
+  { name:'Gold',         ticker:'XAU',  val:2312.40,  chg:+0.55,  mktcap:'—',      pe:'—',    vol:'182K',  hi52:'2431.00',lo52:'1810.46', sector:'Commodity' },
+  { name:'Silver',       ticker:'XAG',  val:27.14,    chg:+0.82,  mktcap:'—',      pe:'—',    vol:'380K',  hi52:'32.50',  lo52:'20.68',   sector:'Commodity' },
+  { name:'Oil (WTI)',    ticker:'CL1',  val:82.14,    chg:-1.02,  mktcap:'—',      pe:'—',    vol:'1.1M',  hi52:'95.03',  lo52:'63.64',   sector:'Commodity' },
+  { name:'Natural Gas',  ticker:'NG1',  val:1.82,     chg:-2.40,  mktcap:'—',      pe:'—',    vol:'2.4M',  hi52:'3.64',   lo52:'1.54',    sector:'Commodity' },
+  { name:'Copper',       ticker:'HG1',  val:4.05,     chg:+1.10,  mktcap:'—',      pe:'—',    vol:'320K',  hi52:'4.35',   lo52:'3.52',    sector:'Commodity' },
+  { name:'Platinum',     ticker:'PL1',  val:962.00,   chg:-0.55,  mktcap:'—',      pe:'—',    vol:'78K',   hi52:'1096.40',lo52:'838.80',  sector:'Commodity' },
+  { name:'Wheat',        ticker:'ZW1',  val:559.50,   chg:-0.35,  mktcap:'—',      pe:'—',    vol:'210K',  hi52:'652.00', lo52:'490.25',  sector:'Commodity' },
+  // ── Crypto ───────────────────────────────────────────────────────────────
+  { name:'Bitcoin',      ticker:'BTC',  val:67842,    chg:+2.14,  mktcap:'$1.33T', pe:'—',    vol:'$32B',  hi52:'73794',  lo52:'24930',   sector:'Crypto' },
+  { name:'Ethereum',     ticker:'ETH',  val:3892.10,  chg:+3.45,  mktcap:'$467B',  pe:'—',    vol:'$18B',  hi52:'4090',   lo52:'1520',    sector:'Crypto' },
+  { name:'Solana',       ticker:'SOL',  val:172.40,   chg:+5.10,  mktcap:'$80B',   pe:'—',    vol:'$4.1B', hi52:'210',    lo52:'19.23',   sector:'Crypto' },
+  { name:'XRP',          ticker:'XRP',  val:0.5240,   chg:+1.23,  mktcap:'$29B',   pe:'—',    vol:'$1.2B', hi52:'0.79',   lo52:'0.36',    sector:'Crypto' },
+  { name:'BNB',          ticker:'BNB',  val:385.40,   chg:+1.80,  mktcap:'$58B',   pe:'—',    vol:'$890M', hi52:'432.00', lo52:'210.40',  sector:'Crypto' },
+  { name:'Cardano',      ticker:'ADA',  val:0.4820,   chg:+2.30,  mktcap:'$17B',   pe:'—',    vol:'$620M', hi52:'0.78',   lo52:'0.24',    sector:'Crypto' },
+  { name:'Dogecoin',     ticker:'DOGE', val:0.1480,   chg:+3.80,  mktcap:'$21B',   pe:'—',    vol:'$1.4B', hi52:'0.23',   lo52:'0.065',   sector:'Crypto' },
+  { name:'Avalanche',    ticker:'AVAX', val:37.20,    chg:+4.10,  mktcap:'$15B',   pe:'—',    vol:'$540M', hi52:'58.00',  lo52:'9.20',    sector:'Crypto' },
+  { name:'Chainlink',    ticker:'LINK', val:17.48,    chg:+2.90,  mktcap:'$10B',   pe:'—',    vol:'$480M', hi52:'21.50',  lo52:'5.80',    sector:'Crypto' },
+  { name:'Polygon',      ticker:'MATIC',val:0.8920,   chg:+1.50,  mktcap:'$8.2B',  pe:'—',    vol:'$370M', hi52:'1.29',   lo52:'0.49',    sector:'Crypto' },
 ];
 
 const TF_CONFIG = {
@@ -861,8 +911,31 @@ function fmtPrice(v) {
   return v.toFixed(2);
 }
 
+// Currency conversion — all market values stored in USD, converted on display
+const CURRENCY_CONFIG = {
+  USD: { symbol: '$',   rate: 1.00   },
+  GBP: { symbol: '£',   rate: 0.79   },
+  EUR: { symbol: '€',   rate: 0.92   },
+  JPY: { symbol: '¥',   rate: 151.5  },
+  CAD: { symbol: 'C$',  rate: 1.36   },
+  AUD: { symbol: 'A$',  rate: 1.53   },
+  ZAR: { symbol: 'R',   rate: 18.63  },
+};
+function curCfg() { return CURRENCY_CONFIG[loadSettings().currency] || CURRENCY_CONFIG.USD; }
+
 function fmtMoney(v) {
-  return '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (loadSettings().hideBalances) return '••••••';
+  const cfg = curCfg();
+  return cfg.symbol + (v * cfg.rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// Per-unit price with currency conversion (for avg cost / current price in portfolio)
+function fmtUnitPrice(v) {
+  if (loadSettings().hideBalances) return '••••';
+  const cfg = curCfg();
+  const c = v * cfg.rate;
+  if (c >= 10000) return cfg.symbol + c.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  return cfg.symbol + c.toFixed(2);
 }
 
 function escHtml(s) {
@@ -1204,18 +1277,26 @@ function renderMarkets(filter) {
   miniCharts = [];
 
   const fmap = {
-    All: () => true,
-    Indices: m => m.sector === 'Index',
-    Stocks: m => ['Tech','Auto'].includes(m.sector),
-    Crypto: m => m.sector === 'Crypto',
+    All:         () => true,
+    Indices:     m => m.sector === 'Index',
+    Stocks:      m => !['Index','Crypto','Commodity'].includes(m.sector),
+    Tech:        m => m.sector === 'Tech',
+    Finance:     m => m.sector === 'Finance',
+    Healthcare:  m => m.sector === 'Healthcare',
+    Crypto:      m => m.sector === 'Crypto',
     Commodities: m => m.sector === 'Commodity',
-    Watchlist: m => watchlistSet.has(m.ticker),
+    Watchlist:   m => watchlistSet.has(m.ticker),
   };
-  const shown = MARKETS.filter(fmap[marketsFilter] || (() => true));
-  const hero = MARKETS[0];
+  const shown  = MARKETS.filter(fmap[marketsFilter] || (() => true));
+  const hero   = MARKETS[0];
   const heroUp = hero.chg >= 0;
-  const filters = ['All','Indices','Stocks','Crypto','Commodities'];
+  const filters = ['All','Indices','Stocks','Tech','Finance','Healthcare','Crypto','Commodities'];
   if (currentUser) filters.push('Watchlist');
+
+  // Top movers: 3 biggest gainers + 3 biggest losers
+  const sorted    = [...MARKETS].sort((a,b) => b.chg - a.chg);
+  const topGain   = sorted.slice(0, 4);
+  const topLoss   = sorted.slice(-4).reverse();
 
   document.getElementById('tab-markets').innerHTML = `
     <div class="section-title"><h2>Markets</h2><p>Tap any asset for detailed charts & stats</p></div>
@@ -1235,8 +1316,24 @@ function renderMarkets(filter) {
       </div>
       <div class="hero-chart" id="hero-chart"></div>
     </div>
-    <div class="filter-row">
-      ${filters.map(f => `<button class="filter-btn ${marketsFilter===f?'active':''}" onclick="renderMarkets('${f}')">${f}</button>`).join('')}
+    <!-- Top Movers strip -->
+    <div style="margin-bottom:16px">
+      <p style="font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">🔥 Top Movers</p>
+      <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none">
+        ${topGain.map(m => `
+          <div onclick="openStockDetail(${MARKETS.indexOf(m)})" style="flex-shrink:0;background:var(--card);border:1px solid #10b98130;border-radius:12px;padding:8px 12px;cursor:pointer;min-width:90px">
+            <p style="font-size:10px;font-weight:700;color:var(--muted);font-family:var(--mono)">${m.ticker}</p>
+            <p style="font-size:12px;font-weight:800;color:#10b981;margin-top:2px">▲ ${m.chg}%</p>
+          </div>`).join('')}
+        ${topLoss.map(m => `
+          <div onclick="openStockDetail(${MARKETS.indexOf(m)})" style="flex-shrink:0;background:var(--card);border:1px solid #ef444430;border-radius:12px;padding:8px 12px;cursor:pointer;min-width:90px">
+            <p style="font-size:10px;font-weight:700;color:var(--muted);font-family:var(--mono)">${m.ticker}</p>
+            <p style="font-size:12px;font-weight:800;color:#ef4444;margin-top:2px">▼ ${Math.abs(m.chg)}%</p>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="filter-row" style="overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none">
+      ${filters.map(f => `<button class="filter-btn ${marketsFilter===f?'active':''}" style="white-space:nowrap;flex-shrink:0" onclick="renderMarkets('${f}')">${f}</button>`).join('')}
     </div>
     ${shown.length === 0 && marketsFilter === 'Watchlist' ? `
       <div style="text-align:center;padding:40px 20px">
@@ -2586,11 +2683,11 @@ function renderPortfolio() {
             </div>
             <div style="text-align:right">
               <p class="mono" style="font-weight:500;font-size:15px;color:var(--text)">${fmtMoney(val)}</p>
-              <span class="mono ${hUp?'up':'dn'}" style="font-size:12px;font-weight:700">${hUp?'▲':'▼'} $${Math.abs(gain).toFixed(2)} (${pct}%)</span>
+              <span class="mono ${hUp?'up':'dn'}" style="font-size:12px;font-weight:700">${hUp?'▲':'▼'} ${fmtMoney(Math.abs(gain))} (${pct}%)</span>
             </div>
           </div>
           <div class="holding-stats">
-            ${[{l:'Avg Cost',v:'$'+h.cost.toFixed(2)},{l:'Current',v:'$'+h.cur.toFixed(2)},{l:'Allocation',v:h.alloc+'%'}].map(s =>
+            ${[{l:'Avg Cost',v:fmtUnitPrice(h.cost)},{l:'Current',v:fmtUnitPrice(h.cur)},{l:'Allocation',v:h.alloc+'%'}].map(s =>
               `<div class="holding-stat"><p class="hl">${s.l}</p><p class="hv">${s.v}</p></div>`
             ).join('')}
           </div>
@@ -2737,7 +2834,7 @@ function renderDBPortfolio() {
           </div>
         </div>
         <div class="holding-stats">
-          ${[{l:'Shares',v:h.shares},{l:'Avg Cost',v:'$'+h.avg_cost.toFixed(2)},{l:'Current',v:'$'+h.cur.toFixed(2)}].map(s =>
+          ${[{l:'Units',v:h.shares},{l:'Avg Cost',v:fmtUnitPrice(h.avg_cost)},{l:'Current',v:fmtUnitPrice(h.cur)}].map(s =>
             `<div class="holding-stat"><p class="hl">${s.l}</p><p class="hv">${s.v}</p></div>`
           ).join('')}
         </div>
@@ -2772,18 +2869,10 @@ function renderDBPortfolio() {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const SETTINGS_DEFAULTS = {
-  name: 'Alex Johnson',
-  email: 'alex@example.com',
-  username: '@alexj',
-  notifications: true,
-  priceAlerts: true,
-  newsletter: false,
-  currency: 'USD',
-  defaultRisk: 'Moderate',
-  defaultHorizon: '1–5 years',
-  defaultSectors: 'Tech, Finance',
-  hideBalances: false,
-  compactView: false,
+  name: '', email: '', username: '',
+  notifications: true, priceAlerts: true, newsletter: false,
+  currency: 'USD', hideBalances: false,
+  defaultRisk: 'Moderate', defaultHorizon: '1–5 years', defaultSectors: 'Tech, Finance',
 };
 
 function loadSettings() {
@@ -2797,8 +2886,13 @@ function saveSettings(updates) {
   const current = loadSettings();
   const next = Object.assign(current, updates);
   localStorage.setItem('ie_settings', JSON.stringify(next));
-  saveSettingsToDB(updates); // sync to DB in background when logged in
+  saveSettingsToDB(updates);
   renderSettings();
+  // Re-render portfolio immediately when display-affecting settings change
+  if ('currency' in updates || 'hideBalances' in updates) {
+    const portTab = document.getElementById('tab-portfolio');
+    if (portTab && portTab.classList.contains('active')) renderPortfolio();
+  }
 }
 
 function getInitials(name) {
@@ -2812,10 +2906,12 @@ function getAvatarColor(name) {
 }
 
 function openEditModal() {
-  const s = loadSettings();
-  document.getElementById('modal-name').value = s.name;
-  document.getElementById('modal-email').value = s.email;
-  document.getElementById('modal-username').value = s.username;
+  // Always prefer live currentUser data over stale localStorage values
+  document.getElementById('modal-name').value     = currentUser ? (currentUser.name     || '') : '';
+  document.getElementById('modal-email').value    = currentUser ? (currentUser.email    || '') : '';
+  document.getElementById('modal-username').value = currentUser ? (currentUser.username || '') : '';
+  const errEl = document.getElementById('edit-profile-error');
+  if (errEl) { errEl.textContent = ''; errEl.classList.remove('show'); }
   document.getElementById('edit-profile-modal').classList.remove('hidden');
 }
 
@@ -2826,19 +2922,32 @@ function closeEditModal() {
 async function saveProfile() {
   const name     = document.getElementById('modal-name').value.trim();
   const email    = document.getElementById('modal-email').value.trim();
-  const username = document.getElementById('modal-username').value.trim();
-  if (!name) { document.getElementById('modal-name').focus(); return; }
+  const username = document.getElementById('modal-username').value.trim().replace(/^@/, '');
+  const errEl    = document.getElementById('edit-profile-error');
+  const saveBtn  = document.getElementById('edit-profile-save-btn');
 
-  // Try DB first if logged in
+  const showErr = msg => { errEl.textContent = msg; errEl.classList.add('show'); };
+  errEl.classList.remove('show');
+
+  if (!name)  { showErr('Name is required.'); document.getElementById('modal-name').focus(); return; }
+  if (!email) { showErr('Email is required.'); return; }
+  if (!username) { showErr('Username is required.'); return; }
+
+  saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+
   if (currentUser) {
     const result = await saveProfileToDB(name, email, username);
     if (result !== true) {
-      alert(result); // show DB error (e.g. email taken)
+      showErr(result);
+      saveBtn.disabled = false; saveBtn.textContent = 'Save Changes';
       return;
     }
   }
   saveSettings({ name, email, username });
+  saveBtn.disabled = false; saveBtn.textContent = 'Save Changes';
   closeEditModal();
+  renderSettings();
+  updateHeaderUser();
 }
 
 // Close modal on backdrop click
@@ -2917,8 +3026,8 @@ function renderSettings() {
             <div><p class="settings-row-title">Currency</p><p class="settings-row-sub">Base display currency</p></div>
           </div>
           <select class="settings-select" onchange="saveSettings({currency:this.value})">
-            ${['USD','GBP','EUR','JPY','CAD','AUD'].map(c =>
-              `<option value="${c}" ${s.currency===c?'selected':''}>${c}</option>`
+            ${['USD','GBP','EUR','JPY','CAD','AUD','ZAR'].map(c =>
+              `<option value="${c}" ${s.currency===c?'selected':''}>${c}${c==='ZAR'?' (Rand)':''}</option>`
             ).join('')}
           </select>
         </div>
@@ -2929,16 +3038,6 @@ function renderSettings() {
           </div>
           <label class="toggle">
             <input type="checkbox" ${s.hideBalances?'checked':''} onchange="saveSettings({hideBalances:this.checked})">
-            <div class="toggle-track"></div><div class="toggle-thumb"></div>
-          </label>
-        </div>
-        <div class="settings-row">
-          <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:#06b6d414">⚡</div>
-            <div><p class="settings-row-title">Compact View</p><p class="settings-row-sub">Denser layout for more content</p></div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" ${s.compactView?'checked':''} onchange="saveSettings({compactView:this.checked})">
             <div class="toggle-track"></div><div class="toggle-thumb"></div>
           </label>
         </div>
