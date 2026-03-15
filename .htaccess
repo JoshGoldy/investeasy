@@ -1,5 +1,10 @@
 # ── InvestEasy .htaccess ─────────────────────────────────────
 
+# ── PHP HANDLER (EasyApache 4 / cPanel PHP 8.4) ──────────────
+<FilesMatch "\.php$">
+    SetHandler application/x-httpd-ea-php84
+</FilesMatch>
+
 # ── SECURITY ─────────────────────────────────────────────────
 
 # Block access to hidden files (.git, .env, .htpasswd, etc.)
