@@ -353,7 +353,12 @@ button{cursor:pointer}
   display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
 .modal-overlay.hidden{display:none}
 .modal-sheet{background:var(--bg);border-radius:24px 24px 0 0;padding:20px 20px 36px;
-  width:100%;max-width:520px;animation:slideUp 0.3s ease}
+  width:100%;max-width:520px;animation:slideUp 0.3s ease;max-height:90vh;overflow-y:auto}
+.quick-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.quick-chip{display:inline-flex;align-items:center;gap:3px;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:none;line-height:1;transition:opacity .15s;white-space:nowrap}.quick-chip:active{opacity:.65}
+.qc-commodity{background:#fef3c7;color:#92400e}.qc-crypto{background:#f3e8ff;color:#6d28d9}
+.qc-etf{background:#dbeafe;color:#1e40af}.qc-stock{background:#dcfce7;color:#166534}
+.import-port-btn{font-size:11px;font-weight:700;color:var(--green);background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:2px 0;flex-shrink:0}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .modal-handle{width:36px;height:4px;border-radius:2px;background:var(--border2);margin:0 auto 20px}
 .modal-title{font-size:17px;font-weight:800;color:var(--text);margin-bottom:18px}
@@ -561,22 +566,63 @@ button{cursor:pointer}
   <div id="add-holding-modal" class="modal-overlay hidden">
     <div class="modal-sheet">
       <div class="modal-handle"></div>
-      <p class="modal-title">Add / Update Holding</p>
+      <p class="modal-title">Add Holding</p>
+
+      <!-- Quick-pick chips by asset type -->
+      <div class="modal-field">
+        <label class="form-label">Quick Add</label>
+
+        <p style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Commodities</p>
+        <div class="quick-chips">
+          <button class="quick-chip qc-commodity" onclick="holdingQuickPick('GLD','Gold (SPDR ETF)')">🥇 Gold</button>
+          <button class="quick-chip qc-commodity" onclick="holdingQuickPick('SLV','Silver (iShares ETF)')">🥈 Silver</button>
+          <button class="quick-chip qc-commodity" onclick="holdingQuickPick('USO','US Oil Fund (USO)')">🛢 Oil</button>
+          <button class="quick-chip qc-commodity" onclick="holdingQuickPick('PDBC','Invesco Commodity ETF')">📦 Commodities</button>
+          <button class="quick-chip qc-commodity" onclick="holdingQuickPick('PLTM','Platinum ETF')">⬡ Platinum</button>
+        </div>
+
+        <p style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 4px">Crypto</p>
+        <div class="quick-chips">
+          <button class="quick-chip qc-crypto" onclick="holdingQuickPick('BTC','Bitcoin')">₿ Bitcoin</button>
+          <button class="quick-chip qc-crypto" onclick="holdingQuickPick('ETH','Ethereum')">Ξ Ethereum</button>
+          <button class="quick-chip qc-crypto" onclick="holdingQuickPick('SOL','Solana')">◎ Solana</button>
+          <button class="quick-chip qc-crypto" onclick="holdingQuickPick('XRP','Ripple (XRP)')">✕ XRP</button>
+          <button class="quick-chip qc-crypto" onclick="holdingQuickPick('ADA','Cardano (ADA)')">ADA</button>
+          <button class="quick-chip qc-crypto" onclick="holdingQuickPick('DOGE','Dogecoin')">Ð DOGE</button>
+        </div>
+
+        <p style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 4px">Popular ETFs</p>
+        <div class="quick-chips">
+          <button class="quick-chip qc-etf" onclick="holdingQuickPick('SPY','S&amp;P 500 ETF (SPY)')">SPY</button>
+          <button class="quick-chip qc-etf" onclick="holdingQuickPick('QQQ','NASDAQ 100 ETF (QQQ)')">QQQ</button>
+          <button class="quick-chip qc-etf" onclick="holdingQuickPick('VOO','Vanguard S&amp;P 500 (VOO)')">VOO</button>
+          <button class="quick-chip qc-etf" onclick="holdingQuickPick('VTI','Vanguard Total Market (VTI)')">VTI</button>
+          <button class="quick-chip qc-etf" onclick="holdingQuickPick('ARKK','ARK Innovation ETF')">ARKK</button>
+        </div>
+
+        <div style="margin-top:10px;padding:10px 12px;background:var(--border);border-radius:12px">
+          <p style="font-size:11px;color:var(--faint);line-height:1.5">
+            💡 <strong>Any asset works</strong> — stocks (AAPL, TSLA), bonds (TLT), REITs, mutual funds, or type a ticker manually below.
+          </p>
+        </div>
+      </div>
+
       <div class="modal-field">
         <label class="form-label">Ticker Symbol</label>
-        <input id="holding-ticker" class="form-input mono" type="text" placeholder="AAPL" maxlength="10"
-          style="text-transform:uppercase">
+        <input id="holding-ticker" class="form-input mono" type="text"
+          placeholder="e.g. AAPL · GLD · BTC · ETH · SPY" maxlength="10" style="text-transform:uppercase">
       </div>
       <div class="modal-field">
-        <label class="form-label">Company Name</label>
-        <input id="holding-name" class="form-input" type="text" placeholder="Apple Inc." maxlength="60">
+        <label class="form-label">Asset Name</label>
+        <input id="holding-name" class="form-input" type="text"
+          placeholder="e.g. Apple Inc. / Gold ETF / Bitcoin" maxlength="60">
       </div>
       <div class="modal-field">
-        <label class="form-label">Shares</label>
+        <label class="form-label">Units / Shares / Oz / Coins</label>
         <input id="holding-shares" class="form-input mono" type="number" placeholder="10" min="0.0001" step="0.0001">
       </div>
       <div class="modal-field">
-        <label class="form-label">Average Cost (per share)</label>
+        <label class="form-label">Avg. Cost per Unit</label>
         <input id="holding-cost" class="form-input mono" type="number" placeholder="150.00" min="0" step="0.01">
       </div>
       <div id="holding-error" class="auth-error"></div>
@@ -686,7 +732,10 @@ const RAW_MARKETS = [
   { name:'Amazon', ticker:'AMZN', val:182.70, chg:+0.67, mktcap:'$1.90T', pe:'58.7', vol:'48M', hi52:'189.77', lo52:'118.35', sector:'Tech' },
   { name:'Gold', ticker:'XAU', val:2312.40, chg:+0.55, mktcap:'—', pe:'—', vol:'182K', hi52:'2431.00', lo52:'1810.46', sector:'Commodity' },
   { name:'Oil (WTI)', ticker:'CL1', val:82.14, chg:-1.02, mktcap:'—', pe:'—', vol:'1.1M', hi52:'95.03', lo52:'63.64', sector:'Commodity' },
-  { name:'BTC/USD', ticker:'BTC', val:67842, chg:+2.14, mktcap:'$1.33T', pe:'—', vol:'$32B', hi52:'73794', lo52:'24930', sector:'Crypto' },
+  { name:'BTC/USD',   ticker:'BTC',  val:67842,   chg:+2.14,  mktcap:'$1.33T', pe:'—', vol:'$32B',  hi52:'73794', lo52:'24930',  sector:'Crypto' },
+  { name:'Ethereum',  ticker:'ETH',  val:3892.10,  chg:+3.45,  mktcap:'$467B',  pe:'—', vol:'$18B',  hi52:'4090',  lo52:'1520',   sector:'Crypto' },
+  { name:'Solana',    ticker:'SOL',  val:172.40,   chg:+5.10,  mktcap:'$80B',   pe:'—', vol:'$4.1B', hi52:'210',   lo52:'19.23',  sector:'Crypto' },
+  { name:'XRP/USD',   ticker:'XRP',  val:0.5240,   chg:+1.23,  mktcap:'$29B',   pe:'—', vol:'$1.2B', hi52:'0.79',  lo52:'0.36',   sector:'Crypto' },
 ];
 
 const TF_CONFIG = {
@@ -1319,7 +1368,7 @@ let finbotForm = {
   ticker: '', portfolio: 'AAPL 28%, MSFT 26%, NVDA 22%, TSLA 13%, AMZN 11%', portVal: '',
   company: '', earnDate: '', ePos: 'none',
   age: '', income: '', savings: '', goal: 'wealth', bRisk: 'moderate', acct: 'taxable',
-  techTicker: '', techPos: 'none',
+  techTicker: '', techPos: 'none', builderHoldings: '',
 };
 
 // Prompt builders
@@ -1960,11 +2009,23 @@ function renderFinBot() {
         <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!finbotForm.ticker.trim()?'disabled':''} onclick="runFinBot('dcf')">Run DCF Valuation →</button>
       </div>`;
   } else if (mode === 'risk') {
+    const riskCanImport = currentUser && dbPortfolio.length > 0;
     el.innerHTML = `${backBtn}
       <div style="display:flex;flex-direction:column;gap:16px">
-        <div><label class="form-label">Your Holdings</label>
-          <textarea class="form-textarea" rows="3" placeholder="e.g. AAPL 30%, MSFT 25%, BTC 10%" oninput="finbotForm.portfolio=this.value">${finbotForm.portfolio}</textarea>
-          <p class="form-hint">List tickers with approximate allocations</p></div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <label class="form-label" style="margin-bottom:0">Your Holdings</label>
+            ${riskCanImport ? `<button class="import-port-btn" data-import="portfolio"
+              onclick="importPortfolioToFinBot('portfolio','risk-holdings-ta')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 3v13M7 13l5 5 5-5"/><path d="M5 20h14"/></svg>
+              Import my portfolio
+            </button>` : ''}
+          </div>
+          <textarea id="risk-holdings-ta" class="form-textarea" rows="3"
+            placeholder="e.g. AAPL 30%, MSFT 25%, BTC 10%, GLD 5%"
+            oninput="finbotForm.portfolio=this.value">${finbotForm.portfolio}</textarea>
+          <p class="form-hint">Stocks, ETFs, crypto, commodities — any mix works</p>
+        </div>
         <div><label class="form-label">Total Portfolio Value (optional)</label>
           <input class="form-input mono" placeholder="e.g. $50,000" value="${finbotForm.portVal}" oninput="finbotForm.portVal=this.value"></div>
         <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" onclick="runFinBot('risk')">Run Risk Assessment →</button>
@@ -1981,6 +2042,7 @@ function renderFinBot() {
         <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!finbotForm.company.trim()?'disabled':''} onclick="runFinBot('earnings')">Run Earnings Preview →</button>
       </div>`;
   } else if (mode === 'builder') {
+    const bldrCanImport = currentUser && dbPortfolio.length > 0;
     el.innerHTML = `${backBtn}
       <div style="display:flex;flex-direction:column;gap:16px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -1995,6 +2057,20 @@ function renderFinBot() {
           ${pillsHtml('bRisk', [{k:'conservative',l:'Conservative'},{k:'moderate',l:'Moderate'},{k:'aggressive',l:'Aggressive'}])}</div>
         <div><label class="form-label">Account Type</label>
           ${pillsHtml('acct', [{k:'taxable',l:'Taxable'},{k:'isa',l:'ISA / Roth'},{k:'401k',l:'401(k)'}])}</div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <label class="form-label" style="margin-bottom:0">Existing Holdings <span style="font-weight:400;color:var(--faint)">(optional)</span></label>
+            ${bldrCanImport ? `<button class="import-port-btn" data-import="builderHoldings"
+              onclick="importPortfolioToFinBot('builderHoldings','builder-holdings-ta')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 3v13M7 13l5 5 5-5"/><path d="M5 20h14"/></svg>
+              Import portfolio
+            </button>` : ''}
+          </div>
+          <textarea id="builder-holdings-ta" class="form-textarea" rows="2"
+            placeholder="e.g. AAPL 20%, BTC 10% — leave blank if starting from scratch"
+            oninput="finbotForm.builderHoldings=this.value">${finbotForm.builderHoldings}</textarea>
+          <p class="form-hint">Leo will build around what you already own</p>
+        </div>
         <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" onclick="runFinBot('builder')">Build My Portfolio →</button>
       </div>`;
   } else if (mode === 'technical') {
@@ -2905,6 +2981,36 @@ async function toggleWatchlist(ticker, name) {
 }
 
 // ── Add / Remove Portfolio Holdings ──────────────────────────────────────────
+function holdingQuickPick(ticker, name) {
+  // Decode HTML entities (e.g. &amp; → &) for display in the input
+  const txt = document.createElement('textarea');
+  txt.innerHTML = name;
+  document.getElementById('holding-ticker').value = ticker;
+  document.getElementById('holding-name').value   = txt.value;
+  document.getElementById('holding-shares').focus();
+}
+
+function importPortfolioToFinBot(field, textareaId) {
+  if (!currentUser || !dbPortfolio.length) return;
+  const enriched = dbPortfolio.map(h => {
+    const mkt = RAW_MARKETS.find(m => m.ticker === h.ticker);
+    const cur  = mkt ? mkt.val : h.avg_cost;
+    return { ...h, val: h.shares * cur };
+  });
+  const total = enriched.reduce((s, h) => s + h.val, 0);
+  const str   = enriched.map(h => {
+    const pct = total > 0 ? Math.round(h.val / total * 100) : 0;
+    return `${h.ticker} ${pct}%`;
+  }).join(', ');
+  finbotForm[field] = str;
+  if (field === 'portfolio' && total > 0) finbotForm.portVal = '$' + Math.round(total).toLocaleString();
+  const ta = document.getElementById(textareaId);
+  if (ta) { ta.value = str; ta.dispatchEvent(new Event('input')); }
+  // Flash button feedback
+  const btn = document.querySelector(`[data-import="${field}"]`);
+  if (btn) { btn.textContent = '✓ Imported'; setTimeout(() => btn.textContent = '↓ Import portfolio', 1500); }
+}
+
 function openAddHoldingModal(ticker = '', name = '') {
   document.getElementById('holding-ticker').value = ticker;
   document.getElementById('holding-name').value   = name;
