@@ -980,34 +980,82 @@ function refreshNews() {
   });
 }
 
+const summaryCache = {};  // uuid → summary text
+
 function openNewsArticle(idx, fromLive) {
   const source = fromLive ? liveNews : NEWS_FALLBACK;
   const n = source[idx];
   if (!n) return;
+
   const overlay = document.getElementById('news-overlay');
-  const inner = document.getElementById('news-sheet-inner');
+  const inner   = document.getElementById('news-sheet-inner');
 
   const cleanTickers = (n.tickers || []).filter(t => !t.startsWith('^'));
+  // Always produce a working link: direct link if available, else Yahoo Finance search
+  const articleLink = n.link || `https://finance.yahoo.com/search?p=${encodeURIComponent(n.title)}`;
 
-  inner.innerHTML = `
-    <div class="news-sheet-meta">
-      <span class="news-sheet-pub">${escHtml(n.publisher||'')}</span>
-      <span class="news-sheet-time">${escHtml(n.time)}</span>
-    </div>
-    ${n.thumbnail ? `<img class="news-sheet-img" src="${escHtml(n.thumbnail)}" alt="" onerror="this.style.display='none'">` : ''}
-    <div class="news-sheet-title">${escHtml(n.title)}</div>
-    ${cleanTickers.length ? `
-      <div class="news-sheet-tickers">
-        ${cleanTickers.map(t => `<span class="news-ticker-chip">${escHtml(t)}</span>`).join('')}
-      </div>` : ''}
-    <div class="news-sheet-btns">
-      ${n.link
-        ? `<a class="news-btn-primary" href="${escHtml(n.link)}" target="_blank" rel="noopener">Read Full Article ↗</a>`
-        : `<div class="news-btn-primary" style="opacity:.5;cursor:default">No link available</div>`}
-      <button class="news-btn-secondary" onclick="analyseNewsWithFinBot(${JSON.stringify(escHtml(n.title))})">Analyse with FinBot</button>
-    </div>
-  `;
+  function render(summaryHtml) {
+    inner.innerHTML = `
+      <div class="news-sheet-meta">
+        <span class="news-sheet-pub">${escHtml(n.publisher || '')}</span>
+        <span class="news-sheet-time">${escHtml(n.time)}</span>
+      </div>
+      ${n.thumbnail ? `<img class="news-sheet-img" src="${escHtml(n.thumbnail)}" alt="" onerror="this.style.display='none'">` : ''}
+      <div class="news-sheet-title">${escHtml(n.title)}</div>
+      ${cleanTickers.length ? `
+        <div class="news-sheet-tickers">
+          ${cleanTickers.map(t => `<span class="news-ticker-chip">${escHtml(t)}</span>`).join('')}
+        </div>` : ''}
+      <div id="news-summary-box" style="margin:14px 0 2px">${summaryHtml}</div>
+      <div class="news-sheet-btns">
+        <a class="news-btn-primary" href="${escHtml(articleLink)}" target="_blank" rel="noopener">Read Full Article ↗</a>
+        <button class="news-btn-secondary" onclick="analyseNewsWithFinBot(${JSON.stringify(escHtml(n.title))})">Analyse with FinBot</button>
+      </div>
+    `;
+  }
+
+  // Show immediately with loading summary
+  const loadingHtml = `
+    <div style="display:flex;align-items:center;gap:8px;padding:12px 0;color:var(--faint);font-size:13px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;flex-shrink:0"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+      Generating summary…
+    </div>`;
+  render(loadingHtml);
   overlay.classList.remove('hidden');
+
+  // Fetch or return cached summary
+  const cacheKey = n.uuid || n.title;
+  if (summaryCache[cacheKey]) {
+    document.getElementById('news-summary-box').innerHTML = formatSummaryHtml(summaryCache[cacheKey]);
+    return;
+  }
+
+  fetch('api.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      prompt: `You are a concise financial analyst. Given only this news headline, write a 2–3 sentence summary of the likely investment implications for retail investors. Be specific about which assets, sectors, or market participants are most affected. Do not include disclaimers or introductory phrases — just the analysis.\n\nHeadline: "${n.title}"`
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    const box = document.getElementById('news-summary-box');
+    if (!box) return;
+    if (d.success && d.text) {
+      summaryCache[cacheKey] = d.text;
+      box.innerHTML = formatSummaryHtml(d.text);
+    } else {
+      box.innerHTML = '';
+    }
+  })
+  .catch(() => {
+    const box = document.getElementById('news-summary-box');
+    if (box) box.innerHTML = '';
+  });
+}
+
+function formatSummaryHtml(text) {
+  return `<div style="background:var(--border);border-radius:var(--radius-sm);padding:14px 16px;font-size:13px;color:var(--text2);line-height:1.65;border-left:3px solid var(--green)">${escHtml(text)}</div>`;
 }
 
 function closeNewsOverlay() {
@@ -1017,7 +1065,6 @@ function closeNewsOverlay() {
 function analyseNewsWithFinBot(headline) {
   closeNewsOverlay();
   switchTab('finbot');
-  // Pre-fill FinBot with a news analysis prompt
   setTimeout(() => {
     const promptArea = document.querySelector('#finbot-form textarea, #finbot-custom-input');
     if (promptArea) {
