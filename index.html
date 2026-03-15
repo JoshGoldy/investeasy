@@ -866,6 +866,38 @@ function renderMarkets(filter) {
 
 let detailChart = null;
 
+// ── Live data helpers ─────────────────────────────────────────────────────────
+async function fetchLivePrices() {
+  const tickers = MARKETS.map(m => m.ticker).join(',');
+  try {
+    const r = await fetch('prices.php?action=quotes&tickers=' + tickers);
+    const d = await r.json();
+    if (!d.success) return;
+    let updated = false;
+    MARKETS.forEach(m => {
+      const q = d.quotes[m.ticker];
+      if (q && q.price) {
+        m.val = q.price; m.chg = q.chg ?? m.chg;
+        if (q.hi52) m.hi52 = String(q.hi52);
+        if (q.lo52) m.lo52 = String(q.lo52);
+        updated = true;
+      }
+    });
+    if (updated) {
+      const tab = document.getElementById('tab-markets');
+      if (tab && tab.classList.contains('active')) renderMarkets();
+    }
+  } catch(e) { /* keep generated data on error */ }
+}
+
+async function fetchLiveChart(ticker, tf, callback) {
+  try {
+    const r = await fetch(`prices.php?action=chart&ticker=${encodeURIComponent(ticker)}&tf=${tf}`);
+    const d = await r.json();
+    if (d.success && d.points && d.points.length > 1) callback(d.points);
+  } catch(e) { /* silent fallback */ }
+}
+
 function openStockDetail(idx) {
   const stock = MARKETS[idx];
   const up = stock.chg >= 0;
@@ -912,6 +944,12 @@ function openStockDetail(idx) {
       if (detailChart) detailChart.remove();
       detailChart = createFullChart(el, stock.charts['1D'], color, 300);
     }
+    // Replace with live data as soon as it arrives
+    fetchLiveChart(stock.ticker, '1D', points => {
+      stock.charts['1D'] = points;
+      const el2 = document.getElementById('detail-chart');
+      if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, points, color, 300); }
+    });
   });
 }
 
@@ -930,6 +968,11 @@ function switchDetailTF(idx, tf) {
       if (detailChart) detailChart.remove();
       detailChart = createFullChart(el, stock.charts[tf], color, 300);
     }
+    fetchLiveChart(stock.ticker, tf, points => {
+      stock.charts[tf] = points;
+      const el2 = document.getElementById('detail-chart');
+      if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, points, color, 300); }
+    });
   });
 }
 
@@ -2390,6 +2433,8 @@ async function removeHolding(ticker) {
 renderNews();
 // Check auth — shows login overlay if not logged in, syncs data if session exists
 checkAuth();
+// Fetch live prices in background (updates Markets tab when ready)
+fetchLivePrices();
 </script>
 </body>
 </html>
