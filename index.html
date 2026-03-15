@@ -1008,22 +1008,28 @@ function openNewsArticle(idx, fromLive) {
     `;
   }
 
-  // Show overlay immediately with loading state
+  overlay.classList.remove('hidden');
+
+  // 1. Use RSS description if available (instant, no fetch needed)
+  if (n.description && n.description.length > 60) {
+    renderSheet(`<p style="font-size:13px;color:var(--text2);line-height:1.75">${escHtml(n.description)}</p>`);
+    return;
+  }
+
+  // 2. Use cached full-article scrape
+  if (n.link && articleCache[n.link]) {
+    renderSheet(buildArticleHtml(articleCache[n.link]));
+    return;
+  }
+
+  // 3. No description and no cache — show spinner and scrape
   renderSheet(`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;color:var(--faint);font-size:13px">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;flex-shrink:0"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
     Loading article…
   </div>`);
-  overlay.classList.remove('hidden');
 
-  // Return from cache if we already fetched this article
-  if (n.link && articleCache[n.link]) {
-    document.getElementById('news-body-box').innerHTML = buildArticleHtml(articleCache[n.link]);
-    return;
-  }
-
-  // No link — nothing to fetch
   if (!n.link) {
-    document.getElementById('news-body-box').innerHTML = `<p style="font-size:13px;color:var(--faint)">No article content available for this item.</p>`;
+    document.getElementById('news-body-box').innerHTML = `<p style="font-size:13px;color:var(--faint)">Click the link below to read this article.</p>`;
     return;
   }
 
@@ -1036,12 +1042,12 @@ function openNewsArticle(idx, fromLive) {
         articleCache[n.link] = d.paragraphs;
         box.innerHTML = buildArticleHtml(d.paragraphs);
       } else {
-        box.innerHTML = `<p style="font-size:13px;color:var(--faint)">Article content could not be loaded. Click the link below to read on the publisher's site.</p>`;
+        box.innerHTML = `<p style="font-size:13px;color:var(--faint)">Preview unavailable — click the link below to read on the publisher's site.</p>`;
       }
     })
     .catch(() => {
       const box = document.getElementById('news-body-box');
-      if (box) box.innerHTML = `<p style="font-size:13px;color:var(--faint)">Could not load article. Click the link below to read on the publisher's site.</p>`;
+      if (box) box.innerHTML = `<p style="font-size:13px;color:var(--faint)">Preview unavailable — click the link below to read on the publisher's site.</p>`;
     });
 }
 

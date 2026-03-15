@@ -143,20 +143,7 @@ if ($action === 'quotes') {
     echo $out;
 
 } elseif ($action === 'news') {
-    $count = min((int)($_GET['count'] ?? 40), 60);
-    $cat   = strtolower(trim($_GET['cat'] ?? 'all'));
-
-    // Different queries per category for more targeted results
-    $queries = [
-        'all'     => 'stock market investing finance',
-        'markets' => 'stock market S&P 500 Wall Street equities',
-        'economy' => 'economy inflation interest rates Federal Reserve GDP',
-        'tech'    => 'technology stocks AI semiconductor Apple Microsoft Nvidia',
-        'crypto'  => 'bitcoin cryptocurrency ethereum blockchain crypto',
-    ];
-    $q = $queries[$cat] ?? $queries['all'];
-
-    $articles = fetchYahooNews($q, $count);
+    $articles = fetchNewsFromRSS();
     if ($articles === null) {
         echo json_encode(['success' => false, 'error' => 'Could not fetch news']);
         exit;
@@ -206,91 +193,141 @@ function extractArticleText(string $html): array {
     return $paragraphs;
 }
 
-// ── Yahoo Finance news fetch ──────────────────────────────────────────────────
-function fetchYahooNews(string $query, int $count): ?array {
-    $cacheKey  = md5('news_' . $query . '_' . $count);
-    $cachePath = sys_get_temp_dir() . '/ie_news_' . $cacheKey . '.json';
-
+// ── RSS news fetch ────────────────────────────────────────────────────────────
+function fetchNewsFromRSS(): ?array {
+    $cachePath = sys_get_temp_dir() . '/ie_news_rss.json';
     if (file_exists($cachePath) && (time() - filemtime($cachePath)) < 300) {
         $cached = @file_get_contents($cachePath);
-        if ($cached) {
-            $d = json_decode($cached, true);
-            if (is_array($d)) return $d;
+        if ($cached) { $d = json_decode($cached, true); if (is_array($d)) return $d; }
+    }
+
+    // Multiple feeds for redundancy and variety
+    $feeds = [
+        ['url' => 'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US', 'pub' => 'Yahoo Finance'],
+        ['url' => 'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^NDX&region=US&lang=en-US',  'pub' => 'Yahoo Finance'],
+        ['url' => 'https://www.cnbc.com/id/100003114/device/rss/rss.html',                          'pub' => 'CNBC'],
+        ['url' => 'https://www.cnbc.com/id/10000664/device/rss/rss.html',                           'pub' => 'CNBC'],
+        ['url' => 'https://feeds.marketwatch.com/marketwatch/topstories/',                          'pub' => 'MarketWatch'],
+        ['url' => 'https://feeds.reuters.com/reuters/businessNews',                                 'pub' => 'Reuters'],
+        ['url' => 'https://www.investing.com/rss/news.rss',                                         'pub' => 'Investing.com'],
+    ];
+
+    $articles = [];
+    $seen     = [];
+
+    foreach ($feeds as $feed) {
+        $xml = fetchXmlFeed($feed['url']);
+        if (!$xml) continue;
+
+        // RSS 2.0: items live under channel/item
+        $items = isset($xml->channel) ? $xml->channel->item : $xml->item;
+        if (!$items) continue;
+
+        foreach ($items as $item) {
+            $title = html_entity_decode(trim((string)$item->title), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            if (!$title) continue;
+            $key = md5(strtolower($title));
+            if (isset($seen[$key])) continue;
+            $seen[$key] = true;
+
+            // Link — try <link>, then <guid> if it looks like a URL
+            $link = trim((string)$item->link);
+            if (!$link) {
+                $guid = trim((string)$item->guid);
+                if (filter_var($guid, FILTER_VALIDATE_URL)) $link = $guid;
+            }
+
+            // Description / summary from RSS
+            $desc = '';
+            if (!empty($item->description)) {
+                $raw  = (string)$item->description;
+                $desc = strip_tags($raw);
+                $desc = html_entity_decode($desc, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                $desc = preg_replace('/\s+/', ' ', trim($desc));
+                // Drop if it's just the title echoed back or is too short
+                if (strlen($desc) < 60 || similar_text(strtolower($desc), strtolower($title)) / max(strlen($title),1) > 0.85) {
+                    $desc = '';
+                }
+                if (strlen($desc) > 800) $desc = substr($desc, 0, 800) . '…';
+            }
+
+            // Publisher — prefer <source> tag, fall back to feed default
+            $publisher = $feed['pub'];
+            if (!empty($item->source)) {
+                $src = trim((string)$item->source);
+                if ($src) $publisher = $src;
+            }
+
+            // Thumbnail — try media:content, then media:thumbnail, then enclosure
+            $thumb = null;
+            $media = $item->children('media', true);
+            if (!empty($media->content)) {
+                $a = $media->content->attributes();
+                if (!empty($a['url'])) $thumb = (string)$a['url'];
+            }
+            if (!$thumb && !empty($media->thumbnail)) {
+                $a = $media->thumbnail->attributes();
+                if (!empty($a['url'])) $thumb = (string)$a['url'];
+            }
+            if (!$thumb && !empty($item->enclosure)) {
+                $a = $item->enclosure->attributes();
+                if (!empty($a['type']) && strpos((string)$a['type'], 'image') === 0) {
+                    $thumb = (string)($a['url'] ?? '');
+                }
+            }
+
+            $pubTime = strtotime((string)$item->pubDate) ?: 0;
+            $age     = max(0, time() - $pubTime);
+            if ($age < 3600)      $timeStr = max(1, round($age / 60)) . 'm ago';
+            elseif ($age < 86400) $timeStr = round($age / 3600) . 'h ago';
+            else                  $timeStr = round($age / 86400) . 'd ago';
+
+            $articles[] = [
+                'uuid'        => md5($title . $link),
+                'title'       => $title,
+                'publisher'   => $publisher,
+                'link'        => $link,
+                'description' => $desc,
+                'time'        => $timeStr,
+                'pubTime'     => $pubTime,
+                'tickers'     => [],
+                'thumbnail'   => $thumb ?: null,
+                'cat'         => categorizeArticle($title, []),
+                'hot'         => isHotArticle($title, []),
+            ];
+
+            if (count($articles) >= 60) break 2;
         }
     }
 
-    $url = 'https://query1.finance.yahoo.com/v1/finance/search?'
-         . http_build_query([
-             'q'                  => $query,
-             'newsCount'          => $count,
-             'quotesCount'        => 0,
-             'lang'               => 'en-US',
-             'region'             => 'US',
-             'enableFuzzyQuery'   => 'false',
-             'enableCb'           => 'false',
-         ]);
+    if (!$articles) return null;
 
+    usort($articles, fn($a, $b) => $b['pubTime'] - $a['pubTime']);
+    $articles = array_values(array_slice($articles, 0, 50));
+    @file_put_contents($cachePath, json_encode($articles));
+    return $articles;
+}
+
+function fetchXmlFeed(string $url): ?SimpleXMLElement {
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 10,
-        CURLOPT_HTTPHEADER     => [
-            'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-            'Accept: application/json, text/plain, */*',
-            'Accept-Language: en-US,en;q=0.9',
-            'Referer: https://finance.yahoo.com',
-        ],
+        CURLOPT_TIMEOUT        => 8,
         CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS      => 3,
         CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_HTTPHEADER     => [
+            'User-Agent: Mozilla/5.0 (compatible; RSS reader/1.0)',
+            'Accept: application/rss+xml, application/xml, text/xml, */*',
+        ],
     ]);
-    $response = curl_exec($ch);
-    $code     = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $body = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
-
-    if ($code !== 200 || !$response) return null;
-    $decoded = json_decode($response, true);
-    if (!$decoded || empty($decoded['news'])) return null;
-
-    $articles = [];
-    foreach ($decoded['news'] as $item) {
-        if (($item['type'] ?? '') !== 'STORY') continue;
-
-        $title     = $item['title']   ?? '';
-        $publisher = $item['publisher'] ?? 'Unknown';
-        $link      = $item['link']    ?? '';
-        $pubTime   = (int)($item['providerPublishTime'] ?? 0);
-        $tickers   = $item['relatedTickers'] ?? [];
-        $thumb     = null;
-
-        if (!empty($item['thumbnail']['resolutions'])) {
-            // Pick the smallest usable thumbnail
-            foreach ($item['thumbnail']['resolutions'] as $res) {
-                if (($res['width'] ?? 0) >= 100) { $thumb = $res['url']; break; }
-            }
-        }
-
-        $age = time() - $pubTime;
-        if ($age < 3600)       $timeStr = max(1, round($age / 60)) . 'm ago';
-        elseif ($age < 86400)  $timeStr = round($age / 3600) . 'h ago';
-        else                   $timeStr = round($age / 86400) . 'd ago';
-
-        $articles[] = [
-            'uuid'      => $item['uuid'] ?? uniqid(),
-            'title'     => $title,
-            'publisher' => $publisher,
-            'link'      => $link,
-            'time'      => $timeStr,
-            'pubTime'   => $pubTime,
-            'tickers'   => array_slice($tickers, 0, 5),
-            'thumbnail' => $thumb,
-            'cat'       => categorizeArticle($title, $tickers),
-            'hot'       => isHotArticle($title, $tickers),
-        ];
-    }
-
-    usort($articles, fn($a, $b) => $b['pubTime'] - $a['pubTime']);
-    @file_put_contents($cachePath, json_encode($articles));
-    return $articles;
+    if (!$body || $code !== 200) return null;
+    libxml_use_internal_errors(true);
+    $xml = simplexml_load_string($body);
+    return $xml ?: null;
 }
 
 function categorizeArticle(string $title, array $tickers): string {
