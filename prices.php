@@ -236,9 +236,9 @@ function fetchNewsFromRSS(): ?array {
                 $guid = trim((string)$item->guid);
                 if (filter_var($guid, FILTER_VALIDATE_URL)) $link = $guid;
             }
-            // Yahoo Finance article links frequently 404 — replace with a Google News search
+            // Yahoo Finance article links frequently 404 — replace with a Google search
             if ($link && strpos($link, 'finance.yahoo.com') !== false) {
-                $link = 'https://news.google.com/search?q=' . urlencode('"' . $title . '"') . '&hl=en-US&gl=US&ceid=US:en';
+                $link = 'https://www.google.com/search?q=' . urlencode($title) . '&tbm=nws';
             }
 
             // Description / summary from RSS

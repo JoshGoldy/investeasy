@@ -1199,7 +1199,7 @@ function openNewsArticle(idx, fromLive) {
   const overlay = document.getElementById('news-overlay');
   const inner   = document.getElementById('news-sheet-inner');
   const cleanTickers = (n.tickers || []).filter(t => !t.startsWith('^'));
-  const articleLink = n.link || `https://news.google.com/search?q=${encodeURIComponent('"' + n.title + '"')}&hl=en-US&gl=US&ceid=US:en`;
+  const articleLink = n.link || `https://www.google.com/search?q=${encodeURIComponent(n.title)}&tbm=nws`;
 
   function renderSheet(bodyHtml) {
     inner.innerHTML = `
