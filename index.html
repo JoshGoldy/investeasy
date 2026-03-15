@@ -97,6 +97,52 @@ button{cursor:pointer}
 .chip-green{background:var(--green-bg);color:var(--green)}
 .chip-red{background:var(--red-bg);color:var(--red)}
 
+/* ── NEWS CARD ENHANCEMENTS ───────────────────────────────────── */
+.news-thumb{width:100%;height:160px;object-fit:cover;border-radius:var(--radius-sm);margin-bottom:10px;background:var(--border)}
+.news-card{cursor:pointer;transition:all 0.2s}
+.news-source{font-size:11px;color:var(--faint);font-weight:500;margin-top:4px}
+.news-search{width:100%;padding:10px 16px;border-radius:var(--radius-sm);background:var(--border);
+  font-size:13px;color:var(--text);margin-bottom:12px;transition:all 0.2s}
+.news-search:focus{background:var(--card);box-shadow:0 0 0 2px var(--green)}
+.news-search::placeholder{color:var(--faint)}
+.news-skeleton{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:10px}
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.skel-line{height:14px;border-radius:6px;background:linear-gradient(90deg,var(--border) 25%,var(--border2) 50%,var(--border) 75%);
+  background-size:400px 100%;animation:shimmer 1.4s infinite}
+.skel-sm{height:10px;width:40%}.skel-lg{width:100%;margin-bottom:8px}.skel-md{width:70%}
+.news-refresh-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:var(--radius-xs);
+  background:var(--border);color:var(--muted);font-size:11px;font-weight:600;transition:all 0.2s;cursor:pointer}
+.news-refresh-btn:hover{background:var(--border2)}
+.news-refresh-btn.spinning svg{animation:spin 1s linear infinite}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+/* ── NEWS DETAIL OVERLAY ──────────────────────────────────────── */
+.news-overlay{position:fixed;inset:0;z-index:1100;background:rgba(15,23,42,0.7);
+  display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);
+  animation:ndFadeIn 0.2s ease}
+.news-overlay.hidden{display:none}
+@keyframes ndFadeIn{from{opacity:0}to{opacity:1}}
+.news-sheet{background:var(--card);width:100%;max-width:640px;border-radius:var(--radius) var(--radius) 0 0;
+  max-height:90vh;overflow-y:auto;animation:ndSlide 0.3s ease}
+@keyframes ndSlide{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.news-sheet-handle{width:40px;height:4px;background:var(--border2);border-radius:2px;margin:14px auto 0}
+.news-sheet-inner{padding:16px 20px 36px}
+.news-sheet-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.news-sheet-pub{font-size:12px;font-weight:700;color:var(--muted)}
+.news-sheet-time{font-size:11px;color:var(--faint)}
+.news-sheet-title{font-size:18px;font-weight:800;color:var(--text);line-height:1.4;margin-bottom:14px}
+.news-sheet-img{width:100%;height:200px;object-fit:cover;border-radius:var(--radius-sm);margin-bottom:16px}
+.news-sheet-tickers{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.news-ticker-chip{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;
+  background:var(--green-bg);color:var(--green);font-family:var(--mono)}
+.news-sheet-btns{display:flex;gap:10px;margin-top:6px}
+.news-btn-primary{flex:1;padding:14px;border-radius:var(--radius-sm);background:var(--green);color:#fff;
+  font-size:13px;font-weight:700;text-align:center;cursor:pointer;text-decoration:none;display:block;transition:all 0.2s}
+.news-btn-primary:hover{background:#059669}
+.news-btn-secondary{flex:1;padding:14px;border-radius:var(--radius-sm);background:var(--border);color:var(--text2);
+  font-size:13px;font-weight:700;text-align:center;cursor:pointer;transition:all 0.2s}
+.news-btn-secondary:hover{background:var(--border2)}
+
 /* ── LIVE BANNER ──────────────────────────────────────────────── */
 .live-banner{background:linear-gradient(135deg,#10b981,#059669);border-radius:var(--radius);
   padding:16px;margin-bottom:12px;color:#fff}
@@ -434,6 +480,14 @@ button{cursor:pointer}
   <!-- Stock Detail Overlay -->
   <div id="stock-detail" class="stock-detail hidden"></div>
 
+  <!-- News Detail Overlay -->
+  <div id="news-overlay" class="news-overlay hidden" onclick="if(event.target===this)closeNewsOverlay()">
+    <div class="news-sheet">
+      <div class="news-sheet-handle"></div>
+      <div class="news-sheet-inner" id="news-sheet-inner"></div>
+    </div>
+  </div>
+
   <!-- Auth Popup -->
   <div id="auth-overlay" class="auth-overlay hidden" onclick="if(event.target===this)this.classList.add('hidden')">
     <div class="auth-popup">
@@ -645,15 +699,21 @@ const MARKETS = RAW_MARKETS.map(m => {
   return { ...m, charts };
 });
 
-const NEWS = [
-  { id:1, cat:'Markets', title:'S&P 500 edges higher as tech stocks lead amid Fed commentary', time:'2h ago', hot:true },
-  { id:2, cat:'Economy', title:'US inflation prints below expectations — markets rally sharply', time:'4h ago', hot:true },
-  { id:3, cat:'Tech', title:'Microsoft announces $10B AI infrastructure expansion across data centers', time:'5h ago', hot:false },
-  { id:4, cat:'Crypto', title:'Bitcoin consolidates near $68,000 ahead of ETF inflow data', time:'6h ago', hot:false },
-  { id:5, cat:'Markets', title:'European markets close mixed as energy stocks drag on FTSE 100', time:'7h ago', hot:false },
-  { id:6, cat:'Economy', title:"China's PMI beats forecasts for third consecutive month", time:'8h ago', hot:false },
-  { id:7, cat:'Tech', title:'Nvidia shares surge on analyst upgrades amid soaring AI chip demand', time:'10h ago', hot:true },
+// Fallback static news (shown while live data loads or on error)
+const NEWS_FALLBACK = [
+  { uuid:'f1', cat:'Markets', title:'S&P 500 edges higher as tech stocks lead amid Fed commentary', time:'2h ago', hot:true, publisher:'Reuters', link:'', tickers:[] },
+  { uuid:'f2', cat:'Economy', title:'US inflation prints below expectations — markets rally sharply', time:'4h ago', hot:true, publisher:'CNBC', link:'', tickers:[] },
+  { uuid:'f3', cat:'Tech', title:'Microsoft announces $10B AI infrastructure expansion across data centers', time:'5h ago', hot:false, publisher:'Bloomberg', link:'', tickers:['MSFT'] },
+  { uuid:'f4', cat:'Crypto', title:'Bitcoin consolidates near $68,000 ahead of ETF inflow data', time:'6h ago', hot:false, publisher:'CoinDesk', link:'', tickers:['BTC-USD'] },
+  { uuid:'f5', cat:'Markets', title:'European markets close mixed as energy stocks drag on FTSE 100', time:'7h ago', hot:false, publisher:'FT', link:'', tickers:[] },
+  { uuid:'f6', cat:'Economy', title:"China's PMI beats forecasts for third consecutive month", time:'8h ago', hot:false, publisher:'Reuters', link:'', tickers:[] },
+  { uuid:'f7', cat:'Tech', title:'Nvidia shares surge on analyst upgrades amid soaring AI chip demand', time:'10h ago', hot:true, publisher:'Barron\'s', link:'', tickers:['NVDA'] },
 ];
+let liveNews = [];
+let newsLastFetched = 0;
+let newsFetchedAt = null;
+let newsFilter = 'All';
+let newsSearch = '';
 
 const HOLDINGS = [
   { ticker:'AAPL', name:'Apple Inc.', shares:12, cost:178.40, cur:189.30, alloc:28 },
@@ -792,6 +852,7 @@ function switchTab(id) {
     b.querySelector('svg').setAttribute('stroke', isActive ? '#10b981' : '#94a3b8');
   });
   tabPanels.forEach(p => p.classList.toggle('active', p.id === 'tab-' + id));
+  if (id === 'news') renderNews();
   if (id === 'markets') renderMarkets();
   if (id === 'learn') renderLearn();
   if (id === 'portfolio') renderPortfolio();
@@ -804,21 +865,93 @@ navBtns.forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab))
 // NEWS TAB
 // ═══════════════════════════════════════════════════════════════════════════
 
-function renderNews(filter = 'All') {
-  const list = filter === 'All' ? NEWS : NEWS.filter(n => n.cat === filter);
-  const cats = ['All','Markets','Economy','Tech','Crypto'];
+async function fetchLiveNews(force = false) {
+  const now = Date.now();
+  if (!force && liveNews.length && (now - newsLastFetched) < 5 * 60 * 1000) return;
+  try {
+    const cat = newsFilter === 'All' ? 'all' : newsFilter.toLowerCase();
+    const r = await fetch(`prices.php?action=news&count=40&cat=${cat}`);
+    const d = await r.json();
+    if (d.success && d.articles && d.articles.length) {
+      liveNews = d.articles;
+      newsLastFetched = now;
+      newsFetchedAt = new Date();
+    }
+  } catch(e) { /* use fallback */ }
+  renderNewsContent();
+}
 
-  document.getElementById('tab-news').innerHTML = `
-    <div class="section-title"><h2>News Feed</h2><p>Latest market insights & analysis</p></div>
+function renderNews(filter, search) {
+  if (filter !== undefined) newsFilter = filter;
+  if (search !== undefined) newsSearch = search;
+  const cats = ['All','Markets','Economy','Tech','Crypto'];
+  const el = document.getElementById('tab-news');
+
+  el.innerHTML = `
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><h2>News Feed</h2><p>Live market insights & analysis</p></div>
+      <button class="news-refresh-btn" id="refresh-btn" onclick="refreshNews()" title="Refresh news">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        Refresh
+      </button>
+    </div>
     <div class="filter-row">
-      ${cats.map(c => `<button class="filter-btn ${filter===c?'active':''}" onclick="renderNews('${c}')">${c}</button>`).join('')}
+      ${cats.map(c => `<button class="filter-btn ${newsFilter===c?'active':''}" onclick="renderNews('${c}')">${c}</button>`).join('')}
     </div>
-    <div class="live-banner">
-      <span class="badge">LIVE</span>
-      <span style="font-weight:500;font-size:13px">Markets are open — last updated just now</span>
+    <input class="news-search" id="news-search-input" type="text" placeholder="Search news…" value="${escHtml(newsSearch)}"
+      oninput="renderNews(undefined,this.value)">
+    <div id="news-articles-container"></div>
+  `;
+  renderNewsContent();
+  // Fetch live if needed
+  if (!liveNews.length || (Date.now() - newsLastFetched) > 5 * 60 * 1000) {
+    showNewsSkeletons();
+    fetchLiveNews();
+  }
+}
+
+function showNewsSkeletons() {
+  const c = document.getElementById('news-articles-container');
+  if (!c) return;
+  c.innerHTML = Array(6).fill(0).map(() => `
+    <div class="news-skeleton">
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+        <div class="skel-line skel-sm"></div><div class="skel-line" style="width:15%"></div>
+      </div>
+      <div class="skel-line skel-lg"></div>
+      <div class="skel-line skel-md"></div>
     </div>
-    ${list.map(n => `
-      <div class="card news-card">
+  `).join('');
+}
+
+function renderNewsContent() {
+  const c = document.getElementById('news-articles-container');
+  if (!c) return;
+  const source = liveNews.length ? liveNews : NEWS_FALLBACK;
+  let list = newsFilter === 'All' ? source : source.filter(n => n.cat === newsFilter);
+  if (newsSearch.trim()) {
+    const q = newsSearch.toLowerCase();
+    list = list.filter(n => n.title.toLowerCase().includes(q) || (n.publisher||'').toLowerCase().includes(q));
+  }
+
+  const lastUpdatedStr = newsFetchedAt
+    ? `Updated ${newsFetchedAt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`
+    : 'Loading live data…';
+
+  c.innerHTML = `
+    <div class="live-banner" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge">LIVE</span>
+        <span style="font-weight:500;font-size:13px">${liveNews.length ? list.length + ' articles' : 'Loading…'}</span>
+      </div>
+      <span style="font-size:11px;color:rgba(255,255,255,0.7)">${lastUpdatedStr}</span>
+    </div>
+    ${list.length === 0 ? '<div style="text-align:center;padding:40px;color:var(--faint);font-size:13px">No articles found</div>' : ''}
+    ${list.map((n, i) => {
+      const actualIdx = source.indexOf(n);
+      return `
+      <div class="card news-card" onclick="openNewsArticle(${actualIdx},${liveNews.length > 0})">
+        ${n.thumbnail ? `<img class="news-thumb" src="${escHtml(n.thumbnail)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
         <div class="meta">
           <span class="cat" style="background:${CAT_COLORS[n.cat]}18;color:${CAT_COLORS[n.cat]}">${n.cat}</span>
           <div style="display:flex;align-items:center;gap:5px">
@@ -827,12 +960,80 @@ function renderNews(filter = 'All') {
           </div>
         </div>
         <h3>${escHtml(n.title)}</h3>
-        <p class="cta">Tap to read full analysis →</p>
-      </div>
-    `).join('')}
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+          <span class="news-source">${escHtml(n.publisher||'')}</span>
+          <span style="font-size:11px;color:var(--green);font-weight:600">Read more →</span>
+        </div>
+      </div>`;
+    }).join('')}
   `;
 }
-renderNews();
+
+function refreshNews() {
+  const btn = document.getElementById('refresh-btn');
+  if (btn) btn.classList.add('spinning');
+  liveNews = [];
+  newsLastFetched = 0;
+  showNewsSkeletons();
+  fetchLiveNews(true).then(() => {
+    if (btn) btn.classList.remove('spinning');
+  });
+}
+
+function openNewsArticle(idx, fromLive) {
+  const source = fromLive ? liveNews : NEWS_FALLBACK;
+  const n = source[idx];
+  if (!n) return;
+  const overlay = document.getElementById('news-overlay');
+  const inner = document.getElementById('news-sheet-inner');
+
+  const cleanTickers = (n.tickers || []).filter(t => !t.startsWith('^'));
+
+  inner.innerHTML = `
+    <div class="news-sheet-meta">
+      <span class="news-sheet-pub">${escHtml(n.publisher||'')}</span>
+      <span class="news-sheet-time">${escHtml(n.time)}</span>
+    </div>
+    ${n.thumbnail ? `<img class="news-sheet-img" src="${escHtml(n.thumbnail)}" alt="" onerror="this.style.display='none'">` : ''}
+    <div class="news-sheet-title">${escHtml(n.title)}</div>
+    ${cleanTickers.length ? `
+      <div class="news-sheet-tickers">
+        ${cleanTickers.map(t => `<span class="news-ticker-chip">${escHtml(t)}</span>`).join('')}
+      </div>` : ''}
+    <div class="news-sheet-btns">
+      ${n.link
+        ? `<a class="news-btn-primary" href="${escHtml(n.link)}" target="_blank" rel="noopener">Read Full Article ↗</a>`
+        : `<div class="news-btn-primary" style="opacity:.5;cursor:default">No link available</div>`}
+      <button class="news-btn-secondary" onclick="analyseNewsWithFinBot(${JSON.stringify(escHtml(n.title))})">Analyse with FinBot</button>
+    </div>
+  `;
+  overlay.classList.remove('hidden');
+}
+
+function closeNewsOverlay() {
+  document.getElementById('news-overlay').classList.add('hidden');
+}
+
+function analyseNewsWithFinBot(headline) {
+  closeNewsOverlay();
+  switchTab('finbot');
+  // Pre-fill FinBot with a news analysis prompt
+  setTimeout(() => {
+    const promptArea = document.querySelector('#finbot-form textarea, #finbot-custom-input');
+    if (promptArea) {
+      promptArea.value = 'Analyse the investment implications of this news headline: "' + headline + '"';
+      promptArea.dispatchEvent(new Event('input'));
+    }
+  }, 300);
+}
+
+// Auto-refresh news every 5 minutes when on the news tab
+setInterval(() => {
+  const newsTab = document.getElementById('tab-news');
+  if (newsTab && newsTab.classList.contains('active') && liveNews.length) {
+    fetchLiveNews();
+  }
+}, 5 * 60 * 1000);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MARKETS TAB
