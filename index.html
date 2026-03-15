@@ -79,6 +79,20 @@ button{cursor:pointer}
 .nav button.active span{font-weight:700;color:var(--green)}
 .nav button.active svg{stroke:var(--green)}
 .nav-dot{display:none}
+.saved-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:10px;text-align:center}
+.saved-empty-icon{font-size:48px;opacity:.35;line-height:1}
+.saved-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px 18px;margin-bottom:12px}
+.saved-card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
+.saved-card-meta{display:flex;align-items:center;gap:10px}
+.saved-card-icon{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.saved-card-title{font-size:14px;font-weight:800;color:var(--text);line-height:1.2}
+.saved-card-sub{font-size:11px;color:var(--faint);margin-top:3px}
+.saved-card-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.saved-action-btn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:opacity .15s;white-space:nowrap}.saved-action-btn:active{opacity:.65}
+.saved-preview{font-size:12px;color:var(--faint);line-height:1.55;max-height:52px;overflow:hidden;position:relative}.saved-preview::after{content:'';position:absolute;bottom:0;left:0;right:0;height:24px;background:linear-gradient(transparent,var(--card))}
+.finbot-save-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.finbot-save-btn-big{flex:1;min-width:140px;padding:13px;border-radius:14px;font-weight:700;font-size:14px;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .15s}.finbot-save-btn-big:active{opacity:.7}
+#ie-toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-90px);background:#1e293b;color:#e2e8f0;padding:10px 22px;border-radius:20px;font-size:13px;font-weight:700;z-index:9999;transition:transform .35s cubic-bezier(.34,1.56,.64,1);box-shadow:0 4px 24px rgba(0,0,0,.45);white-space:nowrap;pointer-events:none}
 
 /* ── SHARED ───────────────────────────────────────────────────── */
 .section-title{padding:18px 0 10px}
@@ -488,6 +502,7 @@ button{cursor:pointer}
     <div id="tab-markets" class="tab-content"></div>
     <div id="tab-finbot" class="tab-content"></div>
     <div id="tab-portfolio" class="tab-content"></div>
+    <div id="tab-saved" class="tab-content"></div>
     <div id="tab-learn" class="tab-content"></div>
     <div id="tab-settings" class="tab-content"></div>
   </div>
@@ -652,6 +667,10 @@ button{cursor:pointer}
     <button data-tab="portfolio">
       <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 000 4h4v-4h-4z"/></svg>
       <span>Portfolio</span><div class="nav-dot"></div>
+    </button>
+    <button data-tab="saved">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+      <span>Saved</span><div class="nav-dot" id="saved-badge" style="display:none;width:7px;height:7px;background:#10b981;border-radius:50%;position:absolute;top:8px;right:16px"></div>
     </button>
     <button data-tab="learn">
       <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
@@ -916,6 +935,7 @@ function switchTab(id) {
   if (id === 'learn') renderLearn();
   if (id === 'portfolio') renderPortfolio();
   if (id === 'settings') renderSettings();
+  if (id === 'saved') renderSaved();
 }
 
 navBtns.forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
@@ -1362,7 +1382,7 @@ function closeStockDetail() {
 // FINBOT TAB
 // ═══════════════════════════════════════════════════════════════════════════
 
-let finbotState = { mode: null, loading: false, result: null, error: null };
+let finbotState = { mode: null, loading: false, result: null, error: null, savedId: null };
 let finbotForm = {
   risk: 'moderate', amount: '', horizon: 'medium', sectors: '',
   ticker: '', portfolio: 'AAPL 28%, MSFT 26%, NVDA 22%, TSLA 13%, AMZN 11%', portVal: '',
@@ -1851,7 +1871,7 @@ async function runFinBot(modeId) {
 }
 
 function setFinbotMode(id) { finbotState.mode = id; renderFinBot(); }
-function resetFinBot() { finbotState = { mode: null, loading: false, result: null, error: null }; renderFinBot(); }
+function resetFinBot() { finbotState = { mode: null, loading: false, result: null, error: null, savedId: null }; renderFinBot(); }
 
 function updateFormField(field, value) { finbotForm[field] = value; renderFinBot(); }
 
@@ -1934,6 +1954,7 @@ function renderFinBot() {
 
   // ── Result / Error ──
   if (finbotState.result || finbotState.error) {
+    const isSaved = !!finbotState.savedId;
     el.innerHTML = `
       <div class="result-header">
         <div style="display:flex;align-items:center;gap:10px">
@@ -1943,7 +1964,13 @@ function renderFinBot() {
             <p style="font-size:11px;color:${modeObj.col};font-weight:600">by ${modeObj.sub}</p>
           </div>
         </div>
-        ${finbotState.result ? '<span class="chip chip-green">✓ Complete</span>' : ''}
+        ${finbotState.result ? `<div style="display:flex;align-items:center;gap:8px">
+          <span class="chip chip-green">✓ Complete</span>
+          <button id="finbot-save-btn-top" onclick="saveFinBotReport()"
+            style="padding:5px 11px;border-radius:10px;${isSaved ? 'background:#10b98122;color:#10b981' : 'background:var(--border);color:var(--text)'};font-size:12px;font-weight:700;border:none;cursor:pointer;white-space:nowrap">
+            ${isSaved ? '🔖 Saved' : '🔖 Save'}
+          </button>
+        </div>` : ''}
       </div>
       ${finbotState.error ? `
         <div class="error-box">
@@ -1953,8 +1980,16 @@ function renderFinBot() {
         </div>
       ` : ''}
       ${finbotState.result ? `<div class="result-content">${parseMd(finbotState.result)}</div>` : ''}
-      <button onclick="finbotState.result=null;finbotState.error=null;renderFinBot()"
-        style="margin-top:10px;width:100%;background:var(--border);border-radius:14px;padding:14px;font-weight:700;font-size:14px;color:var(--muted)">← Back to ${modeObj.title}</button>
+      <div class="finbot-save-row">
+        ${finbotState.result ? `
+          <button onclick="saveFinBotReport()" class="finbot-save-btn-big"
+            style="${isSaved ? 'background:#10b98122;color:#10b981;border:1.5px solid #10b981' : 'background:var(--green-bg);color:var(--green);border:1.5px solid var(--green)'}">
+            ${isSaved ? '🔖 View in Saved →' : '🔖 Save Report'}
+          </button>
+        ` : ''}
+        <button onclick="finbotState.result=null;finbotState.error=null;renderFinBot()"
+          class="finbot-save-btn-big" style="background:var(--border);color:var(--muted);border:none">← Back to ${modeObj.title}</button>
+      </div>
     `;
     return;
   }
@@ -2088,6 +2123,173 @@ function renderFinBot() {
   }
 }
 renderFinBot();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SAVED REPORTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+const SAVED_KEY = 'ie_saved_reports';
+
+function getSavedReports() {
+  return JSON.parse(localStorage.getItem(SAVED_KEY) || '[]');
+}
+
+function saveFinBotReport() {
+  // If already saved — navigate to Saved tab
+  if (finbotState.savedId) { switchTab('saved'); return; }
+  if (!finbotState.result) return;
+  const modeObj = FINBOT_MODES.find(m => m.id === finbotState.mode);
+  const reports  = getSavedReports();
+  const report   = {
+    id:        Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    modeId:    modeObj.id,
+    modeTitle: modeObj.title,
+    modeSub:   modeObj.sub,
+    modeCol:   modeObj.col,
+    modeIcon:  modeObj.icon,
+    content:   finbotState.result,
+    savedAt:   Date.now(),
+  };
+  reports.unshift(report);
+  localStorage.setItem(SAVED_KEY, JSON.stringify(reports));
+  finbotState.savedId = report.id;
+  renderFinBot();
+  updateSavedBadge();
+  showToast('Report saved! View it in the Saved tab.');
+}
+
+function deleteSavedReport(id) {
+  const reports = getSavedReports().filter(r => r.id !== id);
+  localStorage.setItem(SAVED_KEY, JSON.stringify(reports));
+  updateSavedBadge();
+  renderSaved();
+}
+
+function downloadReport(id) {
+  const r = getSavedReports().find(r => r.id === id);
+  if (!r) return;
+  const date     = new Date(r.savedAt).toISOString().slice(0, 10);
+  const filename = `${r.modeTitle.replace(/\s+/g, '-')}_${date}.md`;
+  const blob     = new Blob([r.content], { type: 'text/markdown' });
+  const a        = document.createElement('a');
+  a.href         = URL.createObjectURL(blob);
+  a.download     = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+async function shareReport(id) {
+  const r = getSavedReports().find(r => r.id === id);
+  if (!r) return;
+  const text = `${r.modeTitle} by ${r.modeSub}\n\n${r.content}`;
+  if (navigator.share) {
+    try { await navigator.share({ title: r.modeTitle, text }); return; } catch(e) { /* fall through */ }
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('Copied to clipboard!');
+  } catch(e) { showToast('Could not copy — try downloading instead.'); }
+}
+
+function viewSavedReport(id) {
+  const r = getSavedReports().find(r => r.id === id);
+  if (!r) return;
+  finbotState.mode    = r.modeId;
+  finbotState.result  = r.content;
+  finbotState.loading = false;
+  finbotState.error   = null;
+  finbotState.savedId = r.id;
+  switchTab('finbot');
+}
+
+function updateSavedBadge() {
+  const badge = document.getElementById('saved-badge');
+  if (badge) badge.style.display = getSavedReports().length > 0 ? 'block' : 'none';
+}
+
+function renderSaved() {
+  const el      = document.getElementById('tab-saved');
+  const reports = getSavedReports();
+
+  if (!reports.length) {
+    el.innerHTML = `
+      <div class="section-title"><h2>Saved Reports</h2></div>
+      <div class="saved-empty">
+        <div class="saved-empty-icon">🔖</div>
+        <p style="font-size:15px;font-weight:700;color:var(--text)">No saved reports yet</p>
+        <p style="font-size:13px;color:var(--faint);line-height:1.6;max-width:280px">
+          Run any analysis in FinBot and tap <strong style="color:var(--text)">🔖 Save Report</strong> to keep it here.
+        </p>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <h2>Saved Reports</h2>
+        <p style="font-size:12px;color:var(--faint);margin-top:4px">${reports.length} report${reports.length !== 1 ? 's' : ''} saved locally</p>
+      </div>
+      <button onclick="if(confirm('Delete all saved reports?')){localStorage.removeItem(SAVED_KEY);updateSavedBadge();renderSaved()}"
+        style="font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;padding:6px 8px;border-radius:8px">Clear all</button>
+    </div>
+    ${reports.map(r => {
+      const date    = new Date(r.savedAt);
+      const dateStr = date.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+      const timeStr = date.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+      const preview = r.content.replace(/[#*_`>~\[\]]/g, '').replace(/\n+/g, ' ').trim().slice(0, 180);
+      return `
+        <div class="saved-card">
+          <div class="saved-card-header">
+            <div class="saved-card-meta">
+              <div class="saved-card-icon" style="background:${r.modeCol}22">${r.modeIcon}</div>
+              <div>
+                <div class="saved-card-title">${r.modeTitle}</div>
+                <div class="saved-card-sub">by ${r.modeSub} &nbsp;·&nbsp; ${dateStr}, ${timeStr}</div>
+              </div>
+            </div>
+            <button onclick="deleteSavedReport('${r.id}')"
+              style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--faint);padding:2px 4px;flex-shrink:0;line-height:1" title="Delete">✕</button>
+          </div>
+          <div class="saved-preview">${escHtml(preview)}</div>
+          <div class="saved-card-actions">
+            <button class="saved-action-btn" style="background:${r.modeCol}18;color:${r.modeCol}"
+              onclick="viewSavedReport('${r.id}')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              View Full Report
+            </button>
+            <button class="saved-action-btn" style="background:var(--border);color:var(--text)"
+              onclick="downloadReport('${r.id}')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 3v13M7 12l5 5 5-5"/><path d="M5 20h14"/></svg>
+              Download .md
+            </button>
+            <button class="saved-action-btn" style="background:var(--border);color:var(--text)"
+              onclick="shareReport('${r.id}')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              Share / Copy
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('')}
+  `;
+}
+
+function showToast(msg, duration = 2400) {
+  let t = document.getElementById('ie-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'ie-toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.transform = 'translateX(-50%) translateY(-90px)'; }, duration);
+}
+
+// Init saved badge on page load
+updateSavedBadge();
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PORTFOLIO TAB
