@@ -980,7 +980,7 @@ function refreshNews() {
   });
 }
 
-const summaryCache = {};  // uuid → summary text
+const articleCache = {};  // url → paragraphs[]
 
 function openNewsArticle(idx, fromLive) {
   const source = fromLive ? liveNews : NEWS_FALLBACK;
@@ -989,12 +989,10 @@ function openNewsArticle(idx, fromLive) {
 
   const overlay = document.getElementById('news-overlay');
   const inner   = document.getElementById('news-sheet-inner');
-
   const cleanTickers = (n.tickers || []).filter(t => !t.startsWith('^'));
-  // Always produce a working link: direct link if available, else Yahoo Finance search
   const articleLink = n.link || `https://finance.yahoo.com/search?p=${encodeURIComponent(n.title)}`;
 
-  function render(summaryHtml) {
+  function renderSheet(bodyHtml) {
     inner.innerHTML = `
       <div class="news-sheet-meta">
         <span class="news-sheet-pub">${escHtml(n.publisher || '')}</span>
@@ -1002,60 +1000,53 @@ function openNewsArticle(idx, fromLive) {
       </div>
       ${n.thumbnail ? `<img class="news-sheet-img" src="${escHtml(n.thumbnail)}" alt="" onerror="this.style.display='none'">` : ''}
       <div class="news-sheet-title">${escHtml(n.title)}</div>
-      ${cleanTickers.length ? `
-        <div class="news-sheet-tickers">
-          ${cleanTickers.map(t => `<span class="news-ticker-chip">${escHtml(t)}</span>`).join('')}
-        </div>` : ''}
-      <div id="news-summary-box" style="margin:14px 0 2px">${summaryHtml}</div>
-      <div class="news-sheet-btns">
-        <a class="news-btn-primary" href="${escHtml(articleLink)}" target="_blank" rel="noopener">Read Full Article ↗</a>
-        <button class="news-btn-secondary" onclick="analyseNewsWithFinBot(${JSON.stringify(escHtml(n.title))})">Analyse with FinBot</button>
-      </div>
+      ${cleanTickers.length ? `<div class="news-sheet-tickers">${cleanTickers.map(t=>`<span class="news-ticker-chip">${escHtml(t)}</span>`).join('')}</div>` : ''}
+      <div id="news-body-box" style="margin:14px 0 16px">${bodyHtml}</div>
+      <a class="news-btn-primary" href="${escHtml(articleLink)}" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">
+        Read Full Article on ${escHtml(n.publisher || 'Publisher')} ↗
+      </a>
     `;
   }
 
-  // Show immediately with loading summary
-  const loadingHtml = `
-    <div style="display:flex;align-items:center;gap:8px;padding:12px 0;color:var(--faint);font-size:13px">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;flex-shrink:0"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
-      Generating summary…
-    </div>`;
-  render(loadingHtml);
+  // Show overlay immediately with loading state
+  renderSheet(`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;color:var(--faint);font-size:13px">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;flex-shrink:0"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+    Loading article…
+  </div>`);
   overlay.classList.remove('hidden');
 
-  // Fetch or return cached summary
-  const cacheKey = n.uuid || n.title;
-  if (summaryCache[cacheKey]) {
-    document.getElementById('news-summary-box').innerHTML = formatSummaryHtml(summaryCache[cacheKey]);
+  // Return from cache if we already fetched this article
+  if (n.link && articleCache[n.link]) {
+    document.getElementById('news-body-box').innerHTML = buildArticleHtml(articleCache[n.link]);
     return;
   }
 
-  fetch('api.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      prompt: `You are a concise financial analyst. Given only this news headline, write a 2–3 sentence summary of the likely investment implications for retail investors. Be specific about which assets, sectors, or market participants are most affected. Do not include disclaimers or introductory phrases — just the analysis.\n\nHeadline: "${n.title}"`
+  // No link — nothing to fetch
+  if (!n.link) {
+    document.getElementById('news-body-box').innerHTML = `<p style="font-size:13px;color:var(--faint)">No article content available for this item.</p>`;
+    return;
+  }
+
+  fetch(`prices.php?action=article&url=${encodeURIComponent(n.link)}`)
+    .then(r => r.json())
+    .then(d => {
+      const box = document.getElementById('news-body-box');
+      if (!box) return;
+      if (d.success && d.paragraphs && d.paragraphs.length) {
+        articleCache[n.link] = d.paragraphs;
+        box.innerHTML = buildArticleHtml(d.paragraphs);
+      } else {
+        box.innerHTML = `<p style="font-size:13px;color:var(--faint)">Article content could not be loaded. Click the link below to read on the publisher's site.</p>`;
+      }
     })
-  })
-  .then(r => r.json())
-  .then(d => {
-    const box = document.getElementById('news-summary-box');
-    if (!box) return;
-    if (d.success && d.text) {
-      summaryCache[cacheKey] = d.text;
-      box.innerHTML = formatSummaryHtml(d.text);
-    } else {
-      box.innerHTML = '';
-    }
-  })
-  .catch(() => {
-    const box = document.getElementById('news-summary-box');
-    if (box) box.innerHTML = '';
-  });
+    .catch(() => {
+      const box = document.getElementById('news-body-box');
+      if (box) box.innerHTML = `<p style="font-size:13px;color:var(--faint)">Could not load article. Click the link below to read on the publisher's site.</p>`;
+    });
 }
 
-function formatSummaryHtml(text) {
-  return `<div style="background:var(--border);border-radius:var(--radius-sm);padding:14px 16px;font-size:13px;color:var(--text2);line-height:1.65;border-left:3px solid var(--green)">${escHtml(text)}</div>`;
+function buildArticleHtml(paragraphs) {
+  return paragraphs.map(p => `<p style="font-size:13px;color:var(--text2);line-height:1.75;margin-bottom:12px">${escHtml(p)}</p>`).join('');
 }
 
 function closeNewsOverlay() {

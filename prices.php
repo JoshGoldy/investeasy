@@ -97,6 +97,51 @@ if ($action === 'quotes') {
 
     echo json_encode(['success' => true, 'points' => $points]);
 
+} elseif ($action === 'article') {
+    $url = trim($_GET['url'] ?? '');
+    if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
+        echo json_encode(['success' => false, 'error' => 'Invalid URL']);
+        exit;
+    }
+    $scheme = parse_url($url, PHP_URL_SCHEME);
+    if (!in_array($scheme, ['http', 'https'])) {
+        echo json_encode(['success' => false, 'error' => 'Invalid URL scheme']);
+        exit;
+    }
+
+    $cachePath = sys_get_temp_dir() . '/ie_art_' . md5($url) . '.json';
+    if (file_exists($cachePath) && (time() - filemtime($cachePath)) < 3600) {
+        $cached = @file_get_contents($cachePath);
+        if ($cached) { echo $cached; exit; }
+    }
+
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 12,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS      => 5,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_HTTPHEADER     => [
+            'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Accept: text/html,application/xhtml+xml',
+            'Accept-Language: en-US,en;q=0.9',
+        ],
+    ]);
+    $html = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if (!$html || $code !== 200) {
+        echo json_encode(['success' => false, 'error' => 'Could not fetch article']);
+        exit;
+    }
+
+    $paragraphs = extractArticleText($html);
+    $out = json_encode(['success' => true, 'paragraphs' => $paragraphs]);
+    @file_put_contents($cachePath, $out);
+    echo $out;
+
 } elseif ($action === 'news') {
     $count = min((int)($_GET['count'] ?? 40), 60);
     $cat   = strtolower(trim($_GET['cat'] ?? 'all'));
@@ -120,6 +165,45 @@ if ($action === 'quotes') {
 
 } else {
     echo json_encode(['success' => false, 'error' => 'Unknown action']);
+}
+
+// ── Article text extractor ────────────────────────────────────────────────────
+function extractArticleText(string $html): array {
+    // Strip scripts, styles, and noisy structural tags
+    $html = preg_replace('/<(script|style|noscript|iframe|aside|nav|header|footer|form)[^>]*>.*?<\/\1>/is', '', $html);
+    // Remove HTML comments
+    $html = preg_replace('/<!--.*?-->/s', '', $html);
+
+    // Try to isolate article body using common containers (ordered by specificity)
+    $body = '';
+    $patterns = [
+        '/<article[^>]*>(.*?)<\/article>/is',
+        '/<div[^>]*\b(?:class|id)="[^"]*\b(?:article-body|article-content|story-body|story-content|post-body|post-content|entry-content|article__body|caas-body|Body|ArticleBody|paywall-article)[^"]*"[^>]*>(.*?)<\/div>/is',
+        '/<div[^>]*\b(?:class|id)=\'[^\']*\b(?:article-body|article-content|story-body)[^\']*\'[^>]*>(.*?)<\/div>/is',
+        '/<main[^>]*>(.*?)<\/main>/is',
+    ];
+    foreach ($patterns as $p) {
+        if (preg_match($p, $html, $m)) {
+            $body = end($m);
+            break;
+        }
+    }
+    if (!$body) $body = $html;
+
+    // Pull all <p> tags
+    preg_match_all('/<p[^>]*>(.*?)<\/p>/is', $body, $matches);
+    $paragraphs = [];
+    foreach ($matches[1] as $raw) {
+        $text = strip_tags($raw);
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = preg_replace('/\s+/', ' ', trim($text));
+        // Skip navigation snippets, cookie notices, very short lines
+        if (mb_strlen($text) < 50) continue;
+        if (preg_match('/cookie|subscribe|sign up|newsletter|javascript|follow us|advertisement/i', $text)) continue;
+        $paragraphs[] = $text;
+        if (count($paragraphs) >= 8) break;
+    }
+    return $paragraphs;
 }
 
 // ── Yahoo Finance news fetch ──────────────────────────────────────────────────
