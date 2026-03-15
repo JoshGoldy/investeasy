@@ -267,6 +267,16 @@ button{cursor:pointer}
 .holding-stat{text-align:center}
 .holding-stat .hl{font-size:10px;color:var(--faint)}
 .holding-stat .hv{margin-top:2px;font-family:var(--mono);font-size:12px;font-weight:500;color:#374151}
+.port-perf-card{background:var(--card);border-radius:20px;padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
+.perf-tabs{display:flex;gap:3px;background:var(--border);border-radius:10px;padding:3px}
+.perf-tab{padding:4px 11px;border-radius:7px;font-size:11px;font-weight:700;color:var(--faint);cursor:pointer;transition:all .15s;background:none;border:none}
+.perf-tab.active{background:var(--card);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.pnl-bars-card{background:var(--card);border-radius:20px;padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
+.pnl-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}.pnl-bar-row:last-child{margin-bottom:0}
+.pnl-bar-label{font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);width:42px;flex-shrink:0}
+.pnl-bar-track{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.pnl-bar-fill{height:100%;border-radius:3px;width:0;transition:width .8s cubic-bezier(.25,.46,.45,.94)}
+.pnl-bar-val{font-size:11px;font-weight:700;font-family:var(--mono);width:54px;text-align:right;flex-shrink:0}
 
 /* ── AUTH POPUP ───────────────────────────────────────────────── */
 .auth-overlay{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.45);
@@ -2008,6 +2018,159 @@ renderFinBot();
 // ═══════════════════════════════════════════════════════════════════════════
 
 let portChart = null;
+let portPerfChart = null;
+
+// ─── Interactive Donut Chart (Canvas) ────────────────────────────────────────
+function makeDonut(canvasEl, segments) {
+  // segments: [{label, pct, color}]
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const SIZE = 140, cx = 70, cy = 70, OUTER = 57, INNER = 33;
+  canvasEl.width  = SIZE * dpr;
+  canvasEl.height = SIZE * dpr;
+  canvasEl.style.width  = SIZE + 'px';
+  canvasEl.style.height = SIZE + 'px';
+  const ctx = canvasEl.getContext('2d');
+  ctx.scale(dpr, dpr);
+  let hov = -1;
+
+  function draw() {
+    ctx.clearRect(0, 0, SIZE, SIZE);
+    let start = -Math.PI / 2;
+    segments.forEach((seg, i) => {
+      const sweep = (seg.pct / 100) * Math.PI * 2;
+      const isH = i === hov;
+      ctx.save();
+      if (isH) ctx.translate(Math.cos(start + sweep / 2) * 4, Math.sin(start + sweep / 2) * 4);
+      ctx.beginPath();
+      ctx.arc(cx, cy, isH ? OUTER + 5 : OUTER, start, start + sweep);
+      ctx.arc(cx, cy, INNER, start + sweep, start, true);
+      ctx.closePath();
+      ctx.fillStyle = seg.color;
+      ctx.globalAlpha = isH ? 1 : 0.86;
+      ctx.fill();
+      ctx.restore();
+      start += sweep;
+    });
+    ctx.globalAlpha = 1;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const textCol = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#1e293b';
+    if (hov >= 0) {
+      const s = segments[hov];
+      ctx.fillStyle = textCol;
+      ctx.font = 'bold 13px system-ui,sans-serif';
+      ctx.fillText(s.label, cx, cy - 7);
+      ctx.fillStyle = '#64748b';
+      ctx.font = '11px system-ui,sans-serif';
+      ctx.fillText(s.pct.toFixed(1) + '%', cx, cy + 9);
+    } else {
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 9px system-ui,sans-serif';
+      ctx.fillText('ALLOCATION', cx, cy - 6);
+      ctx.font = '9px system-ui,sans-serif';
+      ctx.fillText(segments.length + ' holdings', cx, cy + 7);
+    }
+  }
+
+  function hitIdx(mx, my) {
+    const dx = mx - cx, dy = my - cy, d = Math.sqrt(dx * dx + dy * dy);
+    if (d < INNER || d > OUTER + 8) return -1;
+    let a = Math.atan2(dy, dx) + Math.PI / 2;
+    if (a < 0) a += Math.PI * 2;
+    let start = 0;
+    for (let i = 0; i < segments.length; i++) {
+      const sweep = (segments[i].pct / 100) * Math.PI * 2;
+      if (a >= start && a < start + sweep) return i;
+      start += sweep;
+    }
+    return segments.length - 1;
+  }
+
+  canvasEl.style.cursor = 'pointer';
+  canvasEl.addEventListener('mousemove', e => {
+    const r = canvasEl.getBoundingClientRect();
+    const i = hitIdx(e.clientX - r.left, e.clientY - r.top);
+    if (i !== hov) { hov = i; draw(); }
+  });
+  canvasEl.addEventListener('mouseleave', () => { if (hov !== -1) { hov = -1; draw(); } });
+  canvasEl.addEventListener('click', e => {
+    const r = canvasEl.getBoundingClientRect();
+    const i = hitIdx(e.clientX - r.left, e.clientY - r.top);
+    hov = i === hov ? -1 : i; draw();
+  });
+  draw();
+}
+
+// ─── Portfolio Performance Chart with period tabs ─────────────────────────────
+function createPerfChart(container, data, color, height) {
+  if (!container || !data.length) return null;
+  container.innerHTML = '';
+  const chart = LightweightCharts.createChart(container, {
+    width: container.clientWidth || 300, height,
+    layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#94a3b8' },
+    grid: { vertLines: { visible: false }, horzLines: { color: '#1e293b30' } },
+    crosshair: {
+      mode: 1,
+      vertLine: { color: color + '80', labelBackgroundColor: color },
+      horzLine: { color: color + '80', labelBackgroundColor: color },
+    },
+    rightPriceScale: { borderVisible: false, textColor: '#94a3b8' },
+    timeScale: { borderVisible: false, timeVisible: false },
+    handleScroll: false, handleScale: false,
+  });
+  const series = chart.addAreaSeries({
+    lineColor: color, lineWidth: 2.5,
+    topColor: color + '35', bottomColor: color + '00',
+    priceLineVisible: false, lastValueVisible: true,
+    crosshairMarkerRadius: 5, crosshairMarkerBackgroundColor: color,
+  });
+  series.setData(data.map((d, i) => ({ time: i + 1, value: d.value })));
+  chart.timeScale().fitContent();
+  return chart;
+}
+
+function initPerfChart(allData, color) {
+  const wrap = document.getElementById('port-perf-wrap');
+  if (!wrap) return;
+  const chartEl = wrap.querySelector('.perf-chart-area');
+  if (!chartEl) return;
+  function renderRange(range) {
+    let slice = allData;
+    if (range === '1m') slice = allData.slice(-4);
+    else if (range === '3m') slice = allData.slice(-3);
+    else if (range === '6m') slice = allData.slice(-6);
+    if (portPerfChart) { try { portPerfChart.remove(); } catch (e) {} portPerfChart = null; }
+    portPerfChart = createPerfChart(chartEl, slice.map((p, i) => ({ time: i + 1, value: p.v })), color, 170);
+  }
+  wrap.querySelectorAll('.perf-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      wrap.querySelectorAll('.perf-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderRange(btn.dataset.range);
+    });
+  });
+  renderRange('1y');
+}
+
+function animatePnlBars() {
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.pnl-bar-fill[data-w]').forEach(el => {
+      el.style.width = el.dataset.w + '%';
+    });
+  });
+}
+
+// Simulate portfolio history from cost→current over 12 monthly points
+function genPortHistory(totalCost, total) {
+  const base  = totalCost * 0.95;
+  const range = total - base;
+  return Array.from({ length: 12 }, (_, i) => {
+    const t    = i / 11;
+    const ease = t * t * (3 - 2 * t);
+    const noise = (Math.sin(i * 2.3) * 0.03 + Math.cos(i * 1.7) * 0.02) * base;
+    return { t: i, v: Math.max(0, base + range * ease + noise) };
+  });
+}
 
 function renderPortfolio() {
   // If logged in and have DB portfolio data, render that instead of demo data
@@ -2028,49 +2191,71 @@ function renderPortfolio() {
   const pnlP = ((pnl / cost) * 100).toFixed(2);
   const up = pnl > 0;
 
-  // SVG Pie chart
-  let cumAngle = 0;
-  const pieSlices = HOLDINGS.map((h, i) => {
-    const angle = (h.alloc / 100) * 360;
-    const startAngle = cumAngle;
-    cumAngle += angle;
-    const r = 38, cx = 45, cy = 45;
-    const startRad = (startAngle - 90) * Math.PI / 180;
-    const endRad = (startAngle + angle - 90) * Math.PI / 180;
-    const x1 = cx + r * Math.cos(startRad), y1 = cy + r * Math.sin(startRad);
-    const x2 = cx + r * Math.cos(endRad), y2 = cy + r * Math.sin(endRad);
-    const large = angle > 180 ? 1 : 0;
-    return `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2} Z" fill="${ALLOC_COLORS[i]}"/>`;
-  }).join('');
-  const pieSvg = `<svg width="90" height="90" viewBox="0 0 90 90">${pieSlices}<circle cx="45" cy="45" r="25" fill="var(--card)"/></svg>`;
+  const maxDemoPct = Math.max(...HOLDINGS.map(h => Math.abs((h.cur - h.cost) / h.cost * 100))) || 1;
 
   document.getElementById('tab-portfolio').innerHTML = `
     <div class="section-title"><h2>My Portfolio</h2><p>Demo portfolio · 5 holdings</p></div>
+
+    <!-- Hero: summary numbers only -->
     <div class="port-hero">
       <p style="font-size:11px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase">Total Value</p>
       <p class="mono" style="font-size:32px;font-weight:500;color:#fff;margin:4px 0 2px">${fmtMoney(total)}</p>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px">
         <span class="chip ${up?'chip-green':'chip-red'}" style="font-size:13px;font-weight:700;font-family:var(--mono)">
           ${up?'▲':'▼'} ${fmtMoney(Math.abs(pnl))} (${pnlP}%)
         </span>
         <span style="font-size:12px;color:var(--muted)">All time</span>
       </div>
-      <div class="port-chart" id="port-chart"></div>
     </div>
 
+    <!-- Performance chart card with period tabs -->
+    <div class="port-perf-card" id="port-perf-wrap">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <p style="font-weight:800;font-size:13px;color:var(--text)">Performance</p>
+        <div class="perf-tabs">
+          <button class="perf-tab" data-range="1m">1M</button>
+          <button class="perf-tab" data-range="3m">3M</button>
+          <button class="perf-tab" data-range="6m">6M</button>
+          <button class="perf-tab active" data-range="1y">1Y</button>
+        </div>
+      </div>
+      <div class="perf-chart-area" style="height:170px"></div>
+    </div>
+
+    <!-- Allocation: interactive canvas donut + legend -->
     <div class="alloc-card">
       <p style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:12px">Allocation</p>
       <div style="display:flex;align-items:center;gap:16px">
-        ${pieSvg}
+        <canvas id="port-donut" style="flex-shrink:0"></canvas>
         <div style="flex:1">
           ${HOLDINGS.map((h, i) => `
             <div class="alloc-row">
-              <div style="display:flex;align-items:center"><span class="alloc-dot" style="background:${ALLOC_COLORS[i]}"></span><span style="font-size:12px;color:#374151">${h.ticker}</span></div>
+              <div style="display:flex;align-items:center">
+                <span class="alloc-dot" style="background:${ALLOC_COLORS[i]}"></span>
+                <span style="font-size:12px;color:var(--text);font-weight:600">${h.ticker}</span>
+              </div>
               <span style="font-size:12px;font-weight:700;color:var(--muted)">${h.alloc}%</span>
             </div>
           `).join('')}
         </div>
       </div>
+    </div>
+
+    <!-- P&L breakdown bars -->
+    <div class="pnl-bars-card">
+      <p style="font-weight:800;font-size:13px;color:var(--text);margin-bottom:12px">P&amp;L by Holding</p>
+      ${HOLDINGS.map(h => {
+        const pct = (h.cur - h.cost) / h.cost * 100;
+        const barW = (Math.abs(pct) / maxDemoPct * 100).toFixed(1);
+        const isUp = pct >= 0;
+        return `<div class="pnl-bar-row">
+          <div class="pnl-bar-label">${h.ticker}</div>
+          <div class="pnl-bar-track">
+            <div class="pnl-bar-fill" data-w="${barW}" style="background:${isUp?'var(--green)':'var(--red)'}"></div>
+          </div>
+          <div class="pnl-bar-val ${isUp?'up':'dn'}">${isUp?'+':''}${pct.toFixed(1)}%</div>
+        </div>`;
+      }).join('')}
     </div>
 
     <p style="font-weight:700;font-size:11px;color:var(--faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px">Holdings</p>
@@ -2105,11 +2290,11 @@ function renderPortfolio() {
   `;
 
   requestAnimationFrame(() => {
-    const el = document.getElementById('port-chart');
-    if (el) {
-      if (portChart) portChart.remove();
-      portChart = createMiniChart(el, PORT_HIST.map((p,i) => ({time:i+1,value:p.v})), '#10b981', 70);
-    }
+    if (portPerfChart) { try { portPerfChart.remove(); } catch(e){} portPerfChart = null; }
+    initPerfChart(PORT_HIST, '#10b981');
+    const donut = document.getElementById('port-donut');
+    if (donut) makeDonut(donut, HOLDINGS.map((h, i) => ({ label: h.ticker, pct: h.alloc, color: ALLOC_COLORS[i] })));
+    animatePnlBars();
   });
 }
 
@@ -2150,21 +2335,8 @@ function renderDBPortfolio() {
   const totalPnlP = totalCost > 0 ? ((totalPnl / totalCost) * 100).toFixed(2) : '0.00';
   const up = totalPnl >= 0;
 
-  // Pie chart
-  let cumAngle = 0;
-  const pieSlices = holdings.map((h, i) => {
-    const pct = total > 0 ? (h.val / total) * 100 : 0;
-    const angle = (pct / 100) * 360;
-    const startAngle = cumAngle;
-    cumAngle += angle;
-    const r = 38, cx = 45, cy = 45;
-    const startRad = (startAngle - 90) * Math.PI / 180;
-    const endRad   = (startAngle + angle - 90) * Math.PI / 180;
-    const x1 = cx + r * Math.cos(startRad), y1 = cy + r * Math.sin(startRad);
-    const x2 = cx + r * Math.cos(endRad),   y2 = cy + r * Math.sin(endRad);
-    const large = angle > 180 ? 1 : 0;
-    return `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2} Z" fill="${COLORS[i % COLORS.length]}"/>`;
-  }).join('');
+  const maxPnlPct = Math.max(...holdings.map(h => Math.abs(h.pnlP))) || 1;
+  const perfData  = genPortHistory(totalCost, total);
 
   document.getElementById('tab-portfolio').innerHTML = `
     <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
@@ -2173,7 +2345,7 @@ function renderDBPortfolio() {
         background:var(--green);color:#fff;font-weight:800;font-size:12px;flex-shrink:0">+ Add</button>
     </div>
 
-    <!-- Hero -->
+    <!-- Hero: summary numbers only -->
     <div class="port-hero">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
@@ -2190,11 +2362,25 @@ function renderDBPortfolio() {
       </div>
     </div>
 
-    <!-- Allocation -->
+    <!-- Performance chart card with period tabs -->
+    <div class="port-perf-card" id="port-perf-wrap">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <p style="font-weight:800;font-size:13px;color:var(--text)">Performance</p>
+        <div class="perf-tabs">
+          <button class="perf-tab" data-range="1m">1M</button>
+          <button class="perf-tab" data-range="3m">3M</button>
+          <button class="perf-tab" data-range="6m">6M</button>
+          <button class="perf-tab active" data-range="1y">1Y</button>
+        </div>
+      </div>
+      <div class="perf-chart-area" style="height:170px"></div>
+    </div>
+
+    <!-- Allocation: interactive canvas donut + legend -->
     <div class="alloc-card">
       <p style="font-weight:800;font-size:13px;color:var(--text);margin-bottom:12px">Allocation</p>
       <div style="display:flex;gap:16px;align-items:center">
-        <svg width="90" height="90" viewBox="0 0 90 90">${pieSlices}</svg>
+        <canvas id="port-donut" style="flex-shrink:0"></canvas>
         <div style="flex:1">
           ${holdings.map((h, i) => {
             const pct = total > 0 ? ((h.val / total) * 100).toFixed(1) : '0.0';
@@ -2210,7 +2396,23 @@ function renderDBPortfolio() {
       </div>
     </div>
 
-    <!-- Holdings -->
+    <!-- P&L breakdown bars -->
+    <div class="pnl-bars-card">
+      <p style="font-weight:800;font-size:13px;color:var(--text);margin-bottom:12px">P&amp;L by Holding</p>
+      ${holdings.map(h => {
+        const barW = (Math.abs(h.pnlP) / maxPnlPct * 100).toFixed(1);
+        const isUp = h.pnl >= 0;
+        return `<div class="pnl-bar-row">
+          <div class="pnl-bar-label">${h.ticker}</div>
+          <div class="pnl-bar-track">
+            <div class="pnl-bar-fill" data-w="${barW}" style="background:${isUp?'var(--green)':'var(--red)'}"></div>
+          </div>
+          <div class="pnl-bar-val ${isUp?'up':'dn'}">${isUp?'+':''}${h.pnlP.toFixed(1)}%</div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <!-- Holdings list -->
     <p style="font-weight:700;font-size:11px;color:var(--faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px">Holdings</p>
     ${holdings.map(h => `
       <div class="holding-card">
@@ -2239,6 +2441,20 @@ function renderDBPortfolio() {
     `).join('')}
     <div style="height:8px"></div>
   `;
+
+  requestAnimationFrame(() => {
+    if (portPerfChart) { try { portPerfChart.remove(); } catch(e){} portPerfChart = null; }
+    initPerfChart(perfData, up ? '#10b981' : '#ef4444');
+    const donut = document.getElementById('port-donut');
+    if (donut) {
+      makeDonut(donut, holdings.map((h, i) => ({
+        label: h.ticker,
+        pct: total > 0 ? (h.val / total) * 100 : 0,
+        color: COLORS[i % COLORS.length],
+      })));
+    }
+    animatePnlBars();
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
