@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>InvestEasy — Smart Investing Made Simple</title>
+<title>FinVue — Your Financial View</title>
 <meta name="description" content="AI-powered investment analysis, real-time market data, and portfolio tracking.">
 <meta name="theme-color" content="#0f172a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="InvestEasy">
-<meta property="og:title" content="InvestEasy — Smart Investing Made Simple">
+<meta name="apple-mobile-web-app-title" content="FinVue">
+<meta property="og:title" content="FinVue — Your Financial View">
 <meta property="og:description" content="AI-powered investment analysis with 6 elite analysis modes, real-time market data, and portfolio tracking.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="og-image.png">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f172a'/><text x='50' y='68' text-anchor='middle' font-size='52' font-family='sans-serif' font-weight='bold' fill='%2310b981'>IE</text></svg>">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f172a'/><text x='50' y='68' text-anchor='middle' font-size='52' font-family='sans-serif' font-weight='bold' fill='%2310b981'>FV</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&amp;family=DM+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
@@ -373,6 +373,14 @@ button{cursor:pointer}
 .qc-commodity{background:#fef3c7;color:#92400e}.qc-crypto{background:#f3e8ff;color:#6d28d9}
 .qc-etf{background:#dbeafe;color:#1e40af}.qc-stock{background:#dcfce7;color:#166534}
 .import-port-btn{font-size:11px;font-weight:700;color:var(--green);background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:2px 0;flex-shrink:0}
+.user-chip{position:relative;cursor:pointer;border-radius:10px;padding:4px 6px;transition:background .15s}.user-chip:hover{background:var(--border)}
+.user-dropdown{position:absolute;top:calc(100% + 10px);right:0;min-width:220px;background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.3);z-index:2000;overflow:hidden;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .2s ease,transform .2s ease}
+.user-chip:hover .user-dropdown,.user-chip:focus-within .user-dropdown{opacity:1;transform:translateY(0);pointer-events:auto}
+.user-dd-header{padding:14px 16px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,#0f172a,#1e293b)}
+.user-dd-name{font-size:13px;font-weight:800;color:#fff}.user-dd-email{font-size:11px;color:#64748b;margin-top:2px}
+.user-dd-item{display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;border:none;background:none;width:100%;text-align:left;transition:background .15s;white-space:nowrap}.user-dd-item:hover{background:var(--border)}
+.user-dd-item svg{flex-shrink:0;opacity:.7}.user-dd-divider{height:1px;background:var(--border);margin:3px 0}
+.user-dd-item.signout{color:#f87171}.user-dd-item.signout:hover{background:#7f1d1d22}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .modal-handle{width:36px;height:4px;border-radius:2px;background:var(--border2);margin:0 auto 20px}
 .modal-title{font-size:17px;font-weight:800;color:var(--text);margin-bottom:18px}
@@ -478,7 +486,7 @@ button{cursor:pointer}
 <div class="shell">
   <!-- Header -->
   <div class="header">
-    <div><h1>InvestEasy<span class="ver">v8</span></h1></div>
+    <div><h1>FinVue<span class="ver">v8</span></h1></div>
     <div style="display:flex;align-items:center;gap:14px">
       <div style="display:flex;align-items:center"><span class="live-dot"></span><span class="live-txt">Live</span></div>
       <div id="header-auth-btns" style="display:flex;align-items:center;gap:8px">
@@ -489,9 +497,33 @@ button{cursor:pointer}
           style="padding:7px 16px;border-radius:10px;font-size:12px;font-weight:700;color:#fff;background:var(--green);transition:background 0.2s"
           onmouseover="this.style.background='#059669'" onmouseout="this.style.background='var(--green)'">Sign up</button>
       </div>
-      <div id="header-user" style="display:none;align-items:center;gap:8px">
+      <div id="header-user" class="user-chip" style="display:none;align-items:center;gap:8px" tabindex="0">
         <div id="header-avatar" style="width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;font-family:var(--mono)"></div>
         <span id="header-username-text" style="font-size:13px;font-weight:700;color:var(--text2)"></span>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="color:var(--faint);flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+        <div class="user-dropdown">
+          <div class="user-dd-header">
+            <div class="user-dd-name" id="dd-name"></div>
+            <div class="user-dd-email" id="dd-email"></div>
+          </div>
+          <button class="user-dd-item" onclick="switchTab('portfolio');event.stopPropagation()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 000 4h4v-4h-4z"/></svg>
+            My Portfolio
+          </button>
+          <button class="user-dd-item" onclick="switchTab('saved');event.stopPropagation()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+            Saved Reports
+          </button>
+          <button class="user-dd-item" onclick="switchTab('settings');event.stopPropagation()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 00-16 0"/></svg>
+            View Profile
+          </button>
+          <div class="user-dd-divider"></div>
+          <button class="user-dd-item signout" onclick="doLogout();event.stopPropagation()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Sign Out
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -523,8 +555,8 @@ button{cursor:pointer}
     <div class="auth-popup">
       <button class="auth-close" onclick="document.getElementById('auth-overlay').classList.add('hidden')">✕</button>
       <div class="auth-logo">
-        <div class="auth-logo-icon">IE</div>
-        <h2>InvestEasy</h2>
+        <div class="auth-logo-icon">FV</div>
+        <h2>FinVue</h2>
         <p>Smart investing made simple</p>
       </div>
       <div class="auth-card">
@@ -649,8 +681,8 @@ button{cursor:pointer}
   <!-- Nav -->
   <div class="nav">
     <div class="nav-brand">
-      <div class="nav-brand-icon">IE</div>
-      <span class="nav-brand-name">InvestEasy</span>
+      <div class="nav-brand-icon">FV</div>
+      <span class="nav-brand-name">FinVue</span>
     </div>
     <button class="active" data-tab="news">
       <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M18 18h-8M18 10h-8"/></svg>
@@ -1069,7 +1101,7 @@ function openNewsArticle(idx, fromLive) {
   const overlay = document.getElementById('news-overlay');
   const inner   = document.getElementById('news-sheet-inner');
   const cleanTickers = (n.tickers || []).filter(t => !t.startsWith('^'));
-  const articleLink = n.link || `https://finance.yahoo.com/search?p=${encodeURIComponent(n.title)}`;
+  const articleLink = n.link || `https://news.google.com/search?q=${encodeURIComponent('"' + n.title + '"')}&hl=en-US&gl=US&ceid=US:en`;
 
   function renderSheet(bodyHtml) {
     inner.innerHTML = `
@@ -1909,7 +1941,7 @@ function renderFinBot() {
           <div>
             <p style="font-weight:800;font-size:12px;color:var(--border);margin-bottom:4px">Educational Tool Only</p>
             <p style="font-size:11.5px;color:var(--faint);line-height:1.65">
-              InvestEasy FinBot is an <strong style="color:#e2e8f0">educational tool</strong>. It does not constitute financial advice. Always consult a licensed professional before making investment decisions.
+              FinVue FinBot is an <strong style="color:#e2e8f0">educational tool</strong>. It does not constitute financial advice. Always consult a licensed professional before making investment decisions.
             </p>
           </div>
         </div>
@@ -3115,6 +3147,10 @@ function updateHeaderUser() {
     userEl.style.display = 'flex';
     un.textContent = '@' + currentUser.username;
     av.textContent = (currentUser.name || currentUser.username)[0].toUpperCase();
+    const ddName  = document.getElementById('dd-name');
+    const ddEmail = document.getElementById('dd-email');
+    if (ddName)  ddName.textContent  = currentUser.name || currentUser.username;
+    if (ddEmail) ddEmail.textContent = currentUser.email || ('@' + currentUser.username);
   } else {
     authBtns.style.display = 'flex';
     userEl.style.display = 'none';
