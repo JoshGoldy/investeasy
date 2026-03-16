@@ -13,7 +13,7 @@
 // ── CONFIGURATION ──────────────────────────────────────────────────────────
 
 // ⚠️  REPLACE THIS WITH YOUR ACTUAL ANTHROPIC API KEY
-define('ANTHROPIC_API_KEY', 'sk-ant-REPLACE-WITH-YOUR-KEY');
+define('ANTHROPIC_API_KEY', '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');
 
 // Rate limiting: max requests per IP per hour (adjust as needed)
 define('RATE_LIMIT', 20);
