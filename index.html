@@ -1610,13 +1610,12 @@ function renderFinBotNewsResult(idx, text, articleLink, n) {
     </div>`;
 }
 
-function saveNewsAnalysis(idx) {
+async function saveNewsAnalysis(idx) {
   if (finbotNewsState.savedId) { closeFinBotNewsModal(); switchTab('saved'); return; }
   if (!finbotNewsState.result) return;
   const n = liveNews[idx];
   if (!n) return;
   const articleLink = n.link || `https://www.google.com/search?q=${encodeURIComponent(n.title)}&tbm=nws`;
-  const reports = getSavedReports();
   const report = {
     id:           Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     modeId:       'news',
@@ -1628,10 +1627,8 @@ function saveNewsAnalysis(idx) {
     articleLink,
     savedAt:      Date.now(),
   };
-  reports.unshift(report);
-  localStorage.setItem(SAVED_KEY, JSON.stringify(reports));
+  await persistReport(report);
   finbotNewsState.savedId = report.id;
-  updateSavedBadge();
   showToast('Analysis saved! View it in the Saved tab.');
   // Re-render to flip buttons to "Saved" state
   renderFinBotNewsResult(idx, finbotNewsState.result, articleLink, n);
@@ -2881,17 +2878,72 @@ renderFinBot();
 
 const SAVED_KEY = 'ie_saved_reports';
 
+// When a user is logged in this holds their reports from the DB.
+// null = guest mode → fall back to localStorage.
+let dbSavedReports = null;
+
 function getSavedReports() {
-  return JSON.parse(localStorage.getItem(SAVED_KEY) || '[]');
+  return dbSavedReports ?? JSON.parse(localStorage.getItem(SAVED_KEY) || '[]');
 }
 
-function saveFinBotReport() {
-  // If already saved — navigate to Saved tab
+async function loadSavedReportsFromDB() {
+  try {
+    const d = await apiCall('data.php?action=saved_reports');
+    if (d.success && Array.isArray(d.reports)) {
+      dbSavedReports = d.reports;
+      updateSavedBadge();
+      if (document.getElementById('tab-saved')?.classList.contains('active')) renderSaved();
+    }
+  } catch(e) { /* silently fall back to localStorage */ }
+}
+
+// Save a report object — DB when logged in, localStorage for guests.
+async function persistReport(report) {
+  if (currentUser) {
+    try {
+      await apiCall('data.php?action=saved_reports', 'POST', {
+        id:          report.id,
+        modeId:      report.modeId,
+        modeTitle:   report.modeTitle,
+        modeSub:     report.modeSub     || '',
+        modeCol:     report.modeCol     || '#10b981',
+        modeIcon:    report.modeIcon    || '🤖',
+        content:     report.content,
+        articleLink: report.articleLink || '',
+        savedAt:     report.savedAt,
+      });
+      if (!dbSavedReports) dbSavedReports = [];
+      dbSavedReports.unshift(report);
+    } catch(e) { showToast('Could not save to server — stored locally.'); localPersistReport(report); }
+  } else {
+    localPersistReport(report);
+  }
+  updateSavedBadge();
+}
+
+function localPersistReport(report) {
+  const reports = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]');
+  reports.unshift(report);
+  localStorage.setItem(SAVED_KEY, JSON.stringify(reports));
+}
+
+// Delete a report — DB when logged in, localStorage for guests.
+async function deletePersistedReport(id) {
+  if (currentUser) {
+    try { await apiCall('data.php?action=saved_reports', 'DELETE', { id }); } catch(e) {}
+    if (dbSavedReports) dbSavedReports = dbSavedReports.filter(r => r.id !== id);
+  } else {
+    const reports = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]').filter(r => r.id !== id);
+    localStorage.setItem(SAVED_KEY, JSON.stringify(reports));
+  }
+  updateSavedBadge();
+}
+
+async function saveFinBotReport() {
   if (finbotState.savedId) { switchTab('saved'); return; }
   if (!finbotState.result) return;
   const modeObj = FINBOT_MODES.find(m => m.id === finbotState.mode);
-  const reports  = getSavedReports();
-  const report   = {
+  const report  = {
     id:        Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     modeId:    modeObj.id,
     modeTitle: modeObj.title,
@@ -2901,17 +2953,27 @@ function saveFinBotReport() {
     content:   finbotState.result,
     savedAt:   Date.now(),
   };
-  reports.unshift(report);
-  localStorage.setItem(SAVED_KEY, JSON.stringify(reports));
+  await persistReport(report);
   finbotState.savedId = report.id;
   renderFinBot();
-  updateSavedBadge();
   showToast('Report saved! View it in the Saved tab.');
 }
 
-function deleteSavedReport(id) {
-  const reports = getSavedReports().filter(r => r.id !== id);
-  localStorage.setItem(SAVED_KEY, JSON.stringify(reports));
+async function deleteSavedReport(id) {
+  await deletePersistedReport(id);
+  renderSaved();
+}
+
+async function clearAllSavedReports() {
+  if (!confirm('Delete all saved reports?')) return;
+  if (currentUser) {
+    // Delete each from DB
+    const ids = getSavedReports().map(r => r.id);
+    await Promise.all(ids.map(id => apiCall('data.php?action=saved_reports', 'DELETE', { id }).catch(() => {})));
+    dbSavedReports = [];
+  } else {
+    localStorage.removeItem(SAVED_KEY);
+  }
   updateSavedBadge();
   renderSaved();
 }
@@ -3008,7 +3070,7 @@ function renderSaved(filter) {
         <h2>Saved Reports</h2>
         <p style="font-size:12px;color:var(--faint);margin-top:4px">${allReports.length} report${allReports.length !== 1 ? 's' : ''} saved locally</p>
       </div>
-      <button onclick="if(confirm('Delete all saved reports?')){localStorage.removeItem(SAVED_KEY);updateSavedBadge();renderSaved()}"
+      <button onclick="clearAllSavedReports()"
         style="font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;padding:6px 8px;border-radius:8px">Clear all</button>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
@@ -3890,9 +3952,10 @@ async function doRegister() {
 // ── Logout ────────────────────────────────────────────────────────────────────
 async function doLogout() {
   try { await apiCall('auth.php?action=logout', 'POST'); } catch(e) {}
-  currentUser  = null;
-  dbPortfolio  = [];
-  watchlistSet = new Set();
+  currentUser     = null;
+  dbPortfolio     = [];
+  watchlistSet    = new Set();
+  dbSavedReports  = null;
   // If on a protected page, redirect to news first
   const activeTab = document.querySelector('.tab-content.active');
   if (activeTab && (activeTab.id === 'tab-portfolio' || activeTab.id === 'tab-settings')) {
@@ -3928,7 +3991,7 @@ function updateHeaderUser() {
 }
 
 async function syncAfterLogin() {
-  await Promise.all([loadSettingsFromDB(), loadWatchlistFromDB(), loadPortfolioFromDB()]);
+  await Promise.all([loadSettingsFromDB(), loadWatchlistFromDB(), loadPortfolioFromDB(), loadSavedReportsFromDB()]);
   updateHeaderUser();
 }
 

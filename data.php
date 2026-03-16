@@ -1,7 +1,7 @@
 <?php
 /**
  * InvestEasy — Data API
- * Handles: settings, portfolio, watchlist CRUD (all require authentication)
+ * Handles: settings, portfolio, watchlist, saved_reports CRUD (all require authentication)
  *
  * GET  data.php?action=settings             → load settings
  * POST data.php?action=settings             → save settings (partial update ok)
@@ -11,6 +11,9 @@
  * GET  data.php?action=watchlist            → load watchlist
  * POST data.php?action=watchlist            → add to watchlist  { ticker, name }
  * DELETE data.php?action=watchlist          → remove from watchlist  { ticker }
+ * GET  data.php?action=saved_reports        → load all saved reports for user
+ * POST data.php?action=saved_reports        → save a report  { id, modeId, modeTitle, ... }
+ * DELETE data.php?action=saved_reports      → delete a report  { id }
  */
 
 session_start();
@@ -146,6 +149,59 @@ switch ($action) {
             $ticker = strtoupper(trim($body['ticker'] ?? $_GET['ticker'] ?? ''));
             if (!$ticker) fail(400, 'Ticker is required.');
             $db->prepare("DELETE FROM watchlist WHERE user_id = ? AND ticker = ?")->execute([$uid, $ticker]);
+            ok();
+        }
+        break;
+
+    // ── SAVED REPORTS ─────────────────────────────────────────────────────────
+    case 'saved_reports':
+        $uid = requireAuth();
+        $db  = getDB();
+
+        if ($method === 'GET') {
+            $stmt = $db->prepare("SELECT * FROM saved_reports WHERE user_id = ? ORDER BY saved_at DESC");
+            $stmt->execute([$uid]);
+            $rows = $stmt->fetchAll();
+            // Rename snake_case to camelCase for the frontend
+            $reports = array_map(function($r) {
+                return [
+                    'id'          => $r['id'],
+                    'modeId'      => $r['mode_id'],
+                    'modeTitle'   => $r['mode_title'],
+                    'modeSub'     => $r['mode_sub'],
+                    'modeCol'     => $r['mode_col'],
+                    'modeIcon'    => $r['mode_icon'],
+                    'content'     => $r['content'],
+                    'articleLink' => $r['article_link'],
+                    'savedAt'     => (int)$r['saved_at'],
+                ];
+            }, $rows);
+            ok(['reports' => $reports]);
+
+        } elseif ($method === 'POST') {
+            $id          = trim($body['id']          ?? '');
+            $modeId      = trim($body['modeId']      ?? '');
+            $modeTitle   = mb_substr(trim($body['modeTitle']   ?? ''), 0, 255);
+            $modeSub     = mb_substr(trim($body['modeSub']     ?? ''), 0, 100);
+            $modeCol     = mb_substr(trim($body['modeCol']     ?? '#10b981'), 0, 20);
+            $modeIcon    = mb_substr(trim($body['modeIcon']    ?? '🤖'), 0, 10);
+            $content     = $body['content']     ?? '';
+            $articleLink = mb_substr(trim($body['articleLink'] ?? ''), 0, 500);
+            $savedAt     = (int)($body['savedAt'] ?? (time() * 1000));
+
+            if (!$id || !$modeId || !$content) fail(400, 'Missing required fields.');
+
+            $db->prepare(
+                "INSERT IGNORE INTO saved_reports
+                 (id, user_id, mode_id, mode_title, mode_sub, mode_col, mode_icon, content, article_link, saved_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            )->execute([$id, $uid, $modeId, $modeTitle, $modeSub, $modeCol, $modeIcon, $content, $articleLink, $savedAt]);
+            ok();
+
+        } elseif ($method === 'DELETE') {
+            $id = trim($body['id'] ?? $_GET['id'] ?? '');
+            if (!$id) fail(400, 'Report id is required.');
+            $db->prepare("DELETE FROM saved_reports WHERE id = ? AND user_id = ?")->execute([$id, $uid]);
             ok();
         }
         break;
