@@ -1,37 +1,38 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 115">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 115">
   <defs>
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@900&amp;display=swap');
-    </style>
-    <clipPath id="glass-clip">
-      <circle cx="50" cy="47" r="30"/>
+    <clipPath id="gc">
+      <circle cx="52" cy="49" r="32"/>
     </clipPath>
   </defs>
 
-  <!-- Magnifying glass handle -->
-  <line x1="73" y1="70" x2="95" y2="92" stroke="#43A047" stroke-width="13" stroke-linecap="round"/>
+  <!-- Handle — bottom-left direction -->
+  <line x1="28" y1="72" x2="5" y2="97" stroke="#46B14B" stroke-width="14" stroke-linecap="round"/>
 
   <!-- Magnifying glass ring -->
-  <circle cx="50" cy="47" r="30" fill="white" stroke="#43A047" stroke-width="9"/>
+  <circle cx="52" cy="49" r="32" fill="white" stroke="#46B14B" stroke-width="10"/>
 
-  <!-- Bar chart bars (clipped inside glass) -->
-  <g clip-path="url(#glass-clip)">
-    <rect x="27" y="52" width="9" height="17" rx="2" fill="#1E88E5"/>
-    <rect x="41" y="43" width="9" height="26" rx="2" fill="#1E88E5"/>
-    <rect x="55" y="34" width="9" height="35" rx="2" fill="#1E88E5"/>
-    <!-- Trend line with dots -->
-    <polyline points="31,49 45,39 59,30" fill="none" stroke="#1E88E5" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="31" cy="49" r="3.2" fill="#1E88E5"/>
-    <circle cx="45" cy="39" r="3.2" fill="#1E88E5"/>
-    <circle cx="59" cy="30" r="3.2" fill="#1E88E5"/>
+  <!-- Chart content clipped inside glass -->
+  <g clip-path="url(#gc)">
+    <!-- Bars (tall → short, left to right) -->
+    <rect x="26" y="36" width="10" height="31" rx="2.5" fill="#2B8FD4"/>
+    <rect x="41" y="43" width="10" height="24" rx="2.5" fill="#2B8FD4"/>
+    <rect x="56" y="51" width="10" height="16" rx="2.5" fill="#2B8FD4"/>
+    <!-- Trend line + dots on bar tops -->
+    <polyline points="31,33  46,41  61,49"
+              fill="none" stroke="#2B8FD4"
+              stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="31" cy="33" r="4" fill="#2B8FD4"/>
+    <circle cx="46" cy="41" r="4" fill="#2B8FD4"/>
+    <circle cx="61" cy="49" r="4" fill="#2B8FD4"/>
   </g>
 
   <!-- "Fin" in blue -->
-  <text x="110" y="75"
-        font-family="'Nunito', 'Arial Black', 'Arial Bold', Arial, sans-serif"
-        font-size="58" font-weight="900" fill="#1E88E5">Fin</text>
+  <text x="107" y="79"
+        font-family="'Nunito','Arial Black','Arial Bold',Arial,sans-serif"
+        font-size="62" font-weight="900" fill="#2B8FD4">Fin</text>
+
   <!-- "Scope" in green -->
-  <text x="207" y="75"
-        font-family="'Nunito', 'Arial Black', 'Arial Bold', Arial, sans-serif"
-        font-size="58" font-weight="900" fill="#43A047">Scope</text>
+  <text x="210" y="79"
+        font-family="'Nunito','Arial Black','Arial Bold',Arial,sans-serif"
+        font-size="62" font-weight="900" fill="#46B14B">Scope</text>
 </svg>
