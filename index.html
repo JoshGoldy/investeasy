@@ -1770,6 +1770,10 @@ function openStockDetail(idx) {
     }
     // Replace with live data as soon as it arrives
     fetchLiveChart(stock.ticker, '1D', points => {
+      // Sanity-check: last price must be within 10× of current price.
+      // Catches wrong-symbol data (e.g. ETH→Ethan Allen $22 vs Ethereum $3892).
+      const last = points[points.length - 1]?.value;
+      if (!last || !stock.val || last / stock.val > 10 || stock.val / last > 10) return;
       stock.charts['1D'] = points;
       const el2 = document.getElementById('detail-chart');
       if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, convertChartData(points), color, 300); }
@@ -1793,6 +1797,8 @@ function switchDetailTF(idx, tf) {
       detailChart = createFullChart(el, convertChartData(stock.charts[tf]), color, 300);
     }
     fetchLiveChart(stock.ticker, tf, points => {
+      const last = points[points.length - 1]?.value;
+      if (!last || !stock.val || last / stock.val > 10 || stock.val / last > 10) return;
       stock.charts[tf] = points;
       const el2 = document.getElementById('detail-chart');
       if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, convertChartData(points), color, 300); }

@@ -2,6 +2,21 @@
 header('Content-Type: application/json');
 header('Cache-Control: no-store');
 
+// ── One-time cleanup: purge stale cache files written before ETH→ETH-USD fix ──
+// These files were created when ETH mapped to Ethan Allen (NYSE:ETH, ~$22).
+// Safe to run every request — file_exists() is a no-op once they're gone.
+foreach ([
+    md5('ETH5m1d'), md5('ETH1d5d'), md5('ETH60m5d'),
+    md5('ETH1d1mo'), md5('ETH1d3mo'), md5('ETH1wk1y'),
+] as $_stale) {
+    $_f = sys_get_temp_dir() . '/ie_' . $_stale . '.json';
+    if (file_exists($_f)) @unlink($_f);
+}
+unset($_stale, $_f);
+
+// Force PHP to recompile this file on next request (clears any OPcache serving old code)
+if (function_exists('opcache_invalidate')) opcache_invalidate(__FILE__, true);
+
 // ── Ticker map: app symbol → Yahoo Finance symbol ─────────────────────────────
 const TICKER_MAP = [
     // Indices
