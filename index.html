@@ -277,7 +277,7 @@ button{cursor:pointer}
 .alloc-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
 .alloc-dot{width:10px;height:10px;border-radius:3px;margin-right:7px;display:inline-block}
 .holding-card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:10px}
-.holding-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.holding-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .holding-stat{text-align:center}
 .holding-stat .hl{font-size:10px;color:var(--faint)}
 .holding-stat .hv{margin-top:2px;font-family:var(--mono);font-size:12px;font-weight:500;color:#374151}
@@ -820,6 +820,8 @@ let currentUser   = null;          // {id, name, email, username} when logged in
 let dbPortfolio   = [];            // [{ticker,name,shares,avg_cost}]
 let watchlistSet  = new Set();     // Set of tickers on watchlist
 let dbSavedReports = null;         // null = guest (localStorage), array = logged-in (DB)
+let portSort   = 'value';          // 'value' | 'pnl_pct' | 'ticker'
+let portFilter = 'all';            // 'all' | 'gainers' | 'losers'
 
 // ═══════════════════════════════════════════════════════════════════════════
 // DATA LAYER
@@ -3531,28 +3533,108 @@ function renderEmptyPortfolio() {
   `;
 }
 
+function analyzePortfolioWithFinBot() {
+  if (!dbPortfolio.length) return;
+  const tot = dbPortfolio.reduce((s, h) => {
+    const mkt = RAW_MARKETS.find(m => m.ticker === h.ticker);
+    return s + h.shares * (mkt ? mkt.val : h.avg_cost);
+  }, 0);
+  finbotForm.portfolio = dbPortfolio.map(h => {
+    const mkt = RAW_MARKETS.find(m => m.ticker === h.ticker);
+    const val = h.shares * (mkt ? mkt.val : h.avg_cost);
+    const pct = tot > 0 ? ((val / tot) * 100).toFixed(1) : '0';
+    return `${h.ticker} ${pct}%`;
+  }).join(', ');
+  finbotForm.portVal = fmtMoney(tot);
+  finbotState.mode = 'risk';
+  finbotState.result = null;
+  finbotState.error = null;
+  finbotState.loading = false;
+  switchTab('finbot');
+}
+
 function renderDBPortfolio() {
   const COLORS = ['#10b981','#3b82f6','#8b5cf6','#f59e0b','#ec4899','#06b6d4','#ef4444','#f97316'];
+  const SECTOR_MAP = {
+    AAPL:'Tech',MSFT:'Tech',GOOGL:'Tech',GOOG:'Tech',NVDA:'Tech',META:'Tech',AMZN:'Tech',
+    TSLA:'Tech',AMD:'Tech',INTC:'Tech',NFLX:'Tech',CRM:'Tech',ORCL:'Tech',ADBE:'Tech',
+    PYPL:'Tech',SHOP:'Tech',UBER:'Tech',SNOW:'Tech',PLTR:'Tech',DDOG:'Tech',NET:'Tech',
+    CRWD:'Tech',PINS:'Tech',RBLX:'Tech',SNAP:'Tech',
+    JPM:'Finance',BAC:'Finance',GS:'Finance',MS:'Finance',WFC:'Finance',
+    V:'Finance',MA:'Finance',AXP:'Finance',C:'Finance',BLK:'Finance',
+    JNJ:'Healthcare',PFE:'Healthcare',UNH:'Healthcare',ABBV:'Healthcare',
+    MRK:'Healthcare',LLY:'Healthcare',TMO:'Healthcare',ABT:'Healthcare',MRNA:'Healthcare',
+    XOM:'Energy',CVX:'Energy',COP:'Energy',SLB:'Energy',BP:'Energy',
+    WMT:'Consumer',HD:'Consumer',MCD:'Consumer',COST:'Consumer',NKE:'Consumer',
+    SBUX:'Consumer',TGT:'Consumer',DIS:'Consumer',
+    CAT:'Industrial',BA:'Industrial',GE:'Industrial',HON:'Industrial',
+    SPY:'ETF',QQQ:'ETF',VOO:'ETF',VTI:'ETF',IWM:'ETF',GLD:'ETF',
+    SLV:'ETF',TLT:'ETF',ARKK:'ETF',USO:'ETF',
+    BTC:'Crypto',ETH:'Crypto',SOL:'Crypto',XRP:'Crypto',DOGE:'Crypto',
+    ADA:'Crypto',GBTC:'Crypto',ETHE:'Crypto',IBIT:'Crypto',FBTC:'Crypto',
+    PDBC:'Commodities',DBC:'Commodities',PLTM:'Commodities',
+  };
+  const SECTOR_COLORS = {
+    Tech:'#6366f1',Finance:'#3b82f6',Healthcare:'#10b981',Crypto:'#f59e0b',
+    ETF:'#8b5cf6',Energy:'#f97316',Consumer:'#ec4899',Industrial:'#06b6d4',
+    Commodities:'#84cc16',Other:'#94a3b8',
+  };
 
-  // Enrich holdings with current prices from RAW_MARKETS where possible
+  // Enrich holdings with current prices
   const holdings = dbPortfolio.map(h => {
     const mkt = RAW_MARKETS.find(m => m.ticker === h.ticker);
-    const cur = mkt ? mkt.val : h.avg_cost;
-    const val = h.shares * cur;
+    const cur  = mkt ? mkt.val : h.avg_cost;
+    const val  = h.shares * cur;
     const cost = h.shares * h.avg_cost;
-    const pnl = val - cost;
+    const pnl  = val - cost;
     const pnlP = h.avg_cost > 0 ? ((cur - h.avg_cost) / h.avg_cost * 100) : 0;
     return { ...h, cur, val, cost, pnl, pnlP };
   });
 
-  const total = holdings.reduce((s, h) => s + h.val, 0);
+  const total     = holdings.reduce((s, h) => s + h.val, 0);
   const totalCost = holdings.reduce((s, h) => s + h.cost, 0);
-  const totalPnl = total - totalCost;
+  const totalPnl  = total - totalCost;
   const totalPnlP = totalCost > 0 ? ((totalPnl / totalCost) * 100).toFixed(2) : '0.00';
-  const up = totalPnl >= 0;
-
+  const up        = totalPnl >= 0;
   const maxPnlPct = Math.max(...holdings.map(h => Math.abs(h.pnlP))) || 1;
   const perfData  = genPortHistory(totalCost, total);
+
+  // Metrics
+  const sortedByPnl = [...holdings].sort((a, b) => b.pnlP - a.pnlP);
+  const best    = sortedByPnl[0];
+  const worst   = sortedByPnl[sortedByPnl.length - 1];
+  const gainers = holdings.filter(h => h.pnl >= 0).length;
+  const losers  = holdings.length - gainers;
+  const sectors = new Set(holdings.map(h => SECTOR_MAP[h.ticker] || 'Other'));
+  const divScore = Math.min(100, Math.round(holdings.length * 10 + sectors.size * 8));
+
+  // Sector breakdown
+  const sectorTotals = {};
+  holdings.forEach(h => {
+    const sec = SECTOR_MAP[h.ticker] || 'Other';
+    sectorTotals[sec] = (sectorTotals[sec] || 0) + h.val;
+  });
+  const sectorList = Object.entries(sectorTotals)
+    .map(([name, val]) => ({ name, val, pct: total > 0 ? (val / total * 100) : 0 }))
+    .sort((a, b) => b.val - a.val);
+  const maxSectorPct = sectorList[0]?.pct || 1;
+
+  // Apply filter + sort to holdings list
+  let filtered = portFilter === 'gainers' ? holdings.filter(h => h.pnl >= 0)
+               : portFilter === 'losers'  ? holdings.filter(h => h.pnl < 0)
+               : [...holdings];
+  if (portSort === 'pnl_pct') filtered.sort((a, b) => b.pnlP - a.pnlP);
+  else if (portSort === 'ticker') filtered.sort((a, b) => a.ticker.localeCompare(b.ticker));
+  else filtered.sort((a, b) => b.val - a.val); // default: value
+
+  const filterBtn = (id, label) => {
+    const active = portFilter === id;
+    return `<button onclick="portFilter='${id}';renderDBPortfolio()"
+      style="padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;border:1.5px solid ${active?'var(--green)':'var(--border)'};
+             background:${active?'var(--green-bg)':'transparent'};color:${active?'var(--green)':'var(--muted)'};cursor:pointer;white-space:nowrap">
+      ${label}
+    </button>`;
+  };
 
   document.getElementById('tab-portfolio').innerHTML = `
     <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
@@ -3561,7 +3643,6 @@ function renderDBPortfolio() {
         background:var(--green);color:#fff;font-weight:800;font-size:12px;flex-shrink:0">+ Add</button>
     </div>
 
-    <!-- Hero: summary numbers only -->
     <div class="port-hero">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
@@ -3578,7 +3659,15 @@ function renderDBPortfolio() {
       </div>
     </div>
 
-    <!-- Performance chart card with period tabs -->
+    <button onclick="analyzePortfolioWithFinBot()"
+      style="width:100%;padding:13px;border-radius:14px;background:linear-gradient(135deg,#7c3aed18,#6d28d918);
+             color:#a78bfa;font-size:13px;font-weight:700;border:1.5px solid #7c3aed30;cursor:pointer;
+             margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s"
+      onmouseenter="this.style.background='linear-gradient(135deg,#7c3aed28,#6d28d928)'"
+      onmouseleave="this.style.background='linear-gradient(135deg,#7c3aed18,#6d28d918)'">
+      🤖 Analyze Portfolio with FinBot →
+    </button>
+
     <div class="port-perf-card" id="port-perf-wrap">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <p style="font-weight:800;font-size:13px;color:var(--text)">Performance</p>
@@ -3592,7 +3681,55 @@ function renderDBPortfolio() {
       <div class="perf-chart-area" style="height:170px"></div>
     </div>
 
-    <!-- Allocation: interactive canvas donut + legend -->
+    <!-- Metrics card -->
+    <div class="alloc-card">
+      <p style="font-weight:800;font-size:13px;color:var(--text);margin-bottom:14px">Portfolio Metrics</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="background:var(--border);border-radius:12px;padding:12px">
+          <p style="font-size:10px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Best Performer</p>
+          <p style="font-weight:800;font-size:14px;color:var(--text);font-family:var(--mono)">${best?.ticker || '—'}</p>
+          <p style="font-size:12px;font-weight:700;color:var(--green)">${best ? '+' + best.pnlP.toFixed(1) + '%' : '—'}</p>
+        </div>
+        <div style="background:var(--border);border-radius:12px;padding:12px">
+          <p style="font-size:10px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Worst Performer</p>
+          <p style="font-weight:800;font-size:14px;color:var(--text);font-family:var(--mono)">${worst?.ticker || '—'}</p>
+          <p style="font-size:12px;font-weight:700;color:${worst && worst.pnlP < 0 ? 'var(--red)' : 'var(--green)'}">
+            ${worst ? (worst.pnlP >= 0 ? '+' : '') + worst.pnlP.toFixed(1) + '%' : '—'}
+          </p>
+        </div>
+        <div style="background:var(--border);border-radius:12px;padding:12px">
+          <p style="font-size:10px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Gainers / Losers</p>
+          <p style="font-size:14px;font-weight:800">
+            <span style="color:var(--green)">${gainers}↑</span>
+            <span style="color:var(--faint);font-weight:400"> / </span>
+            <span style="color:var(--red)">${losers}↓</span>
+          </p>
+        </div>
+        <div style="background:var(--border);border-radius:12px;padding:12px">
+          <p style="font-size:10px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Cost Basis</p>
+          <p style="font-weight:800;font-size:14px;color:var(--text);font-family:var(--mono)">${fmtMoney(totalCost)}</p>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <p style="font-size:12px;font-weight:700;color:var(--text)">Diversification</p>
+          <p style="font-size:12px;font-weight:800;color:${divScore >= 60 ? 'var(--green)' : divScore >= 30 ? '#f59e0b' : 'var(--red)'}">
+            ${divScore}/100
+          </p>
+        </div>
+        <div style="height:7px;background:var(--border);border-radius:4px;overflow:hidden">
+          <div style="height:100%;width:${divScore}%;border-radius:4px;
+            background:${divScore >= 60 ? 'var(--green)' : divScore >= 30 ? '#f59e0b' : 'var(--red)'};
+            transition:width .8s cubic-bezier(.25,.46,.45,.94)"></div>
+        </div>
+        <p style="font-size:10px;color:var(--faint);margin-top:5px">
+          ${sectors.size} sector${sectors.size !== 1 ? 's' : ''} · ${holdings.length} holding${holdings.length !== 1 ? 's' : ''}
+          ${divScore >= 60 ? ' · Well diversified' : divScore >= 30 ? ' · Moderately diversified' : ' · Consider adding more variety'}
+        </p>
+      </div>
+    </div>
+
+    <!-- Allocation donut -->
     <div class="alloc-card">
       <p style="font-weight:800;font-size:13px;color:var(--text);margin-bottom:12px">Allocation</p>
       <div style="display:flex;gap:16px;align-items:center">
@@ -3612,7 +3749,24 @@ function renderDBPortfolio() {
       </div>
     </div>
 
-    <!-- P&L breakdown bars -->
+    <!-- Sector breakdown -->
+    ${sectorList.length > 1 ? `
+    <div class="pnl-bars-card">
+      <p style="font-weight:800;font-size:13px;color:var(--text);margin-bottom:14px">Sector Breakdown</p>
+      ${sectorList.map(s => {
+        const barW = (s.pct / maxSectorPct * 100).toFixed(1);
+        const col  = SECTOR_COLORS[s.name] || '#94a3b8';
+        return `<div class="pnl-bar-row">
+          <div class="pnl-bar-label" style="width:72px;font-size:10px">${s.name}</div>
+          <div class="pnl-bar-track">
+            <div class="pnl-bar-fill" data-w="${barW}" style="background:${col}"></div>
+          </div>
+          <div class="pnl-bar-val" style="color:var(--muted)">${s.pct.toFixed(1)}%</div>
+        </div>`;
+      }).join('')}
+    </div>` : ''}
+
+    <!-- P&L bars -->
     <div class="pnl-bars-card">
       <p style="font-weight:800;font-size:13px;color:var(--text);margin-bottom:12px">P&amp;L by Holding</p>
       ${holdings.map(h => {
@@ -3628,24 +3782,55 @@ function renderDBPortfolio() {
       }).join('')}
     </div>
 
-    <!-- Holdings list -->
-    <p style="font-weight:700;font-size:11px;color:var(--faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px">Holdings</p>
-    ${holdings.map(h => `
+    <!-- Holdings header with sort + filter -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <p style="font-weight:700;font-size:11px;color:var(--faint);letter-spacing:0.08em;text-transform:uppercase">
+        Holdings${filtered.length !== holdings.length ? ' (' + filtered.length + ' of ' + holdings.length + ')' : ''}
+      </p>
+      <div style="display:flex;align-items:center;gap:6px">
+        ${filterBtn('all', 'All')}
+        ${filterBtn('gainers', '↑ Up')}
+        ${filterBtn('losers', '↓ Down')}
+        <select onchange="portSort=this.value;renderDBPortfolio()"
+          style="padding:5px 8px;border-radius:10px;background:var(--border);color:var(--text);
+                 font-size:11px;font-weight:700;border:none;cursor:pointer;outline:none">
+          <option value="value" ${portSort==='value'?'selected':''}>By Value</option>
+          <option value="pnl_pct" ${portSort==='pnl_pct'?'selected':''}>By P&L %</option>
+          <option value="ticker" ${portSort==='ticker'?'selected':''}>A → Z</option>
+        </select>
+      </div>
+    </div>
+
+    ${filtered.length === 0 ? `<div style="text-align:center;padding:30px;color:var(--faint);font-size:13px">No holdings match this filter</div>` : ''}
+
+    ${filtered.map(h => `
       <div class="holding-card">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
-            <p style="font-weight:800;font-size:14px;color:var(--text);font-family:var(--mono)">${h.ticker}</p>
+            <div style="display:flex;align-items:center;gap:8px">
+              <p style="font-weight:800;font-size:14px;color:var(--text);font-family:var(--mono)">${h.ticker}</p>
+              ${SECTOR_MAP[h.ticker] ? `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;
+                background:${SECTOR_COLORS[SECTOR_MAP[h.ticker]] || '#94a3b8'}18;
+                color:${SECTOR_COLORS[SECTOR_MAP[h.ticker]] || '#94a3b8'}">${SECTOR_MAP[h.ticker]}</span>` : ''}
+            </div>
             <p style="font-size:11px;color:var(--faint);margin-top:1px">${escHtml(h.name)}</p>
           </div>
           <div style="text-align:right">
             <p style="font-weight:700;font-size:15px;color:var(--text);font-family:var(--mono)">${fmtMoney(h.val)}</p>
-            <p style="font-size:12px;font-weight:700;margin-top:2px;color:${h.pnl>=0?'var(--green)':'var(--red)'}">${h.pnl>=0?'+':''}${h.pnlP.toFixed(2)}%</p>
+            <p style="font-size:12px;font-weight:700;margin-top:2px;color:${h.pnl>=0?'var(--green)':'var(--red)'}">
+              ${h.pnl>=0?'+':''}${h.pnlP.toFixed(2)}%
+            </p>
           </div>
         </div>
         <div class="holding-stats">
-          ${[{l:'Units',v:h.shares},{l:'Avg Cost',v:fmtUnitPrice(h.avg_cost)},{l:'Current',v:fmtUnitPrice(h.cur)}].map(s =>
-            `<div class="holding-stat"><p class="hl">${s.l}</p><p class="hv">${s.v}</p></div>`
-          ).join('')}
+          ${[
+            {l:'Units',   v:h.shares},
+            {l:'Avg Cost',v:fmtUnitPrice(h.avg_cost)},
+            {l:'Current', v:fmtUnitPrice(h.cur)},
+            {l:'P&amp;L', v:(h.pnl>=0?'+':'')+fmtMoney(Math.abs(h.pnl))},
+            {l:'Value',   v:fmtMoney(h.val)},
+            {l:'Alloc',   v:total>0?((h.val/total*100).toFixed(1)+'%'):'—'},
+          ].map(s => `<div class="holding-stat"><p class="hl">${s.l}</p><p class="hv" style="color:var(--text)">${s.v}</p></div>`).join('')}
         </div>
         <div style="display:flex;gap:8px;margin-top:10px">
           <button onclick="openAddHoldingModal('${h.ticker}','${escHtml(h.name).replace(/'/g,"\\'")}')"
