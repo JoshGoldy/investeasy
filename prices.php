@@ -4,18 +4,55 @@ header('Cache-Control: no-store');
 
 // ── Ticker map: app symbol → Yahoo Finance symbol ─────────────────────────────
 const TICKER_MAP = [
-    'SPX'  => '^GSPC',
-    'NDX'  => '^NDX',
-    'DJI'  => '^DJI',
-    'UKX'  => '^FTSE',
-    'AAPL' => 'AAPL',
-    'MSFT' => 'MSFT',
-    'NVDA' => 'NVDA',
-    'TSLA' => 'TSLA',
-    'AMZN' => 'AMZN',
-    'XAU'  => 'GC=F',
-    'CL1'  => 'CL=F',
-    'BTC'  => 'BTC-USD',
+    // Indices
+    'SPX'   => '^GSPC',
+    'NDX'   => '^NDX',
+    'DJI'   => '^DJI',
+    'UKX'   => '^FTSE',
+    // Tech / equities
+    'AAPL'  => 'AAPL',
+    'MSFT'  => 'MSFT',
+    'NVDA'  => 'NVDA',
+    'TSLA'  => 'TSLA',
+    'AMZN'  => 'AMZN',
+    'GOOGL' => 'GOOGL',
+    'META'  => 'META',
+    // Finance
+    'JPM'   => 'JPM',
+    'BAC'   => 'BAC',
+    'GS'    => 'GS',
+    // Healthcare
+    'JNJ'   => 'JNJ',
+    'PFE'   => 'PFE',
+    'MRK'   => 'MRK',
+    // Energy
+    'XOM'   => 'XOM',
+    'CVX'   => 'CVX',
+    // Consumer
+    'WMT'   => 'WMT',
+    'COST'  => 'COST',
+    // Industrial
+    'BA'    => 'BA',
+    'CAT'   => 'CAT',
+    // Commodities
+    'XAU'   => 'GC=F',
+    'XAG'   => 'SI=F',
+    'CL1'   => 'CL=F',
+    'NG1'   => 'NG=F',
+    'HG1'   => 'HG=F',
+    'PL1'   => 'PL=F',
+    'ZW1'   => 'ZW=F',
+    // Crypto — must use Yahoo Finance -USD suffix
+    'BTC'   => 'BTC-USD',
+    'ETH'   => 'ETH-USD',
+    'SOL'   => 'SOL-USD',
+    'XRP'   => 'XRP-USD',
+    'BNB'   => 'BNB-USD',
+    'ADA'   => 'ADA-USD',
+    'DOGE'  => 'DOGE-USD',
+    'AVAX'  => 'AVAX-USD',
+    'LINK'  => 'LINK-USD',
+    'MATIC' => 'MATIC-USD',
 ];
 
 $action = $_GET['action'] ?? '';
