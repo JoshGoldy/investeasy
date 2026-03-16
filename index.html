@@ -2989,7 +2989,7 @@ async function loadSavedReportsFromDB() {
 async function persistReport(report) {
   if (currentUser) {
     try {
-      await apiCall('data.php?action=saved_reports', 'POST', {
+      const d = await apiCall('data.php?action=saved_reports', 'POST', {
         id:          report.id,
         modeId:      report.modeId,
         modeTitle:   report.modeTitle,
@@ -3000,6 +3000,7 @@ async function persistReport(report) {
         articleLink: report.articleLink || '',
         savedAt:     report.savedAt,
       });
+      if (!d.success) throw new Error(d.error || 'Server rejected save.');
       if (!dbSavedReports) dbSavedReports = [];
       dbSavedReports.unshift(report);
     } catch(e) { showToast('Could not save to server — stored locally.'); localPersistReport(report); }
@@ -3018,13 +3019,17 @@ function localPersistReport(report) {
 // Delete a report — DB when logged in, localStorage for guests.
 async function deletePersistedReport(id) {
   if (currentUser) {
-    try { await apiCall('data.php?action=saved_reports', 'DELETE', { id }); } catch(e) {}
-    if (dbSavedReports) dbSavedReports = dbSavedReports.filter(r => r.id !== id);
+    try {
+      const d = await apiCall('data.php?action=saved_reports', 'DELETE', { id });
+      if (!d.success) throw new Error(d.error || 'Delete failed.');
+      if (dbSavedReports) dbSavedReports = dbSavedReports.filter(r => r.id !== id);
+    } catch(e) { showToast('Could not delete from server. Please try again.'); return false; }
   } else {
     const reports = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]').filter(r => r.id !== id);
     localStorage.setItem(SAVED_KEY, JSON.stringify(reports));
   }
   updateSavedBadge();
+  return true;
 }
 
 async function saveFinBotReport() {
@@ -3048,8 +3053,8 @@ async function saveFinBotReport() {
 }
 
 async function deleteSavedReport(id) {
-  await deletePersistedReport(id);
-  renderSaved();
+  const ok = await deletePersistedReport(id);
+  if (ok) renderSaved();
 }
 
 async function clearAllSavedReports() {
