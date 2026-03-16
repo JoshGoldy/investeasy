@@ -1080,22 +1080,92 @@ navBtns.forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab))
 // NEWS TAB
 // ═══════════════════════════════════════════════════════════════════════════
 
+// Client-side RSS helpers (used when server-side PHP cannot reach the internet)
+function _newsCateg(title) {
+  const t = title.toLowerCase();
+  if (/bitcoin|ethereum|crypto|blockchain|defi|solana|nft|dogecoin|ripple|altcoin/.test(t)) return 'Crypto';
+  if (/\bfed\b|federal reserve|inflation|cpi|ppi|gdp|interest rate|recession|unemployment|tariff|trade war|central bank/.test(t)) return 'Economy';
+  if (/apple|microsoft|google|alphabet|amazon|meta|nvidia|tesla|openai|\bai\b|artificial intelligence|chip|semiconductor|software|cloud|cyber/.test(t)) return 'Tech';
+  return 'Markets';
+}
+function _newsHot(title) {
+  return /surge|soar|crash|record|rally|plunge|breaking|alert|spike|all.time.high|ath|collapse|explode/i.test(title);
+}
+
+async function fetchNewsClientSide() {
+  const RSS2JSON = 'https://api.rss2json.com/v1/api.json?count=20&rss_url=';
+  const feeds = [
+    { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html',            pub: 'CNBC' },
+    { url: 'https://feeds.marketwatch.com/marketwatch/topstories/',             pub: 'MarketWatch' },
+    { url: 'https://rss.nytimes.com/services/xml/rss/nyt/Business.xml',         pub: 'New York Times' },
+    { url: 'https://feeds.a.dj.com/rss/RSSMarketsMain.xml',                    pub: 'Wall Street Journal' },
+    { url: 'https://www.cnbc.com/id/10000664/device/rss/rss.html',             pub: 'CNBC' },
+  ];
+
+  const articles = [], seen = new Set();
+  await Promise.allSettled(feeds.map(async ({ url, pub }) => {
+    try {
+      const r = await fetch(RSS2JSON + encodeURIComponent(url));
+      const d = await r.json();
+      if (d.status !== 'ok' || !Array.isArray(d.items)) return;
+      for (const item of d.items) {
+        if (!item.title) continue;
+        const key = item.title.trim().toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const pubTime = item.pubDate ? Math.floor(new Date(item.pubDate).getTime() / 1000) : 0;
+        const age = Math.max(0, Date.now() / 1000 - pubTime);
+        const timeStr = age < 3600 ? Math.max(1, Math.round(age / 60)) + 'm ago'
+                      : age < 86400 ? Math.round(age / 3600) + 'h ago'
+                      : Math.round(age / 86400) + 'd ago';
+        const desc = (item.description || '').replace(/<[^>]+>/g, '').trim().slice(0, 400);
+        articles.push({
+          uuid: btoa(encodeURIComponent(item.title + item.link)).slice(0, 16),
+          title: item.title,
+          publisher: pub,
+          link: item.link || '',
+          description: desc,
+          time: timeStr,
+          pubTime,
+          tickers: [],
+          thumbnail: item.thumbnail || item.enclosure?.link || null,
+          cat: _newsCateg(item.title),
+          hot: _newsHot(item.title),
+        });
+      }
+    } catch(e) {}
+  }));
+  articles.sort((a, b) => b.pubTime - a.pubTime);
+  return articles.slice(0, 50);
+}
+
 async function fetchLiveNews(force = false) {
   const now = Date.now();
   if (!force && liveNews.length && (now - newsLastFetched) < 5 * 60 * 1000) return;
+
+  // 1. Try server-side PHP (works when server has outbound internet access)
   try {
-    const cat = newsFilter === 'All' ? 'all' : newsFilter.toLowerCase();
-    const r = await fetch(`prices.php?action=news&count=40&cat=${cat}`);
+    const r = await fetch('prices.php?action=news&count=40');
     const d = await r.json();
     if (d.success && d.articles && d.articles.length) {
       liveNews = d.articles;
       newsLastFetched = now;
       newsFetchedAt = new Date();
-    } else {
-      // API responded but no articles — mark as attempted so we don't stay in "Loading" forever
-      if (!newsFetchedAt) newsFetchedAt = null; // keep null to signal fallback
+      renderNewsContent();
+      return;
     }
-  } catch(e) { /* use fallback */ }
+  } catch(e) {}
+
+  // 2. Fall back to client-side RSS fetching (works regardless of server network)
+  try {
+    const articles = await fetchNewsClientSide();
+    if (articles.length) {
+      liveNews = articles;
+      newsLastFetched = now;
+      newsFetchedAt = new Date();
+    }
+  } catch(e) {}
+
   renderNewsContent();
 }
 
