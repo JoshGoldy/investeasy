@@ -4881,15 +4881,16 @@ function finishQuiz() {
 }
 
 // ── Glossary view ─────────────────────────────────────────────────────────────
-function renderGlossary(search = '') {
-  const el = document.getElementById('tab-learn');
-  const filtered = search.trim()
+function glossaryResults(search) {
+  const q = search.trim().toLowerCase();
+  const filtered = q
     ? GLOSSARY_TERMS.filter(g =>
-        g.term.toLowerCase().includes(search.toLowerCase()) ||
-        g.def.toLowerCase().includes(search.toLowerCase()))
+        g.term.toLowerCase().includes(q) || g.def.toLowerCase().includes(q))
     : GLOSSARY_TERMS;
 
-  // Group by first letter
+  if (!filtered.length)
+    return '<div style="text-align:center;padding:40px;color:var(--faint);font-size:13px">No matching terms found</div>';
+
   const groups = {};
   filtered.forEach(g => {
     const letter = g.term[0].toUpperCase();
@@ -4897,6 +4898,25 @@ function renderGlossary(search = '') {
     groups[letter].push(g);
   });
 
+  return Object.keys(groups).sort().map(letter => `
+    <div class="glossary-letter">${letter}</div>
+    ${groups[letter].map(g => `
+      <div class="glossary-item">
+        <span class="glossary-term-name">${escHtml(g.term)}</span>
+        <span class="glossary-term-def">${escHtml(g.def)}</span>
+      </div>`).join('')}
+  `).join('');
+}
+
+function filterGlossary() {
+  const input = document.getElementById('glossary-input');
+  const container = document.getElementById('glossary-results');
+  if (!input || !container) return;
+  container.innerHTML = glossaryResults(input.value);
+}
+
+function renderGlossary() {
+  const el = document.getElementById('tab-learn');
   el.innerHTML = `
     <div class="learn-detail">
       <button class="learn-back" onclick="renderLearn()">← Back to Topics</button>
@@ -4907,20 +4927,13 @@ function renderGlossary(search = '') {
           <p style="font-size:12px;color:var(--faint)">${GLOSSARY_TERMS.length} terms defined</p>
         </div>
       </div>
-      <input class="glossary-search" placeholder="Search terms or definitions…" value="${escHtml(search)}"
-        oninput="renderGlossary(this.value)" autofocus>
-      ${filtered.length === 0 ? '<div style="text-align:center;padding:40px;color:var(--faint);font-size:13px">No matching terms found</div>' : ''}
-      ${Object.keys(groups).sort().map(letter => `
-        <div class="glossary-letter">${letter}</div>
-        ${groups[letter].map(g => `
-          <div class="glossary-item">
-            <span class="glossary-term-name">${escHtml(g.term)}</span>
-            <span class="glossary-term-def">${escHtml(g.def)}</span>
-          </div>`).join('')}
-      `).join('')}
+      <input id="glossary-input" class="glossary-search" placeholder="Search terms or definitions…"
+        oninput="filterGlossary()" autocomplete="off">
+      <div id="glossary-results">${glossaryResults('')}</div>
     </div>
   `;
   el.parentElement.scrollTop = 0;
+  document.getElementById('glossary-input').focus();
 }
 
 // ── Badges page ───────────────────────────────────────────────────────────────
