@@ -196,20 +196,32 @@ function extractArticleText(string $html): array {
 // ── RSS news fetch ────────────────────────────────────────────────────────────
 function fetchNewsFromRSS(): ?array {
     $cachePath = sys_get_temp_dir() . '/ie_news_rss.json';
-    if (file_exists($cachePath) && (time() - filemtime($cachePath)) < 300) {
+
+    // Serve cache if fresh (< 5 min)
+    $staleCache = null;
+    if (file_exists($cachePath)) {
         $cached = @file_get_contents($cachePath);
-        if ($cached) { $d = json_decode($cached, true); if (is_array($d)) return $d; }
+        if ($cached) {
+            $d = json_decode($cached, true);
+            if (is_array($d) && count($d) > 0) {
+                if ((time() - filemtime($cachePath)) < 300) return $d;
+                $staleCache = $d; // keep for fallback if live fetch fails
+            }
+        }
     }
 
-    // Multiple feeds for redundancy and variety
+    // Multiple feeds — ordered by reliability
     $feeds = [
-        ['url' => 'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US', 'pub' => 'Yahoo Finance'],
-        ['url' => 'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^NDX&region=US&lang=en-US',  'pub' => 'Yahoo Finance'],
-        ['url' => 'https://www.cnbc.com/id/100003114/device/rss/rss.html',                          'pub' => 'CNBC'],
-        ['url' => 'https://www.cnbc.com/id/10000664/device/rss/rss.html',                           'pub' => 'CNBC'],
-        ['url' => 'https://feeds.marketwatch.com/marketwatch/topstories/',                          'pub' => 'MarketWatch'],
-        ['url' => 'https://feeds.reuters.com/reuters/businessNews',                                 'pub' => 'Reuters'],
-        ['url' => 'https://www.investing.com/rss/news.rss',                                         'pub' => 'Investing.com'],
+        ['url' => 'https://www.cnbc.com/id/100003114/device/rss/rss.html',                                           'pub' => 'CNBC'],
+        ['url' => 'https://www.cnbc.com/id/10000664/device/rss/rss.html',                                            'pub' => 'CNBC'],
+        ['url' => 'https://feeds.marketwatch.com/marketwatch/topstories/',                                           'pub' => 'MarketWatch'],
+        ['url' => 'https://feeds.marketwatch.com/marketwatch/marketpulse/',                                          'pub' => 'MarketWatch'],
+        ['url' => 'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US',                   'pub' => 'Yahoo Finance'],
+        ['url' => 'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^NDX&region=US&lang=en-US',                    'pub' => 'Yahoo Finance'],
+        ['url' => 'https://rss.nytimes.com/services/xml/rss/nyt/Business.xml',                                       'pub' => 'New York Times'],
+        ['url' => 'https://feeds.a.dj.com/rss/RSSMarketsMain.xml',                                                   'pub' => 'Wall Street Journal'],
+        ['url' => 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=15839069',             'pub' => 'CNBC'],
+        ['url' => 'https://feeds.reuters.com/reuters/businessNews',                                                  'pub' => 'Reuters'],
     ];
 
     $articles = [];
@@ -304,7 +316,10 @@ function fetchNewsFromRSS(): ?array {
         }
     }
 
-    if (!$articles) return null;
+    if (!$articles) {
+        // All feeds failed — serve stale cache rather than null so the UI always has real news
+        return $staleCache;
+    }
 
     usort($articles, fn($a, $b) => $b['pubTime'] - $a['pubTime']);
     $articles = array_values(array_slice($articles, 0, 50));

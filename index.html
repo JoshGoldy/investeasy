@@ -1152,16 +1152,15 @@ function renderNewsContent() {
     list = list.filter(n => n.title.toLowerCase().includes(q) || (n.publisher||'').toLowerCase().includes(q));
   }
 
-  const usingLive = liveNews.length > 0;
-  const lastUpdatedStr = usingLive
+  const lastUpdatedStr = newsFetchedAt
     ? `Updated ${newsFetchedAt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`
-    : 'Retrying…';
+    : 'Fetching…';
 
   c.innerHTML = `
     <div class="live-banner" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px">
         <span class="badge">LIVE</span>
-        <span style="font-weight:500;font-size:13px">${usingLive ? list.length + ' articles' : list.length + ' articles (demo)'}</span>
+        <span style="font-weight:500;font-size:13px">${liveNews.length ? list.length + ' articles' : 'Loading…'}</span>
       </div>
       <span style="font-size:11px;color:rgba(255,255,255,0.7)">${lastUpdatedStr}</span>
     </div>
