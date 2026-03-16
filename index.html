@@ -1391,6 +1391,13 @@ function renderNewsContent() {
           <span class="news-source">${escHtml(n.publisher||'')}</span>
           <span style="font-size:11px;color:var(--green);font-weight:600">Read more →</span>
         </div>
+        <button onclick="event.stopPropagation();analyzeArticleWithFinBot(${actualIdx})"
+          style="margin-top:8px;width:100%;padding:7px;border-radius:10px;background:#7c3aed14;color:#a78bfa;
+                 font-size:11px;font-weight:700;border:1px solid #7c3aed30;cursor:pointer;
+                 display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s"
+          onmouseenter="this.style.background='#7c3aed22'" onmouseleave="this.style.background='#7c3aed14'">
+          🤖 Analyze with FinBot
+        </button>
       </div>`;
     }).join('')}
     </div>
@@ -1430,6 +1437,13 @@ function openNewsArticle(idx, fromLive) {
       <div class="news-sheet-title">${escHtml(n.title)}</div>
       ${cleanTickers.length ? `<div class="news-sheet-tickers">${cleanTickers.map(t=>`<span class="news-ticker-chip">${escHtml(t)}</span>`).join('')}</div>` : ''}
       <div id="news-body-box" style="margin:14px 0 16px">${bodyHtml}</div>
+      <button onclick="analyzeArticleWithFinBot(${idx})"
+        style="width:100%;padding:14px;border-radius:var(--radius-sm);background:linear-gradient(135deg,#7c3aed,#6d28d9);
+               color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;margin-bottom:10px;
+               display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s"
+        onmouseenter="this.style.opacity='.9'" onmouseleave="this.style.opacity='1'">
+        🤖 Analyze with FinBot
+      </button>
       <a class="news-btn-primary" href="${escHtml(articleLink)}" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">
         Read Full Article on ${escHtml(n.publisher || 'Publisher')} ↗
       </a>
@@ -1485,6 +1499,89 @@ function buildArticleHtml(paragraphs) {
 
 function closeNewsOverlay() {
   document.getElementById('news-overlay').classList.add('hidden');
+}
+
+// ── FinBot Article Analysis ────────────────────────────────────────────────
+async function analyzeArticleWithFinBot(idx) {
+  const n = liveNews[idx];
+  if (!n) return;
+
+  const modal   = document.getElementById('finbot-news-modal');
+  const content = document.getElementById('finbot-news-content');
+  modal.classList.remove('hidden');
+
+  // Build the text body to send: title + description/paragraphs
+  const body = articleCache[n.link]
+    ? articleCache[n.link].join('\n\n')
+    : (n.description || '');
+
+  const prompt = `You are FinBot, an expert financial analyst AI. A user wants you to analyze the following news article and break it down clearly.
+
+**Article Title:** ${n.title}
+**Publisher:** ${n.publisher || 'Unknown'}
+${body ? `\n**Article Content:**\n${body.slice(0, 4000)}` : ''}
+
+Please provide a structured breakdown covering:
+1. **TL;DR** — 2-3 sentence summary
+2. **What happened** — Key facts and context
+3. **Market impact** — Which assets, sectors, or indices are affected and how
+4. **Investor takeaways** — What this means for investors (bullish/bearish signals)
+5. **Risks & caveats** — What could make this more or less significant
+6. **Relevant tickers** — Any stocks, ETFs, or assets worth watching
+
+Keep the tone professional but accessible. Use Markdown formatting.`;
+
+  // Loading state
+  content.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;padding:40px 20px;gap:14px">
+      <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#6d28d9);
+                  display:flex;align-items:center;justify-content:center;font-size:22px">🤖</div>
+      <p style="font-weight:800;font-size:16px;color:var(--text)">Analyzing article…</p>
+      <p style="font-size:12px;color:var(--faint);text-align:center;line-height:1.6">Claude is reading and breaking down<br>this article for you</p>
+      <div class="loading-dots" style="margin-top:4px">
+        ${[0,1,2].map(i=>`<span style="background:#7c3aed;animation:bd 1.4s ease-in-out ${i*0.2}s infinite"></span>`).join('')}
+      </div>
+    </div>`;
+
+  try {
+    const resp = await fetch('api.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt }),
+    });
+    const data = await resp.json();
+    if (!resp.ok || data.error) throw new Error(data.error || `Error ${resp.status}`);
+    const text = data.content?.[0]?.text ?? '';
+    content.innerHTML = `
+      <div style="padding:4px 0 20px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+          <span style="font-size:20px">🤖</span>
+          <div>
+            <p style="font-weight:800;font-size:14px;color:var(--text)">FinBot Analysis</p>
+            <p style="font-size:11px;color:#a78bfa;font-weight:600">Powered by Claude</p>
+          </div>
+          <span style="margin-left:auto;font-size:11px;font-weight:700;color:#10b981;
+                       background:#10b98115;padding:3px 10px;border-radius:20px">✓ Complete</span>
+        </div>
+        <div class="result-content" style="font-size:13px">${parseMd(text)}</div>
+      </div>`;
+  } catch (e) {
+    content.innerHTML = `
+      <div style="padding:20px">
+        <div class="error-box">
+          <p style="font-weight:700;font-size:14px;color:#dc2626">Analysis Failed</p>
+          <p style="margin:6px 0 12px;font-size:13px;color:#b91c1c;line-height:1.5">${escHtml(e.message || 'Please try again.')}</p>
+          <button onclick="analyzeArticleWithFinBot(${idx})"
+            style="background:var(--dark);color:#fff;border-radius:10px;padding:10px 20px;font-weight:700;font-size:13px">
+            Retry
+          </button>
+        </div>
+      </div>`;
+  }
+}
+
+function closeFinBotNewsModal() {
+  document.getElementById('finbot-news-modal').classList.add('hidden');
 }
 
 function analyseNewsWithFinBot(headline) {
@@ -2364,16 +2461,105 @@ ${finbotForm.techPos && finbotForm.techPos !== 'none' ? `**Position:** ${finbotF
 > **Legal Disclaimer:** Technical analysis is for educational purposes only and does not guarantee future price movements. All trading involves risk of loss. Consult a licensed financial professional before making trading decisions.`,
 };
 
+function buildFinBotPrompt(modeId) {
+  const f = finbotForm;
+  const sys = 'You are FinBot, an expert financial analyst AI embedded in InvestEasy. Respond in clean Markdown with headers, bullet points, and tables where useful. End every response with a brief legal disclaimer.\n\n';
+  switch (modeId) {
+    case 'screener':
+      return sys + `Run a stock screener and recommend 6–8 specific stocks or ETFs for an investor with:
+- Risk tolerance: ${f.risk || 'moderate'}
+- Investment amount: ${f.amount || 'not specified'}
+- Time horizon: ${f.horizon || 'medium (1–5 years)'}
+- Preferred sectors: ${f.sectors || 'no preference'}
+
+For each pick include: ticker, company name, why it fits the profile, key valuation metrics, and main risk factors. Use a summary table.`;
+
+    case 'dcf':
+      return sys + `Run a full DCF (Discounted Cash Flow) valuation for **${f.ticker}**.
+Include:
+1. Company snapshot and current share price context
+2. Revenue & free cash flow projections (5-year)
+3. WACC assumptions and calculation
+4. Terminal value
+5. Intrinsic value with bull / base / bear scenarios
+6. Margin of safety
+7. Clear Buy / Hold / Sell verdict with price target`;
+
+    case 'risk':
+      return sys + `Perform a comprehensive portfolio risk assessment.
+Holdings: ${f.portfolio || 'not provided'}
+Total value: ${f.portVal || 'not specified'}
+
+Include:
+1. Asset allocation breakdown & diversification score (0–100)
+2. Concentration and correlation risks
+3. Stress tests: 2008 GFC, COVID crash, 2022 rate-spike scenario
+4. Key risk metrics: estimated Beta, Sharpe ratio, max drawdown
+5. Specific rebalancing recommendations`;
+
+    case 'earnings':
+      return sys + `Prepare a pre-earnings briefing for **${f.company}**${f.earnDate ? ` reporting on ${f.earnDate}` : ''}.
+Investor position: ${f.ePos || 'none / watching'}
+
+Include:
+1. Analyst consensus (EPS & revenue expectations)
+2. Key metrics and guidance investors are watching
+3. Recent business developments and catalysts
+4. Historical earnings beat/miss track record
+5. Options-implied move (if estimable)
+6. Bull case / Bear case scenarios
+7. Pre-earnings strategy considerations`;
+
+    case 'builder':
+      return sys + `Build a personalised investment portfolio blueprint for:
+- Age: ${f.age || 'not specified'}
+- Monthly income: ${f.income || 'not specified'}
+- Amount to invest: ${f.savings || 'not specified'}
+- Goal: ${f.goal || 'build wealth'}
+- Risk tolerance: ${f.bRisk || 'moderate'}
+- Account type: ${f.acct || 'taxable'}
+${f.builderHoldings ? `- Existing holdings: ${f.builderHoldings}` : ''}
+
+Provide a full allocation table with specific ETFs/stocks, expected return range, expense ratios, a DCA schedule, and rebalancing triggers.`;
+
+    case 'technical':
+      return sys + `Provide a detailed technical analysis for **${f.techTicker || 'NVDA'}**.
+Current position: ${f.techPos || 'none (observing)'}
+
+Include:
+1. Trend analysis across daily, weekly, and monthly timeframes
+2. Key support and resistance levels (with approximate price zones)
+3. Moving averages: 20, 50, 200-day
+4. RSI, MACD, and volume analysis
+5. Notable chart patterns
+6. Suggested entry/exit levels and stop-loss
+7. Price targets (bull and bear)
+8. Overall signal: Strong Buy / Buy / Neutral / Sell / Strong Sell`;
+
+    default:
+      return sys + `Provide a professional financial analysis for the "${modeId}" mode.`;
+  }
+}
+
 async function runFinBot(modeId) {
   finbotState.loading = true;
   finbotState.result = null;
   finbotState.error = null;
   renderFinBot();
 
-  // Simulate realistic AI response delay
-  await new Promise(r => setTimeout(r, 1800 + Math.random() * 1200));
+  try {
+    const resp = await fetch('api.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: buildFinBotPrompt(modeId) }),
+    });
+    const data = await resp.json();
+    if (!resp.ok || data.error) throw new Error(data.error || `Server error (${resp.status})`);
+    finbotState.result = data.content?.[0]?.text ?? '';
+  } catch (e) {
+    finbotState.error = e.message || 'Analysis failed. Please try again.';
+  }
 
-  finbotState.result = MOCK_RESPONSES[modeId]();
   finbotState.loading = false;
   renderFinBot();
 }
@@ -2400,13 +2586,13 @@ function renderFinBot() {
           </div>
         </div>
       </div>
-      <div class="disclaimer-box" style="border-color:#3b82f620;background:linear-gradient(135deg,#1e293b,#0f172a)">
+      <div class="disclaimer-box" style="border-color:#10b98130;background:linear-gradient(135deg,#064e3b22,#0f172a)">
         <div style="display:flex;gap:10px;align-items:flex-start">
-          <span style="font-size:18px;flex-shrink:0">🚀</span>
+          <span style="font-size:18px;flex-shrink:0">✨</span>
           <div>
-            <p style="font-weight:800;font-size:12px;color:#60a5fa;margin-bottom:4px">Demo Mode — Sample Reports</p>
+            <p style="font-weight:800;font-size:12px;color:#10b981;margin-bottom:4px">Live AI — Powered by Claude</p>
             <p style="font-size:11.5px;color:var(--faint);line-height:1.65">
-              FinBot is running with <strong style="color:#e2e8f0">pre-built sample reports</strong>. Fill in any form and click "Run Analysis" to see a full professional-grade output. Live AI analysis coming soon.
+              FinBot uses <strong style="color:#e2e8f0">Claude claude-sonnet-4</strong> to generate real-time financial analysis. Fill in the form and click Run — results typically arrive in 10–20 seconds.
             </p>
           </div>
         </div>
@@ -5326,5 +5512,24 @@ fetchLivePrices();
 // Retry news after 30s if the initial fetch didn't return live articles
 setTimeout(() => { if (!liveNews.length) fetchLiveNews(true); }, 30 * 1000);
 </script>
+
+<!-- FinBot News Analysis Modal -->
+<div id="finbot-news-modal" class="news-overlay hidden" onclick="if(event.target===this)closeFinBotNewsModal()">
+  <div class="news-sheet" style="max-height:92vh">
+    <div class="news-sheet-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#6d28d9);
+                    display:flex;align-items:center;justify-content:center;font-size:14px">🤖</div>
+        <span style="font-weight:800;font-size:15px;color:var(--text)">FinBot</span>
+        <span style="font-size:11px;color:#a78bfa;font-weight:600">by Claude</span>
+      </div>
+      <button onclick="closeFinBotNewsModal()"
+        style="width:30px;height:30px;border-radius:50%;background:var(--border);color:var(--muted);
+               font-size:16px;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer">✕</button>
+    </div>
+    <div id="finbot-news-content" style="padding:0 20px 36px;overflow-y:auto;max-height:calc(92vh - 80px)"></div>
+  </div>
+</div>
 </body>
 </html>
