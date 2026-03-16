@@ -4715,66 +4715,13 @@ function markLessonRead(topicId, lessonIdx) {
 // ═══════════════════════════════════════════════════════════════════════════
 // CALENDAR TAB
 // ═══════════════════════════════════════════════════════════════════════════
+
+// In-memory cache so switching tabs doesn't re-fetch
+let _calCache = null;
+let _calCacheTs = 0;
+
 function renderCalendar() {
   const el = document.getElementById('tab-calendar');
-
-  // ── Event definitions ────────────────────────────────────────────────────
-  // d = days from 2026-03-16 (today); type: earnings | fed | macro | holiday
-  const BASE = new Date('2026-03-16');
-  function dt(days) {
-    const d = new Date(BASE); d.setDate(d.getDate() + days); return d;
-  }
-  const EVENTS = [
-    // ── March 2026 ──
-    { date: dt(2),  title: 'FOMC Rate Decision',          type: 'fed',      desc: 'Federal Reserve announces interest rate decision. Markets pricing 96% chance of hold at 4.25–4.50%.', tickers: [] },
-    { date: dt(3),  title: 'Fed Chair Press Conference',   type: 'fed',      desc: 'Jerome Powell holds post-FOMC press conference.', tickers: [] },
-    { date: dt(5),  title: 'Quad Witching',                type: 'holiday',  desc: 'Quarterly expiration of stock index futures, stock index options, stock options & single-stock futures.', tickers: [] },
-    { date: dt(12), title: 'PMI Flash Estimates',          type: 'macro',    desc: 'S&P Global preliminary Manufacturing & Services PMI for March.', tickers: [] },
-    { date: dt(16), title: 'Core PCE Price Index',         type: 'macro',    desc: 'Fed\'s preferred inflation gauge for February. Previous: 2.7% YoY.', tickers: [] },
-    { date: dt(17), title: 'GDP Q4 2025 — Final',          type: 'macro',    desc: 'Final revision of Q4 2025 GDP growth estimate. Consensus: +2.4% annualised.', tickers: [] },
-    // ── April 2026 ──
-    { date: dt(18), title: 'Non-Farm Payrolls — March',    type: 'macro',    desc: 'US jobs report for March. Consensus: +185K jobs. Unemployment rate: 4.1%.', tickers: [] },
-    { date: dt(25), title: 'CPI — March',                  type: 'macro',    desc: 'Consumer Price Index for March. Previous: +2.8% YoY, core +3.1%.', tickers: [] },
-    { date: dt(29), title: 'JPMorgan Chase Q1 Earnings',   type: 'earnings', desc: 'Pre-market. Revenue est. $43.2B · EPS est. $4.67. Investor call 8:30am ET.', tickers: ['JPM'] },
-    { date: dt(29), title: 'Goldman Sachs Q1 Earnings',    type: 'earnings', desc: 'Pre-market. Revenue est. $13.8B · EPS est. $11.42.', tickers: ['GS'] },
-    { date: dt(30), title: 'Bank of America Q1 Earnings',  type: 'earnings', desc: 'Pre-market. Revenue est. $25.9B · EPS est. $0.83.', tickers: ['BAC'] },
-    { date: dt(32), title: 'TSLA Q1 Earnings',             type: 'earnings', desc: 'After-market close. Revenue est. $24.1B · EPS est. $0.58. Margins in focus.', tickers: ['TSLA'] },
-    { date: dt(34), title: 'META Q1 Earnings',             type: 'earnings', desc: 'After-market close. Revenue est. $41.8B · EPS est. $5.32. Ad spend recovery.', tickers: ['META'] },
-    { date: dt(35), title: 'Microsoft Q3 Earnings',        type: 'earnings', desc: 'After-market close. Revenue est. $68.9B · EPS est. $3.22. Azure growth key.', tickers: ['MSFT'] },
-    { date: dt(35), title: 'Alphabet Q1 Earnings',         type: 'earnings', desc: 'After-market close. Revenue est. $89.7B · EPS est. $2.07. Cloud & AI focus.', tickers: ['GOOGL'] },
-    { date: dt(36), title: 'Amazon Q1 Earnings',           type: 'earnings', desc: 'After-market close. Revenue est. $156.3B · EPS est. $1.36. AWS margins.', tickers: ['AMZN'] },
-    { date: dt(36), title: 'Apple Q2 FY2026 Earnings',     type: 'earnings', desc: 'After-market close. Revenue est. $95.2B · EPS est. $1.62. iPhone shipments & services growth.', tickers: ['AAPL'] },
-    { date: dt(38), title: 'GDP Q1 2026 — Advance',        type: 'macro',    desc: 'First estimate of Q1 2026 GDP. Consensus: +2.1% annualised.', tickers: [] },
-    // ── May 2026 ──
-    { date: dt(46), title: 'Non-Farm Payrolls — April',    type: 'macro',    desc: 'US jobs report for April. Consensus: +178K jobs.', tickers: [] },
-    { date: dt(52), title: 'FOMC Rate Decision',           type: 'fed',      desc: 'Federal Reserve May meeting rate decision. First potential cut of 2026 per futures.', tickers: [] },
-    { date: dt(53), title: 'NVIDIA Q1 FY2027 Earnings',    type: 'earnings', desc: 'After-market close. Revenue est. $43.0B · EPS est. $0.89. Data-centre demand.', tickers: ['NVDA'] },
-    { date: dt(58), title: 'CPI — April',                  type: 'macro',    desc: 'Consumer Price Index for April. Fed watching closely for rate-cut timing.', tickers: [] },
-    // ── June 2026 ──
-    { date: dt(78), title: 'FOMC Rate Decision',           type: 'fed',      desc: 'Federal Reserve June meeting. Updated dot-plot and economic projections released.', tickers: [] },
-    { date: dt(79), title: 'Fed Chair Press Conference',   type: 'fed',      desc: 'Post-FOMC press conference.', tickers: [] },
-  ].sort((a, b) => a.date - b.date);
-
-  // ── Group by relative label ───────────────────────────────────────────────
-  const today    = new Date(); today.setHours(0,0,0,0);
-  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-  const weekEnd  = new Date(today); weekEnd.setDate(today.getDate() + 7);
-  const nextWeekEnd = new Date(today); nextWeekEnd.setDate(today.getDate() + 14);
-
-  function groupLabel(d) {
-    const day = new Date(d); day.setHours(0,0,0,0);
-    if (+day === +today)    return 'Today';
-    if (+day === +tomorrow) return 'Tomorrow';
-    if (day < weekEnd)      return 'This Week';
-    if (day < nextWeekEnd)  return 'Next Week';
-    return d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
-  }
-
-  const groups = {};
-  EVENTS.forEach(ev => {
-    const lbl = groupLabel(ev.date);
-    (groups[lbl] = groups[lbl] || []).push(ev);
-  });
 
   const DAYS  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const BADGE = { earnings: 'cal-badge-earnings', fed: 'cal-badge-fed', macro: 'cal-badge-macro', holiday: 'cal-badge-holiday' };
@@ -4785,29 +4732,51 @@ function renderCalendar() {
     macro:    `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>`,
     holiday:  `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
   };
-
   const filterTypes = ['all', 'earnings', 'fed', 'macro'];
-  let activeFilter = el._calFilter || 'all';
 
-  function build(filter) {
+  // ── Grouping helpers ───────────────────────────────────────────────────────
+  const todayD    = new Date(); todayD.setHours(0,0,0,0);
+  const tomorrowD = new Date(todayD); tomorrowD.setDate(todayD.getDate() + 1);
+  const weekEndD  = new Date(todayD); weekEndD.setDate(todayD.getDate() + 7);
+  const nextWkEnd = new Date(todayD); nextWkEnd.setDate(todayD.getDate() + 14);
+
+  function groupLabel(dateStr) {
+    const d = new Date(dateStr + 'T12:00:00'); d.setHours(0,0,0,0);
+    if (+d === +todayD)    return 'Today';
+    if (+d === +tomorrowD) return 'Tomorrow';
+    if (d < weekEndD)      return 'This Week';
+    if (d < nextWkEnd)     return 'Next Week';
+    return d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  }
+
+  // ── Render event list ──────────────────────────────────────────────────────
+  function buildUI(events, isLive, filter) {
     el._calFilter = filter;
-    const visible = filter === 'all' ? EVENTS : EVENTS.filter(e => e.type === filter);
+    const visible = filter === 'all' ? events : events.filter(e => e.type === filter);
     const grps = {};
     visible.forEach(ev => {
       const lbl = groupLabel(ev.date);
       (grps[lbl] = grps[lbl] || []).push(ev);
     });
 
-    const groupOrder = ['Today', 'Tomorrow', 'This Week', 'Next Week'];
-    const extraKeys  = Object.keys(grps).filter(k => !groupOrder.includes(k)).sort();
+    const groupOrder  = ['Today', 'Tomorrow', 'This Week', 'Next Week'];
+    const extraKeys   = Object.keys(grps).filter(k => !groupOrder.includes(k)).sort();
     const orderedKeys = [...groupOrder.filter(k => grps[k]), ...extraKeys];
+
+    const statusBadge = isLive
+      ? `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#10b981;background:#10b98115;padding:3px 10px;border-radius:20px">
+           <span style="width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block"></span>Live data</span>`
+      : `<span style="font-size:11px;color:var(--muted);background:var(--border);padding:3px 10px;border-radius:20px">Demo data</span>`;
 
     el.innerHTML = `
       <div style="max-width:780px">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px">
           <div>
-            <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px">Economic Calendar</h2>
-            <p style="font-size:13px;color:var(--muted)">Earnings, Fed decisions &amp; key macro events</p>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+              <h2 style="font-size:22px;font-weight:800;color:var(--text)">Economic Calendar</h2>
+              ${statusBadge}
+            </div>
+            <p style="font-size:13px;color:var(--muted)">Earnings dates from Yahoo Finance · Fed &amp; macro events</p>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             ${filterTypes.map(f => `
@@ -4822,8 +4791,8 @@ function renderCalendar() {
         ${orderedKeys.map(label => `
           <div class="cal-group-label">${label}</div>
           ${grps[label].map(ev => {
-            const d = ev.date;
-            const tChips = ev.tickers.map(t => {
+            const d = new Date(ev.date + 'T12:00:00');
+            const tChips = (ev.tickers || []).map(t => {
               const idx = MARKETS.findIndex(x => x.ticker === t);
               return `<span class="cal-ticker-chip" onclick="switchTab('markets');setTimeout(()=>openStockDetail(${idx}),80)">
                 ${TYPE_ICON.earnings}${t}</span>`;
@@ -4848,8 +4817,79 @@ function renderCalendar() {
       </div>`;
   }
 
-  renderCalendar._build = build;
-  build(activeFilter);
+  // ── Convert API earnings to event objects ──────────────────────────────────
+  function earningsToEvents(earnings) {
+    return earnings.map(e => {
+      const parts = [];
+      if (e.epsEst != null) parts.push(`EPS est. $${e.epsEst}`);
+      if (e.epsLow != null && e.epsHigh != null) parts.push(`range $${e.epsLow}–$${e.epsHigh}`);
+      if (e.revEst)         parts.push(`Revenue est. ${e.revEst}`);
+      return {
+        date:    e.date,
+        title:   `${e.name} Earnings`,
+        type:    'earnings',
+        desc:    parts.length ? parts.join(' · ') : 'Consensus estimates not yet available.',
+        tickers: [e.ticker],
+      };
+    });
+  }
+
+  // ── Active filter (persisted while tab stays open) ─────────────────────────
+  renderCalendar._build = (filter) => {
+    if (_calCache) buildUI(_calCache.events, _calCache.live, filter);
+  };
+
+  // Use memory cache if fresh (< 6 h)
+  if (_calCache && (Date.now() - _calCacheTs) < 21_600_000) {
+    buildUI(_calCache.events, _calCache.live, el._calFilter || 'all');
+    return;
+  }
+
+  // Show loading skeleton
+  el.innerHTML = `
+    <div style="max-width:780px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+        <div>
+          <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px">Economic Calendar</h2>
+          <p style="font-size:13px;color:var(--muted)">Loading live data…</p>
+        </div>
+      </div>
+      ${Array(6).fill(0).map(() => `
+        <div class="cal-event">
+          <div class="cal-date-col">
+            <div style="width:28px;height:22px;background:var(--border);border-radius:4px;margin-bottom:4px"></div>
+            <div style="width:28px;height:10px;background:var(--border);border-radius:3px"></div>
+          </div>
+          <div class="cal-body" style="flex:1">
+            <div style="width:60px;height:18px;background:var(--border);border-radius:10px;display:inline-block;margin-right:8px"></div>
+            <div style="width:200px;height:14px;background:var(--border);border-radius:4px;display:inline-block"></div>
+            <div style="width:280px;height:12px;background:var(--border);border-radius:3px;margin-top:6px"></div>
+          </div>
+        </div>`).join('')}
+    </div>`;
+
+  // Fetch from backend
+  const from = new Date().toISOString().slice(0, 10);
+  const to   = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
+
+  fetch(`prices.php?action=calendar&from=${from}&to=${to}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) throw new Error(data.error || 'API error');
+      const events = [
+        ...earningsToEvents(data.earnings || []),
+        ...(data.economic || []),
+      ].sort((a, b) => a.date.localeCompare(b.date));
+      _calCache   = { events, live: true };
+      _calCacheTs = Date.now();
+      buildUI(events, true, el._calFilter || 'all');
+    })
+    .catch(() => {
+      // Fallback: show a notice but still render (empty) so the tab isn't broken
+      _calCache   = { events: [], live: false };
+      _calCacheTs = Date.now();
+      buildUI([], false, 'all');
+    });
 }
 
 function renderLearn() {

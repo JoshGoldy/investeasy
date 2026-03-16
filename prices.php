@@ -220,8 +220,256 @@ if ($action === 'quotes') {
     }
     echo json_encode(['success' => true, 'articles' => $articles, 'fetchedAt' => time()]);
 
+} elseif ($action === 'calendar') {
+    $from = $_GET['from'] ?? date('Y-m-d');
+    $to   = $_GET['to']   ?? date('Y-m-d', strtotime('+90 days'));
+    $earnings = fetchEarningsCalendar($from, $to);
+    $economic = generateEconomicEvents($from, $to);
+    echo json_encode(['success' => true, 'earnings' => $earnings, 'economic' => $economic]);
+
 } else {
     echo json_encode(['success' => false, 'error' => 'Unknown action']);
+}
+
+// ── Earnings calendar via Yahoo Finance quoteSummary ──────────────────────────
+function fetchEarningsCalendar(string $from, string $to): array {
+    $cacheKey  = md5($from . $to);
+    $cachePath = sys_get_temp_dir() . '/ie_earn_cal_' . $cacheKey . '.json';
+
+    if (file_exists($cachePath) && (time() - filemtime($cachePath)) < 21600) {
+        $c = @file_get_contents($cachePath);
+        if ($c) return json_decode($c, true) ?: [];
+    }
+
+    // Only equity tickers (skip indices, commodities, crypto)
+    $stockTickers = ['AAPL','MSFT','NVDA','TSLA','AMZN','GOOGL','META',
+                     'JPM','BAC','GS','JNJ','PFE','MRK','XOM','CVX','WMT','COST','BA','CAT'];
+
+    $nameMap = [
+        'AAPL' => 'Apple',           'MSFT' => 'Microsoft',       'NVDA' => 'NVIDIA',
+        'TSLA' => 'Tesla',           'AMZN' => 'Amazon',           'GOOGL' => 'Alphabet',
+        'META' => 'Meta Platforms',  'JPM'  => 'JPMorgan Chase',   'BAC'  => 'Bank of America',
+        'GS'   => 'Goldman Sachs',   'JNJ'  => 'Johnson & Johnson','PFE'  => 'Pfizer',
+        'MRK'  => 'Merck',           'XOM'  => 'ExxonMobil',       'CVX'  => 'Chevron',
+        'WMT'  => 'Walmart',         'COST' => 'Costco',           'BA'   => 'Boeing',
+        'CAT'  => 'Caterpillar',
+    ];
+
+    $fromTs = strtotime($from);
+    $toTs   = strtotime($to);
+
+    // Build parallel curl requests
+    $mh      = curl_multi_init();
+    $handles = [];
+    foreach ($stockTickers as $appTicker) {
+        $ySym = TICKER_MAP[$appTicker] ?? null;
+        if (!$ySym) continue;
+
+        // Per-ticker cache (24 h) so we don't re-fetch every time
+        $tc = sys_get_temp_dir() . '/ie_calevent_' . md5($ySym) . '.json';
+        if (file_exists($tc) && (time() - filemtime($tc)) < 86400) {
+            $cached = @file_get_contents($tc);
+            if ($cached) { $handles[$appTicker] = ['cached' => json_decode($cached, true)]; continue; }
+        }
+
+        $url = 'https://query2.finance.yahoo.com/v10/finance/quoteSummary/'
+             . rawurlencode($ySym) . '?modules=calendarEvents';
+        $ch  = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 10,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_HTTPHEADER     => [
+                'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept: application/json',
+                'Referer: https://finance.yahoo.com',
+            ],
+        ]);
+        curl_multi_add_handle($mh, $ch);
+        $handles[$appTicker] = ['ch' => $ch, 'ySym' => $ySym];
+    }
+
+    // Execute parallel requests
+    $running = null;
+    do { curl_multi_exec($mh, $running); curl_multi_select($mh); } while ($running > 0);
+
+    $earnings = [];
+    foreach ($handles as $appTicker => $h) {
+        if (isset($h['cached'])) {
+            $data = $h['cached'];
+        } else {
+            $resp = curl_multi_getcontent($h['ch']);
+            $code = curl_getinfo($h['ch'], CURLINFO_HTTP_CODE);
+            curl_multi_remove_handle($mh, $h['ch']);
+            curl_close($h['ch']);
+            if ($code !== 200 || !$resp) continue;
+            $data = json_decode($resp, true);
+            $tc = sys_get_temp_dir() . '/ie_calevent_' . md5($h['ySym']) . '.json';
+            @file_put_contents($tc, $resp);
+        }
+
+        $cal    = $data['quoteSummary']['result'][0]['calendarEvents']['earnings'] ?? null;
+        if (!$cal) continue;
+
+        foreach ($cal['earningsDate'] ?? [] as $entry) {
+            $ts = $entry['raw'] ?? null;
+            if (!$ts || $ts < $fromTs || $ts > $toTs) continue;
+
+            // Format revenue estimate
+            $revRaw = $cal['revenueAverage']['raw'] ?? null;
+            $revStr = null;
+            if ($revRaw) {
+                if ($revRaw >= 1e12)    $revStr = '$' . round($revRaw / 1e12, 1) . 'T';
+                elseif ($revRaw >= 1e9) $revStr = '$' . round($revRaw / 1e9,  1) . 'B';
+                elseif ($revRaw >= 1e6) $revStr = '$' . round($revRaw / 1e6,  1) . 'M';
+            }
+
+            $epsEst = isset($cal['earningsAverage']['raw']) ? round($cal['earningsAverage']['raw'], 2) : null;
+            $epsLow = isset($cal['earningsLow']['raw'])     ? round($cal['earningsLow']['raw'],  2) : null;
+            $epsHi  = isset($cal['earningsHigh']['raw'])    ? round($cal['earningsHigh']['raw'], 2) : null;
+
+            $earnings[] = [
+                'ticker'  => $appTicker,
+                'name'    => $nameMap[$appTicker] ?? $appTicker,
+                'date'    => date('Y-m-d', $ts),
+                'ts'      => $ts,
+                'epsEst'  => $epsEst,
+                'epsLow'  => $epsLow,
+                'epsHigh' => $epsHi,
+                'revEst'  => $revStr,
+            ];
+            break; // one entry per ticker
+        }
+    }
+
+    curl_multi_close($mh);
+    usort($earnings, fn($a, $b) => $a['ts'] - $b['ts']);
+    @file_put_contents($cachePath, json_encode($earnings));
+    return $earnings;
+}
+
+// ── Economic events (Fed + macro) generated from known patterns ───────────────
+function generateEconomicEvents(string $from, string $to): array {
+    $fromTs = strtotime($from);
+    $toTs   = strtotime($to);
+    $events = [];
+
+    // ── Fed 2026 decision dates (published schedule) ──────────────────────────
+    $fedDecisions = [
+        '2026-01-28', '2026-03-18', '2026-05-06', '2026-06-17',
+        '2026-07-29', '2026-09-16', '2026-10-28', '2026-12-09',
+    ];
+    // FOMC meetings with rate projections (SEP = Summary of Economic Projections)
+    $sepMeetings = ['2026-03-18', '2026-06-17', '2026-09-16', '2026-12-09'];
+
+    foreach ($fedDecisions as $d) {
+        $ts = strtotime($d);
+        if ($ts >= $fromTs && $ts <= $toTs) {
+            $hasSep = in_array($d, $sepMeetings);
+            $events[] = [
+                'date'  => $d,
+                'ts'    => $ts,
+                'type'  => 'fed',
+                'title' => 'FOMC Rate Decision',
+                'desc'  => 'Federal Reserve interest rate decision and policy statement.'
+                         . ($hasSep ? ' Updated dot-plot and economic projections (SEP) released.' : ''),
+            ];
+        }
+        // Press conference (following day)
+        $pcTs = $ts + 86400;
+        $pcDate = date('Y-m-d', $pcTs);
+        if ($pcTs >= $fromTs && $pcTs <= $toTs) {
+            $events[] = [
+                'date'  => $pcDate,
+                'ts'    => $pcTs,
+                'type'  => 'fed',
+                'title' => 'Fed Chair Press Conference',
+                'desc'  => 'Post-FOMC press conference with Fed Chair Jerome Powell.',
+            ];
+        }
+    }
+
+    // ── Monthly recurring macro events ────────────────────────────────────────
+    $cur = new DateTime(date('Y-m-01', $fromTs));
+    $end = new DateTime($to);
+
+    while ($cur <= $end) {
+        $year  = (int)$cur->format('Y');
+        $month = (int)$cur->format('m');
+
+        $prevDt   = (clone $cur)->modify('-1 month');
+        $prevName = $prevDt->format('F Y');
+        $curName  = $cur->format('F Y');
+
+        // Non-Farm Payrolls: first Friday of the month
+        $nfp = new DateTime($cur->format('Y-m-01'));
+        while ($nfp->format('N') !== '5') $nfp->modify('+1 day');
+        $nfpTs = $nfp->getTimestamp();
+        if ($nfpTs >= $fromTs && $nfpTs <= $toTs) {
+            $events[] = [
+                'date'  => $nfp->format('Y-m-d'),
+                'ts'    => $nfpTs,
+                'type'  => 'macro',
+                'title' => "Non-Farm Payrolls — $prevName",
+                'desc'  => "US monthly jobs report covering employment changes and unemployment rate for $prevName.",
+            ];
+        }
+
+        // CPI: second Wednesday of the month
+        $cpi = new DateTime($cur->format('Y-m-01'));
+        $wCount = 0;
+        while (true) {
+            if ($cpi->format('N') === '3') { $wCount++; if ($wCount === 2) break; }
+            $cpi->modify('+1 day');
+        }
+        $cpiTs = $cpi->getTimestamp();
+        if ($cpiTs >= $fromTs && $cpiTs <= $toTs) {
+            $events[] = [
+                'date'  => $cpi->format('Y-m-d'),
+                'ts'    => $cpiTs,
+                'type'  => 'macro',
+                'title' => "CPI — $prevName",
+                'desc'  => "Consumer Price Index for $prevName. Primary inflation gauge watched by the Federal Reserve.",
+            ];
+        }
+
+        // Core PCE: last Thursday of the month
+        $pce = new DateTime($cur->format('Y-m-t'));
+        while ($pce->format('N') !== '4') $pce->modify('-1 day');
+        $pceTs = $pce->getTimestamp();
+        if ($pceTs >= $fromTs && $pceTs <= $toTs) {
+            $events[] = [
+                'date'  => $pce->format('Y-m-d'),
+                'ts'    => $pceTs,
+                'type'  => 'macro',
+                'title' => "Core PCE Price Index — $curName",
+                'desc'  => "Fed's preferred inflation measure for $curName. Excludes food and energy prices.",
+            ];
+        }
+
+        // GDP advance: last week of Jan, Apr, Jul, Oct (approx. -4 business days from month end)
+        if (in_array($month, [1, 4, 7, 10])) {
+            $qLabels = [1 => 'Q4 ' . ($year-1), 4 => 'Q1 ' . $year, 7 => 'Q2 ' . $year, 10 => 'Q3 ' . $year];
+            $gdp = new DateTime($cur->format('Y-m-t'));
+            $skip = 0;
+            while ($skip < 3) { $gdp->modify('-1 day'); if ($gdp->format('N') <= '5') $skip++; }
+            $gdpTs = $gdp->getTimestamp();
+            if ($gdpTs >= $fromTs && $gdpTs <= $toTs) {
+                $events[] = [
+                    'date'  => $gdp->format('Y-m-d'),
+                    'ts'    => $gdpTs,
+                    'type'  => 'macro',
+                    'title' => 'GDP Advance Estimate — ' . $qLabels[$month],
+                    'desc'  => 'Bureau of Economic Analysis first estimate of GDP growth for ' . $qLabels[$month] . '.',
+                ];
+            }
+        }
+
+        $cur->modify('+1 month');
+    }
+
+    usort($events, fn($a, $b) => $a['ts'] - $b['ts']);
+    return $events;
 }
 
 // ── Article text extractor ────────────────────────────────────────────────────
