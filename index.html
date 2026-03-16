@@ -1151,6 +1151,7 @@ function switchTab(id) {
   if (id === 'calendar') renderCalendar();
   if (id === 'portfolio') renderPortfolio();
   if (id === 'settings') renderSettings();
+  if (id === 'finbot') renderFinBot();
   if (id === 'saved') renderSaved();
 }
 
@@ -2628,6 +2629,46 @@ function renderFinBot() {
   const mode = finbotState.mode;
   const modeObj = FINBOT_MODES.find(m => m.id === mode);
 
+  // ── Guest wall ──
+  if (!currentUser) {
+    el.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 20px 24px">
+        <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#7c3aed,#6d28d9);
+                    display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px">🤖</div>
+        <h2 style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px">Meet FinBot</h2>
+        <p style="font-size:13.5px;color:var(--muted);line-height:1.65;max-width:300px;margin-bottom:24px">
+          Your personal AI financial analyst, powered by Claude. Run deep analysis on stocks, portfolios, news, and more — all in seconds.
+        </p>
+        <button onclick="document.getElementById('auth-overlay').classList.remove('hidden');showAuthTab('login')"
+          style="padding:14px 32px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;
+                 font-size:14px;font-weight:800;border:none;cursor:pointer;margin-bottom:32px;width:100%;max-width:320px">
+          Sign In to Use FinBot
+        </button>
+      </div>
+      <p style="font-weight:700;font-size:11px;color:var(--faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;padding:0 4px">6 Analysis Modes</p>
+      ${FINBOT_MODES.map(m => `
+        <div class="mode-card" style="opacity:.6;cursor:default;border-color:var(--border);pointer-events:none">
+          <div style="display:flex;gap:14px;align-items:flex-start">
+            <div class="mode-icon" style="background:linear-gradient(135deg,${m.col},${m.col}dd)">${m.icon}</div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <p style="font-weight:800;font-size:14px;color:var(--text)">${m.title}</p>
+                <span class="mode-sub" style="color:${m.col};background:${m.col}14">${m.sub}</span>
+              </div>
+              <p style="font-size:12px;color:var(--muted);line-height:1.5;margin-top:4px">${m.desc}</p>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+      <div style="margin-top:20px;padding:14px 16px;border-radius:14px;background:var(--card);border:1px solid var(--border)">
+        <p style="font-size:12px;color:var(--faint);line-height:1.6;text-align:center">
+          🔒 <strong style="color:var(--text)">Free account required</strong> — sign up in seconds, no credit card needed
+        </p>
+      </div>
+    `;
+    return;
+  }
+
   // ── Mode Select ──
   if (!mode) {
     el.innerHTML = `
@@ -3033,7 +3074,48 @@ let savedFilter = 'all';
 
 function renderSaved(filter) {
   if (filter !== undefined) savedFilter = filter;
-  const el      = document.getElementById('tab-saved');
+  const el = document.getElementById('tab-saved');
+
+  // ── Guest wall ──
+  if (!currentUser) {
+    el.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 20px 24px">
+        <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#0d9488,#10b981);
+                    display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px">🔖</div>
+        <h2 style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px">Saved Reports</h2>
+        <p style="font-size:13.5px;color:var(--muted);line-height:1.65;max-width:300px;margin-bottom:24px">
+          Save any FinBot analysis or news breakdown and access it from any device. Reports are stored securely with your account.
+        </p>
+        <button onclick="document.getElementById('auth-overlay').classList.remove('hidden');showAuthTab('login')"
+          style="padding:14px 32px;border-radius:14px;background:var(--green);color:#fff;
+                 font-size:14px;font-weight:800;border:none;cursor:pointer;margin-bottom:32px;width:100%;max-width:320px">
+          Sign In to View Saved Reports
+        </button>
+      </div>
+      <p style="font-weight:700;font-size:11px;color:var(--faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;padding:0 4px">What gets saved</p>
+      ${[
+        { icon:'🤖', col:'#6366f1', title:'FinBot Analyses', desc:'Stock screeners, DCF valuations, risk assessments, earnings previews, portfolio blueprints and technical analyses' },
+        { icon:'📰', col:'#7c3aed', title:'News Breakdowns', desc:'AI-powered article summaries with market impact, investor takeaways, and relevant tickers — one tap to re-read' },
+      ].map(f => `
+        <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:14px;
+                    background:var(--card);border:1px solid var(--border);margin-bottom:10px;opacity:.7">
+          <div style="width:40px;height:40px;border-radius:12px;background:${f.col}18;flex-shrink:0;
+                      display:flex;align-items:center;justify-content:center;font-size:18px">${f.icon}</div>
+          <div>
+            <p style="font-weight:800;font-size:13px;color:var(--text);margin-bottom:3px">${f.title}</p>
+            <p style="font-size:12px;color:var(--faint);line-height:1.55">${f.desc}</p>
+          </div>
+        </div>
+      `).join('')}
+      <div style="margin-top:12px;padding:14px 16px;border-radius:14px;background:var(--card);border:1px solid var(--border)">
+        <p style="font-size:12px;color:var(--faint);line-height:1.6;text-align:center">
+          🔒 <strong style="color:var(--text)">Free account required</strong> — sign up in seconds, no credit card needed
+        </p>
+      </div>
+    `;
+    return;
+  }
+
   const allReports = getSavedReports();
 
   if (!allReports.length) {
@@ -3956,11 +4038,13 @@ async function doLogout() {
   dbPortfolio     = [];
   watchlistSet    = new Set();
   dbSavedReports  = null;
-  // If on a protected page, redirect to news first
+  // Portfolio/settings require login — redirect; finbot/saved show their own guest wall
   const activeTab = document.querySelector('.tab-content.active');
   if (activeTab && (activeTab.id === 'tab-portfolio' || activeTab.id === 'tab-settings')) {
     switchTab('news');
   }
+  if (activeTab?.id === 'tab-finbot') renderFinBot();
+  if (activeTab?.id === 'tab-saved')  renderSaved();
   updateHeaderUser();
   document.getElementById('auth-overlay').classList.remove('hidden');
   showAuthTab('login');
@@ -3993,6 +4077,10 @@ function updateHeaderUser() {
 async function syncAfterLogin() {
   await Promise.all([loadSettingsFromDB(), loadWatchlistFromDB(), loadPortfolioFromDB(), loadSavedReportsFromDB()]);
   updateHeaderUser();
+  // If the user was already on a gated tab, re-render it now that they're logged in
+  const activePanel = document.querySelector('.tab-content.active');
+  if (activePanel?.id === 'tab-finbot') renderFinBot();
+  if (activePanel?.id === 'tab-saved')  renderSaved();
 }
 
 async function loadSettingsFromDB() {
