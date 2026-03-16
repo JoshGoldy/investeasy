@@ -1091,6 +1091,9 @@ async function fetchLiveNews(force = false) {
       liveNews = d.articles;
       newsLastFetched = now;
       newsFetchedAt = new Date();
+    } else {
+      // API responded but no articles — mark as attempted so we don't stay in "Loading" forever
+      if (!newsFetchedAt) newsFetchedAt = null; // keep null to signal fallback
     }
   } catch(e) { /* use fallback */ }
   renderNewsContent();
@@ -1149,15 +1152,16 @@ function renderNewsContent() {
     list = list.filter(n => n.title.toLowerCase().includes(q) || (n.publisher||'').toLowerCase().includes(q));
   }
 
-  const lastUpdatedStr = newsFetchedAt
+  const usingLive = liveNews.length > 0;
+  const lastUpdatedStr = usingLive
     ? `Updated ${newsFetchedAt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`
-    : 'Loading live data…';
+    : 'Retrying…';
 
   c.innerHTML = `
     <div class="live-banner" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px">
         <span class="badge">LIVE</span>
-        <span style="font-weight:500;font-size:13px">${liveNews.length ? list.length + ' articles' : 'Loading…'}</span>
+        <span style="font-weight:500;font-size:13px">${usingLive ? list.length + ' articles' : list.length + ' articles (demo)'}</span>
       </div>
       <span style="font-size:11px;color:rgba(255,255,255,0.7)">${lastUpdatedStr}</span>
     </div>
@@ -1286,13 +1290,18 @@ function analyseNewsWithFinBot(headline) {
   }, 300);
 }
 
-// Auto-refresh news every 5 minutes when on the news tab
+// Auto-refresh news every 5 minutes (retry even if previous fetch failed)
 setInterval(() => {
   const newsTab = document.getElementById('tab-news');
-  if (newsTab && newsTab.classList.contains('active') && liveNews.length) {
+  if (newsTab && newsTab.classList.contains('active')) {
     fetchLiveNews();
   }
 }, 5 * 60 * 1000);
+
+// Auto-refresh live prices every 60 seconds
+setInterval(() => {
+  fetchLivePrices();
+}, 60 * 1000);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MARKETS TAB
@@ -4291,6 +4300,8 @@ renderNews();
 checkAuth();
 // Fetch live prices in background (updates Markets tab when ready)
 fetchLivePrices();
+// Retry news after 30s if the initial fetch didn't return live articles
+setTimeout(() => { if (!liveNews.length) fetchLiveNews(true); }, 30 * 1000);
 </script>
 </body>
 </html>
