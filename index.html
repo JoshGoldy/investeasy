@@ -1080,7 +1080,7 @@ navBtns.forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab))
 // NEWS TAB
 // ═══════════════════════════════════════════════════════════════════════════
 
-// Client-side RSS helpers (used when server-side PHP cannot reach the internet)
+// ── Client-side news helpers ──────────────────────────────────────────────────
 function _newsCateg(title) {
   const t = title.toLowerCase();
   if (/bitcoin|ethereum|crypto|blockchain|defi|solana|nft|dogecoin|ripple|altcoin/.test(t)) return 'Crypto';
@@ -1091,21 +1091,61 @@ function _newsCateg(title) {
 function _newsHot(title) {
   return /surge|soar|crash|record|rally|plunge|breaking|alert|spike|all.time.high|ath|collapse|explode/i.test(title);
 }
+function _newsTime(isoOrSql) {
+  const pubTime = isoOrSql ? Math.floor(new Date(isoOrSql).getTime() / 1000) : 0;
+  const age = Math.max(0, Date.now() / 1000 - pubTime);
+  const timeStr = age < 3600 ? Math.max(1, Math.round(age / 60)) + 'm ago'
+                : age < 86400 ? Math.round(age / 3600) + 'h ago'
+                : Math.round(age / 86400) + 'd ago';
+  return { pubTime, timeStr };
+}
 
-async function fetchNewsClientSide() {
+// Primary: The Guardian Open API — free "test" key, CORS-enabled, pure JSON
+async function fetchGuardianNews() {
+  const sections = ['business', 'money', 'technology'];
+  const articles = [];
+  await Promise.allSettled(sections.map(async section => {
+    try {
+      const url = `https://content.guardianapis.com/${section}?api-key=test&show-fields=headline,thumbnail,trailText&page-size=20&order-by=newest`;
+      const r = await fetch(url);
+      if (!r.ok) return;
+      const d = await r.json();
+      if (d.response?.status !== 'ok') return;
+      for (const item of (d.response.results || [])) {
+        const headline = item.fields?.headline || item.webTitle;
+        const { pubTime, timeStr } = _newsTime(item.webPublicationDate);
+        articles.push({
+          uuid: item.id.split('/').pop().slice(0, 20),
+          title: headline,
+          publisher: 'The Guardian',
+          link: item.webUrl,
+          description: (item.fields?.trailText || '').replace(/<[^>]+>/g, ''),
+          time: timeStr,
+          pubTime,
+          tickers: [],
+          thumbnail: item.fields?.thumbnail || null,
+          cat: _newsCateg(headline),
+          hot: _newsHot(headline),
+        });
+      }
+    } catch(e) {}
+  }));
+  return articles;
+}
+
+// Fallback: rss2json.com — CORS proxy for financial RSS feeds
+async function fetchRss2JsonNews() {
   const RSS2JSON = 'https://api.rss2json.com/v1/api.json?count=20&rss_url=';
   const feeds = [
-    { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html',            pub: 'CNBC' },
-    { url: 'https://feeds.marketwatch.com/marketwatch/topstories/',             pub: 'MarketWatch' },
-    { url: 'https://rss.nytimes.com/services/xml/rss/nyt/Business.xml',         pub: 'New York Times' },
-    { url: 'https://feeds.a.dj.com/rss/RSSMarketsMain.xml',                    pub: 'Wall Street Journal' },
-    { url: 'https://www.cnbc.com/id/10000664/device/rss/rss.html',             pub: 'CNBC' },
+    { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html', pub: 'CNBC' },
+    { url: 'https://feeds.marketwatch.com/marketwatch/topstories/',  pub: 'MarketWatch' },
+    { url: 'https://rss.nytimes.com/services/xml/rss/nyt/Business.xml', pub: 'New York Times' },
   ];
-
   const articles = [], seen = new Set();
   await Promise.allSettled(feeds.map(async ({ url, pub }) => {
     try {
       const r = await fetch(RSS2JSON + encodeURIComponent(url));
+      if (!r.ok) return;
       const d = await r.json();
       if (d.status !== 'ok' || !Array.isArray(d.items)) return;
       for (const item of d.items) {
@@ -1113,30 +1153,44 @@ async function fetchNewsClientSide() {
         const key = item.title.trim().toLowerCase();
         if (seen.has(key)) continue;
         seen.add(key);
-        const pubTime = item.pubDate ? Math.floor(new Date(item.pubDate).getTime() / 1000) : 0;
-        const age = Math.max(0, Date.now() / 1000 - pubTime);
-        const timeStr = age < 3600 ? Math.max(1, Math.round(age / 60)) + 'm ago'
-                      : age < 86400 ? Math.round(age / 3600) + 'h ago'
-                      : Math.round(age / 86400) + 'd ago';
-        const desc = (item.description || '').replace(/<[^>]+>/g, '').trim().slice(0, 400);
+        const { pubTime, timeStr } = _newsTime(item.pubDate);
         articles.push({
-          uuid: btoa(encodeURIComponent(item.title + item.link)).slice(0, 16),
+          uuid: btoa(encodeURIComponent(item.title)).slice(0, 16),
           title: item.title,
           publisher: pub,
           link: item.link || '',
-          description: desc,
+          description: (item.description || '').replace(/<[^>]+>/g, '').trim().slice(0, 400),
           time: timeStr,
           pubTime,
           tickers: [],
-          thumbnail: item.thumbnail || item.enclosure?.link || null,
+          thumbnail: item.thumbnail || null,
           cat: _newsCateg(item.title),
           hot: _newsHot(item.title),
         });
       }
     } catch(e) {}
   }));
-  articles.sort((a, b) => b.pubTime - a.pubTime);
-  return articles.slice(0, 50);
+  return articles;
+}
+
+async function fetchNewsClientSide() {
+  // Run both sources in parallel; Guardian is primary, rss2json is fallback
+  const [guardianResult, rssResult] = await Promise.allSettled([
+    fetchGuardianNews(),
+    fetchRss2JsonNews(),
+  ]);
+
+  const seen = new Set();
+  const all = [];
+  for (const result of [guardianResult, rssResult]) {
+    if (result.status !== 'fulfilled') continue;
+    for (const a of result.value) {
+      const key = a.title.trim().toLowerCase();
+      if (!seen.has(key)) { seen.add(key); all.push(a); }
+    }
+  }
+  all.sort((a, b) => b.pubTime - a.pubTime);
+  return all.slice(0, 50);
 }
 
 async function fetchLiveNews(force = false) {
