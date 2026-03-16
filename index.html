@@ -813,6 +813,15 @@ button{cursor:pointer}
 
 <script>
 // ═══════════════════════════════════════════════════════════════════════════
+// STATE — declared first to avoid temporal dead zone errors
+// ═══════════════════════════════════════════════════════════════════════════
+
+let currentUser   = null;          // {id, name, email, username} when logged in
+let dbPortfolio   = [];            // [{ticker,name,shares,avg_cost}]
+let watchlistSet  = new Set();     // Set of tickers on watchlist
+let dbSavedReports = null;         // null = guest (localStorage), array = logged-in (DB)
+
+// ═══════════════════════════════════════════════════════════════════════════
 // DATA LAYER
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -2919,10 +2928,6 @@ renderFinBot();
 
 const SAVED_KEY = 'ie_saved_reports';
 
-// When a user is logged in this holds their reports from the DB.
-// null = guest mode → fall back to localStorage.
-let dbSavedReports = null;
-
 function getSavedReports() {
   return dbSavedReports ?? JSON.parse(localStorage.getItem(SAVED_KEY) || '[]');
 }
@@ -3930,10 +3935,6 @@ function resetAllSettings() {
 // ═══════════════════════════════════════════════════════════════════════════
 // AUTH & DATABASE SYNC
 // ═══════════════════════════════════════════════════════════════════════════
-
-let currentUser   = null;
-let dbPortfolio   = [];          // [{ticker,name,shares,avg_cost}]
-let watchlistSet  = new Set();   // Set of tickers on watchlist
 
 // ── Low-level fetch wrapper ───────────────────────────────────────────────────
 async function apiCall(url, method = 'GET', body = null) {
