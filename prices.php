@@ -64,7 +64,8 @@ if ($action === 'quotes') {
     $results = [];
 
     foreach ($tickers as $ticker) {
-        $ySym = TICKER_MAP[$ticker] ?? $ticker;
+        if (!isset(TICKER_MAP[$ticker])) continue;   // skip unknown tickers — never fall back to raw symbol
+        $ySym = TICKER_MAP[$ticker];
         $data = fetchYahoo($ySym, '1d', '5d', 60);
         if (!$data || !isset($data['chart']['result'][0])) continue;
 
@@ -99,7 +100,11 @@ if ($action === 'quotes') {
         exit;
     }
 
-    $ySym  = TICKER_MAP[$ticker] ?? $ticker;
+    if (!isset(TICKER_MAP[$ticker])) {
+        echo json_encode(['success' => false, 'error' => 'Unknown ticker']);
+        exit;
+    }
+    $ySym  = TICKER_MAP[$ticker];
     $tfMap = [
         '1D' => ['interval' => '5m',  'range' => '1d',  'cache' => 120],
         '1W' => ['interval' => '60m', 'range' => '5d',  'cache' => 300],

@@ -876,15 +876,6 @@ const MARKETS = RAW_MARKETS.map(m => {
 });
 
 // Fallback static news (shown while live data loads or on error)
-const NEWS_FALLBACK = [
-  { uuid:'f1', cat:'Markets', title:'S&P 500 edges higher as tech stocks lead amid Fed commentary', time:'2h ago', hot:true, publisher:'Reuters', link:'', tickers:[] },
-  { uuid:'f2', cat:'Economy', title:'US inflation prints below expectations — markets rally sharply', time:'4h ago', hot:true, publisher:'CNBC', link:'', tickers:[] },
-  { uuid:'f3', cat:'Tech', title:'Microsoft announces $10B AI infrastructure expansion across data centers', time:'5h ago', hot:false, publisher:'Bloomberg', link:'', tickers:['MSFT'] },
-  { uuid:'f4', cat:'Crypto', title:'Bitcoin consolidates near $68,000 ahead of ETF inflow data', time:'6h ago', hot:false, publisher:'CoinDesk', link:'', tickers:['BTC-USD'] },
-  { uuid:'f5', cat:'Markets', title:'European markets close mixed as energy stocks drag on FTSE 100', time:'7h ago', hot:false, publisher:'FT', link:'', tickers:[] },
-  { uuid:'f6', cat:'Economy', title:"China's PMI beats forecasts for third consecutive month", time:'8h ago', hot:false, publisher:'Reuters', link:'', tickers:[] },
-  { uuid:'f7', cat:'Tech', title:'Nvidia shares surge on analyst upgrades amid soaring AI chip demand', time:'10h ago', hot:true, publisher:'Barron\'s', link:'', tickers:['NVDA'] },
-];
 let liveNews = [];
 let newsLastFetched = 0;
 let newsFetchedAt = null;
@@ -1293,7 +1284,11 @@ function showNewsSkeletons() {
 function renderNewsContent() {
   const c = document.getElementById('news-articles-container');
   if (!c) return;
-  const source = liveNews.length ? liveNews : NEWS_FALLBACK;
+  if (!liveNews.length) {
+    c.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--faint);font-size:13px">Loading latest news…</div>';
+    return;
+  }
+  const source = liveNews;
   let list = newsFilter === 'All' ? source : source.filter(n => n.cat === newsFilter);
   if (newsSearch.trim()) {
     const q = newsSearch.toLowerCase();
@@ -1351,7 +1346,7 @@ function refreshNews() {
 const articleCache = {};  // url → paragraphs[]
 
 function openNewsArticle(idx, fromLive) {
-  const source = fromLive ? liveNews : NEWS_FALLBACK;
+  const source = liveNews;
   const n = source[idx];
   if (!n) return;
 
