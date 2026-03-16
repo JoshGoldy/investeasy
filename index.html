@@ -1502,15 +1502,20 @@ function closeNewsOverlay() {
 }
 
 // ── FinBot Article Analysis ────────────────────────────────────────────────
+let finbotNewsState = { idx: null, result: null, savedId: null };
+
 async function analyzeArticleWithFinBot(idx) {
   const n = liveNews[idx];
   if (!n) return;
+
+  // Reset state for new analysis
+  finbotNewsState = { idx, result: null, savedId: null };
 
   const modal   = document.getElementById('finbot-news-modal');
   const content = document.getElementById('finbot-news-content');
   modal.classList.remove('hidden');
 
-  // Build the text body to send: title + description/paragraphs
+  const articleLink = n.link || `https://www.google.com/search?q=${encodeURIComponent(n.title)}&tbm=nws`;
   const body = articleCache[n.link]
     ? articleCache[n.link].join('\n\n')
     : (n.description || '');
@@ -1533,9 +1538,9 @@ Keep the tone professional but accessible. Use Markdown formatting.`;
 
   // Loading state
   content.innerHTML = `
-    <div style="display:flex;flex-direction:column;align-items:center;padding:40px 20px;gap:14px">
-      <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#6d28d9);
-                  display:flex;align-items:center;justify-content:center;font-size:22px">🤖</div>
+    <div style="display:flex;flex-direction:column;align-items:center;padding:48px 20px;gap:14px">
+      <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#6d28d9);
+                  display:flex;align-items:center;justify-content:center;font-size:24px">🤖</div>
       <p style="font-weight:800;font-size:16px;color:var(--text)">Analyzing article…</p>
       <p style="font-size:12px;color:var(--faint);text-align:center;line-height:1.6">Claude is reading and breaking down<br>this article for you</p>
       <div class="loading-dots" style="margin-top:4px">
@@ -1552,19 +1557,8 @@ Keep the tone professional but accessible. Use Markdown formatting.`;
     const data = await resp.json();
     if (!resp.ok || data.error) throw new Error(data.error || `Error ${resp.status}`);
     const text = data.text ?? '';
-    content.innerHTML = `
-      <div style="padding:4px 0 20px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
-          <span style="font-size:20px">🤖</span>
-          <div>
-            <p style="font-weight:800;font-size:14px;color:var(--text)">FinBot Analysis</p>
-            <p style="font-size:11px;color:#a78bfa;font-weight:600">Powered by Claude</p>
-          </div>
-          <span style="margin-left:auto;font-size:11px;font-weight:700;color:#10b981;
-                       background:#10b98115;padding:3px 10px;border-radius:20px">✓ Complete</span>
-        </div>
-        <div class="result-content" style="font-size:13px">${parseMd(text)}</div>
-      </div>`;
+    finbotNewsState.result = text;
+    renderFinBotNewsResult(idx, text, articleLink, n);
   } catch (e) {
     content.innerHTML = `
       <div style="padding:20px">
@@ -1578,6 +1572,69 @@ Keep the tone professional but accessible. Use Markdown formatting.`;
         </div>
       </div>`;
   }
+}
+
+function renderFinBotNewsResult(idx, text, articleLink, n) {
+  const content = document.getElementById('finbot-news-content');
+  const isSaved = !!finbotNewsState.savedId;
+  content.innerHTML = `
+    <div style="padding:20px 0 8px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        <span style="font-size:20px">🤖</span>
+        <div>
+          <p style="font-weight:800;font-size:14px;color:var(--text)">FinBot Analysis</p>
+          <p style="font-size:11px;color:#a78bfa;font-weight:600">Powered by Claude</p>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;font-weight:700;color:#10b981;background:#10b98115;padding:3px 10px;border-radius:20px">✓ Complete</span>
+          <button id="finbot-news-save-btn" onclick="saveNewsAnalysis(${idx})"
+            style="padding:5px 12px;border-radius:10px;${isSaved ? 'background:#10b98122;color:#10b981' : 'background:var(--border);color:var(--text)'};
+                   font-size:12px;font-weight:700;border:none;cursor:pointer;white-space:nowrap">
+            ${isSaved ? '🔖 Saved' : '🔖 Save'}
+          </button>
+        </div>
+      </div>
+      <div class="result-content" style="font-size:13.5px;line-height:1.75">${parseMd(text)}</div>
+      <div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px">
+        <button onclick="saveNewsAnalysis(${idx})" id="finbot-news-save-btn-big"
+          style="width:100%;padding:13px;border-radius:12px;${isSaved ? 'background:#10b98122;color:#10b981;border:1.5px solid #10b981' : 'background:#7c3aed18;color:#a78bfa;border:1.5px solid #7c3aed40'};
+                 font-size:13px;font-weight:700;cursor:pointer;transition:all .2s">
+          ${isSaved ? '🔖 View in Saved Reports →' : '🔖 Save Report'}
+        </button>
+        <a href="${escHtml(articleLink)}" target="_blank" rel="noopener"
+          style="width:100%;padding:13px;border-radius:12px;background:var(--green);color:#fff;
+                 font-size:13px;font-weight:700;text-align:center;text-decoration:none;display:block;box-sizing:border-box">
+          Read Full Article on ${escHtml(n.publisher || 'Publisher')} ↗
+        </a>
+      </div>
+    </div>`;
+}
+
+function saveNewsAnalysis(idx) {
+  if (finbotNewsState.savedId) { closeFinBotNewsModal(); switchTab('saved'); return; }
+  if (!finbotNewsState.result) return;
+  const n = liveNews[idx];
+  if (!n) return;
+  const articleLink = n.link || `https://www.google.com/search?q=${encodeURIComponent(n.title)}&tbm=nws`;
+  const reports = getSavedReports();
+  const report = {
+    id:           Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    modeId:       'news',
+    modeTitle:    n.title,
+    modeSub:      n.publisher || 'News',
+    modeCol:      '#7c3aed',
+    modeIcon:     '📰',
+    content:      finbotNewsState.result,
+    articleLink,
+    savedAt:      Date.now(),
+  };
+  reports.unshift(report);
+  localStorage.setItem(SAVED_KEY, JSON.stringify(reports));
+  finbotNewsState.savedId = report.id;
+  updateSavedBadge();
+  showToast('Analysis saved! View it in the Saved tab.');
+  // Re-render to flip buttons to "Saved" state
+  renderFinBotNewsResult(idx, finbotNewsState.result, articleLink, n);
 }
 
 function closeFinBotNewsModal() {
@@ -2888,6 +2945,15 @@ async function shareReport(id) {
 function viewSavedReport(id) {
   const r = getSavedReports().find(r => r.id === id);
   if (!r) return;
+  if (r.modeId === 'news') {
+    // Show in the finbot-news-modal
+    finbotNewsState = { idx: null, result: r.content, savedId: r.id };
+    document.getElementById('finbot-news-modal').classList.remove('hidden');
+    const articleLink = r.articleLink || '';
+    const fakeN = { title: r.modeTitle, publisher: r.modeSub, link: articleLink };
+    renderFinBotNewsResult(null, r.content, articleLink, fakeN);
+    return;
+  }
   finbotState.mode    = r.modeId;
   finbotState.result  = r.content;
   finbotState.loading = false;
@@ -2901,32 +2967,56 @@ function updateSavedBadge() {
   if (badge) badge.style.display = getSavedReports().length > 0 ? 'block' : 'none';
 }
 
-function renderSaved() {
-  const el      = document.getElementById('tab-saved');
-  const reports = getSavedReports();
+let savedFilter = 'all';
 
-  if (!reports.length) {
+function renderSaved(filter) {
+  if (filter !== undefined) savedFilter = filter;
+  const el      = document.getElementById('tab-saved');
+  const allReports = getSavedReports();
+
+  if (!allReports.length) {
     el.innerHTML = `
       <div class="section-title"><h2>Saved Reports</h2></div>
       <div class="saved-empty">
         <div class="saved-empty-icon">🔖</div>
         <p style="font-size:15px;font-weight:700;color:var(--text)">No saved reports yet</p>
         <p style="font-size:13px;color:var(--faint);line-height:1.6;max-width:280px">
-          Run any analysis in FinBot and tap <strong style="color:var(--text)">🔖 Save Report</strong> to keep it here.
+          Run any analysis in FinBot or analyze a news article and tap <strong style="color:var(--text)">🔖 Save</strong> to keep it here.
         </p>
       </div>`;
     return;
   }
 
+  const finbotCount = allReports.filter(r => r.modeId !== 'news').length;
+  const newsCount   = allReports.filter(r => r.modeId === 'news').length;
+  const reports     = savedFilter === 'finbot' ? allReports.filter(r => r.modeId !== 'news')
+                    : savedFilter === 'news'   ? allReports.filter(r => r.modeId === 'news')
+                    : allReports;
+
+  const filterBtn = (id, label, count, col) => {
+    const active = savedFilter === id;
+    return `<button onclick="renderSaved('${id}')"
+      style="padding:6px 13px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid ${active ? col : 'var(--border)'};
+             background:${active ? col + '18' : 'transparent'};color:${active ? col : 'var(--muted)'};cursor:pointer;white-space:nowrap;transition:all .15s">
+      ${label}${count ? ` <span style="font-size:10px;opacity:.7">${count}</span>` : ''}
+    </button>`;
+  };
+
   el.innerHTML = `
     <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
       <div>
         <h2>Saved Reports</h2>
-        <p style="font-size:12px;color:var(--faint);margin-top:4px">${reports.length} report${reports.length !== 1 ? 's' : ''} saved locally</p>
+        <p style="font-size:12px;color:var(--faint);margin-top:4px">${allReports.length} report${allReports.length !== 1 ? 's' : ''} saved locally</p>
       </div>
       <button onclick="if(confirm('Delete all saved reports?')){localStorage.removeItem(SAVED_KEY);updateSavedBadge();renderSaved()}"
         style="font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;padding:6px 8px;border-radius:8px">Clear all</button>
     </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      ${filterBtn('all',    'All',            allReports.length, 'var(--green)')}
+      ${filterBtn('finbot', '🤖 FinBot',      finbotCount,       '#6366f1')}
+      ${filterBtn('news',   '📰 News Analysis', newsCount,        '#7c3aed')}
+    </div>
+    ${reports.length === 0 ? `<div style="text-align:center;padding:40px 20px;color:var(--faint);font-size:13px">No reports in this category</div>` : ''}
     ${reports.map(r => {
       const date    = new Date(r.savedAt);
       const dateStr = date.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
@@ -2938,8 +3028,8 @@ function renderSaved() {
             <div class="saved-card-meta">
               <div class="saved-card-icon" style="background:${r.modeCol}22">${r.modeIcon}</div>
               <div>
-                <div class="saved-card-title">${r.modeTitle}</div>
-                <div class="saved-card-sub">by ${r.modeSub} &nbsp;·&nbsp; ${dateStr}, ${timeStr}</div>
+                <div class="saved-card-title">${escHtml(r.modeTitle)}</div>
+                <div class="saved-card-sub">${r.modeId === 'news' ? '📰 News Analysis' : 'by ' + escHtml(r.modeSub)} &nbsp;·&nbsp; ${dateStr}, ${timeStr}</div>
               </div>
             </div>
             <button onclick="deleteSavedReport('${r.id}')"
@@ -2950,8 +3040,13 @@ function renderSaved() {
             <button class="saved-action-btn" style="background:${r.modeCol}18;color:${r.modeCol}"
               onclick="viewSavedReport('${r.id}')">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              View Full Report
+              View Report
             </button>
+            ${r.modeId === 'news' && r.articleLink ? `
+            <a class="saved-action-btn" href="${escHtml(r.articleLink)}" target="_blank" rel="noopener"
+              style="background:var(--border);color:var(--text);text-decoration:none">
+              ↗ Article
+            </a>` : ''}
             <button class="saved-action-btn" style="background:var(--border);color:var(--text)"
               onclick="downloadReport('${r.id}')">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 3v13M7 12l5 5 5-5"/><path d="M5 20h14"/></svg>
@@ -5514,21 +5609,25 @@ setTimeout(() => { if (!liveNews.length) fetchLiveNews(true); }, 30 * 1000);
 </script>
 
 <!-- FinBot News Analysis Modal -->
-<div id="finbot-news-modal" class="news-overlay hidden" onclick="if(event.target===this)closeFinBotNewsModal()">
-  <div class="news-sheet" style="max-height:92vh">
-    <div class="news-sheet-handle"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#6d28d9);
-                    display:flex;align-items:center;justify-content:center;font-size:14px">🤖</div>
-        <span style="font-weight:800;font-size:15px;color:var(--text)">FinBot</span>
-        <span style="font-size:11px;color:#a78bfa;font-weight:600">by Claude</span>
+<div id="finbot-news-modal" class="news-overlay hidden"
+     style="align-items:center;justify-content:center"
+     onclick="if(event.target===this)closeFinBotNewsModal()">
+  <div style="background:var(--card);width:calc(100% - 32px);max-width:860px;max-height:92vh;
+              border-radius:20px;display:flex;flex-direction:column;animation:ndSlide 0.25s ease;
+              overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px;
+                border-bottom:1px solid var(--border);flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#6d28d9);
+                    display:flex;align-items:center;justify-content:center;font-size:16px">🤖</div>
+        <span style="font-weight:800;font-size:16px;color:var(--text)">FinBot</span>
+        <span style="font-size:12px;color:#a78bfa;font-weight:600">by Claude</span>
       </div>
       <button onclick="closeFinBotNewsModal()"
-        style="width:30px;height:30px;border-radius:50%;background:var(--border);color:var(--muted);
-               font-size:16px;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer">✕</button>
+        style="width:32px;height:32px;border-radius:50%;background:var(--border);color:var(--muted);
+               font-size:17px;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer">✕</button>
     </div>
-    <div id="finbot-news-content" style="padding:0 20px 36px;overflow-y:auto;max-height:calc(92vh - 80px)"></div>
+    <div id="finbot-news-content" style="padding:0 28px 32px;overflow-y:auto;flex:1"></div>
   </div>
 </div>
 </body>
