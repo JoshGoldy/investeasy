@@ -463,6 +463,36 @@ button{cursor:pointer}
 .quiz-score .score-num{font-size:48px;font-weight:800;font-family:var(--mono);margin:12px 0}
 .quiz-score p{font-size:13px;color:var(--faint);margin-bottom:20px}
 
+/* ── BADGES ───────────────────────────────────────────────────── */
+.badges-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px}
+.badge-item{background:var(--card);border-radius:var(--radius-sm);padding:14px 12px;text-align:center;box-shadow:var(--shadow);transition:transform 0.2s}
+.badge-item.earned{border:1px solid var(--green);cursor:default}
+.badge-item.locked{opacity:0.4;filter:grayscale(1)}
+.badge-icon{font-size:28px;margin-bottom:6px}
+.badge-name{font-size:11px;font-weight:700;color:var(--text);margin-bottom:2px}
+.badge-desc{font-size:10px;color:var(--faint);line-height:1.4}
+/* ── GLOSSARY ─────────────────────────────────────────────────── */
+.glossary-search{width:100%;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;margin-bottom:14px;outline:none}
+.glossary-search:focus{border-color:var(--green)}
+.glossary-letter{font-size:11px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:1px;padding:8px 0 4px;border-bottom:1px solid var(--border);margin-bottom:8px;margin-top:16px}
+.glossary-item{padding:10px 0;border-bottom:1px solid #ffffff06;display:grid;grid-template-columns:160px 1fr;gap:12px;align-items:baseline}
+.glossary-item:last-child{border-bottom:none}
+.glossary-term-name{font-size:13px;font-weight:700;color:var(--green)}
+.glossary-term-def{font-size:12px;color:var(--text2);line-height:1.6}
+/* ── FLASHCARDS ───────────────────────────────────────────────── */
+.flashcard-wrap{perspective:1000px;width:100%;max-width:480px;margin:0 auto 24px;height:200px;cursor:pointer}
+.flashcard{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 0.5s}
+.flashcard.flipped{transform:rotateY(180deg)}
+.flashcard-face{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:var(--radius);padding:28px 24px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;box-shadow:var(--shadow-lg)}
+.flashcard-front{background:var(--card);border:1px solid var(--border2)}
+.flashcard-back{background:linear-gradient(135deg,#0f2a1e,#0c1a2e);border:1px solid var(--green);transform:rotateY(180deg)}
+.flashcard-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+.flashcard-text{font-size:16px;font-weight:700;color:var(--text);line-height:1.4}
+.flashcard-back .flashcard-text{font-size:13px;color:var(--text2);font-weight:400}
+.fc-progress{font-size:12px;color:var(--faint);font-family:var(--mono);text-align:center;margin-bottom:12px}
+.fc-hint{font-size:11px;color:var(--faint);text-align:center;margin-bottom:16px}
+/* ── STREAK ───────────────────────────────────────────────────── */
+.streak-flame{font-size:20px;line-height:1}
 /* ── RESPONSIVE ───────────────────────────────────────────────── */
 @media(max-width:768px){
   body{overflow:auto}
@@ -4188,12 +4218,394 @@ const LEARN_TOPICS = [
       { q: 'Which is the BEST approach to emotional discipline in investing?', opts: ['Check your portfolio every hour', 'Follow social media stock tips', 'Have a written investment plan and stick to it', 'Make decisions based on gut feeling'], ans: 2, explain: 'Having a written plan with clear criteria for buying, selling, and risk limits helps prevent emotional decision-making during market turbulence.' },
       { q: 'What is confirmation bias?', opts: ['Confirming trades before executing', 'Seeking information that supports your existing beliefs', 'Getting a second opinion on investments', 'Verifying stock prices are accurate'], ans: 1, explain: 'Confirmation bias is the tendency to seek out and favor information that confirms what you already believe, while ignoring contradicting evidence.' }
     ]
+  },
+  {
+    id: 'crypto',
+    icon: '₿',
+    iconBg: '#f59e0b18',
+    title: 'Crypto & Blockchain',
+    desc: 'Bitcoin, Ethereum, DeFi, and digital asset investing',
+    difficulty: 'intermediate',
+    lessons: [
+      {
+        title: 'What is Blockchain?',
+        content: `
+          <p>A <span class="term">blockchain</span> is a distributed ledger — a database copied across thousands of computers worldwide. Instead of one company controlling your data, it's verified by a network of independent participants.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Core Concepts</h4>
+          <ul>
+            <li><span class="term">Decentralization</span> — No single point of control or failure. No bank, no CEO, no shutdown button.</li>
+            <li><span class="term">Immutability</span> — Once a transaction is recorded, it cannot be altered. History is permanent.</li>
+            <li><span class="term">Consensus mechanisms</span> — Rules that nodes use to agree on valid transactions:</li>
+            <li><span class="term">Proof of Work (PoW)</span> — Miners solve complex puzzles to add blocks (Bitcoin). Energy-intensive but battle-tested.</li>
+            <li><span class="term">Proof of Stake (PoS)</span> — Validators "stake" coins as collateral (Ethereum). More energy-efficient.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Why It Matters for Finance</h4>
+          <ul>
+            <li>Enables peer-to-peer transactions without banks or intermediaries</li>
+            <li>Programmable money through smart contracts</li>
+            <li>Transparent and auditable by anyone</li>
+          </ul>
+          <div class="highlight">The blockchain is the underlying technology — Bitcoin and Ethereum are applications built on top of it. The internet is a useful analogy: email and the web are apps; TCP/IP is the underlying protocol.</div>
+        `
+      },
+      {
+        title: 'Bitcoin & Major Cryptos',
+        content: `
+          <p><span class="term">Bitcoin (BTC)</span> was created in 2009 by the pseudonymous Satoshi Nakamoto. It is the first and largest cryptocurrency by market cap — often called "digital gold."</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Bitcoin's Key Properties</h4>
+          <ul>
+            <li><span class="term">Fixed supply</span> — Only 21 million BTC will ever exist. Scarcity is built in by design.</li>
+            <li><span class="term">Halving</span> — Every ~4 years, the reward for mining new Bitcoin halves. Historically precedes bull runs.</li>
+            <li><span class="term">Store of value</span> — Bitcoin's use case is primarily as a hedge against inflation and currency debasement.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Ethereum & Beyond</h4>
+          <ul>
+            <li><span class="term">Ethereum (ETH)</span> — A programmable blockchain. Powers decentralized apps, DeFi, and NFTs.</li>
+            <li><span class="term">Stablecoins</span> — Cryptos pegged to the dollar (USDC, USDT). Used for trading and DeFi without price volatility.</li>
+            <li><span class="term">Altcoins</span> — All cryptos other than Bitcoin. Higher risk/reward profile than BTC or ETH.</li>
+            <li><span class="term">Market cap dominance</span> — Bitcoin typically represents 40-60% of total crypto market cap.</li>
+          </ul>
+          <div class="warn">The vast majority of altcoins (thousands exist) are speculative projects or outright scams. Stick to assets with proven network effects and real utility.</div>
+        `
+      },
+      {
+        title: 'DeFi & Web3',
+        content: `
+          <p><span class="term">DeFi (Decentralized Finance)</span> is a financial system built on blockchain — lending, borrowing, trading, and earning yield without banks or brokers. All governed by code (smart contracts).</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Key DeFi Concepts</h4>
+          <ul>
+            <li><span class="term">Smart contracts</span> — Self-executing code. "If X happens, automatically do Y." Trustless and unstoppable.</li>
+            <li><span class="term">DEX (Decentralized Exchange)</span> — Trade tokens directly from your wallet with no account needed (e.g., Uniswap).</li>
+            <li><span class="term">Liquidity pools</span> — Users deposit token pairs to enable trading. Earn fees as a liquidity provider.</li>
+            <li><span class="term">Yield farming</span> — Earning interest/rewards by putting crypto to work in DeFi protocols.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">NFTs & Tokenization</h4>
+          <ul>
+            <li><span class="term">NFT</span> — Non-Fungible Token. Unique digital ownership on a blockchain. Used for art, gaming, real estate.</li>
+            <li><span class="term">Tokenization</span> — Real-world assets (real estate, stocks, commodities) represented as tokens on a blockchain.</li>
+          </ul>
+          <div class="warn">DeFi protocols can have smart contract bugs, exploits, and rug pulls. Always research thoroughly and only use audited, battle-tested protocols with real liquidity.</div>
+        `
+      },
+      {
+        title: 'Crypto Risk & Investing',
+        content: `
+          <p>Cryptocurrencies offer high potential returns — but they are the highest-volatility asset class available to retail investors. A 50–80% drawdown is not unusual, even for Bitcoin.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Major Risks</h4>
+          <ul>
+            <li><span class="term">Volatility</span> — Prices can move 10-30% in a day. Extreme emotional swings. Not suitable for money you need soon.</li>
+            <li><span class="term">Regulatory risk</span> — Governments can ban, tax, or restrict crypto. Policy changes move markets.</li>
+            <li><span class="term">Exchange risk</span> — Centralized exchanges can freeze funds or collapse (FTX in 2022, $8B lost).</li>
+            <li><span class="term">Security risk</span> — Lost keys = lost funds. No recovery option, no customer support, no insurance.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Storage: Hot vs Cold Wallets</h4>
+          <ul>
+            <li><span class="term">Hot wallet</span> — Software wallet connected to the internet. Convenient but vulnerable to hacks.</li>
+            <li><span class="term">Cold wallet</span> — Hardware device (Ledger, Trezor). Offline storage. Best for large holdings.</li>
+          </ul>
+          <div class="highlight">"Not your keys, not your coins." Keeping crypto on an exchange means the exchange technically owns it. For significant holdings, use a hardware wallet you control.</div>
+          <div class="warn">Most financial advisors suggest limiting crypto to 5–10% of your portfolio at most due to its extreme volatility and speculative nature.</div>
+        `
+      }
+    ],
+    quiz: [
+      { q: 'What makes Bitcoin\'s supply unique?', opts: ['It increases every year', 'Only 21 million will ever exist', 'It can be printed by governments', 'It resets every 4 years'], ans: 1, explain: 'Bitcoin\'s maximum supply is capped at 21 million coins, hard-coded into its protocol. This fixed supply is a key reason many see it as "digital gold."' },
+      { q: 'What is a smart contract?', opts: ['A legal agreement signed digitally', 'Self-executing code on a blockchain that runs when conditions are met', 'A contract to buy crypto at a fixed price', 'An insurance policy for crypto investments'], ans: 1, explain: 'A smart contract is self-executing code on a blockchain. When predefined conditions are met, it automatically executes — no human or intermediary required.' },
+      { q: 'What does "Proof of Stake" mean?', opts: ['Mining with powerful computers', 'Validators stake crypto as collateral to validate transactions', 'Staking a claim on a blockchain', 'Holding crypto for at least one year'], ans: 1, explain: 'Proof of Stake requires validators to lock up ("stake") cryptocurrency as collateral. If they try to cheat, they lose their stake. Ethereum uses PoS.' },
+      { q: 'What happened with FTX in 2022?', opts: ['It launched a successful IPO', 'A major crypto exchange collapsed, losing billions in customer funds', 'It was acquired by a bank', 'Bitcoin reached its all-time high'], ans: 1, explain: 'FTX, once one of the world\'s largest crypto exchanges, collapsed in November 2022 due to fraud. Billions in customer funds were lost, illustrating exchange risk.' },
+      { q: 'What is a "cold wallet"?', opts: ['A wallet for frozen assets in a bankruptcy', 'A hardware device that stores crypto offline', 'A wallet that earns below-average interest', 'Any wallet with zero balance'], ans: 1, explain: 'A cold wallet (hardware wallet) stores your private keys on a physical device that is never connected to the internet, making it far more secure than software wallets.' }
+    ]
+  },
+  {
+    id: 'options',
+    icon: '⚡',
+    iconBg: '#ef444418',
+    title: 'Options Basics',
+    desc: 'Calls, puts, strategies, and the Greeks explained',
+    difficulty: 'advanced',
+    lessons: [
+      {
+        title: 'Calls & Puts',
+        content: `
+          <p>An <span class="term">option</span> is a contract that gives the buyer the right — but not the obligation — to buy or sell an asset at a specific price before a set date. Options are powerful but require careful understanding.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">The Two Types</h4>
+          <ul>
+            <li><span class="term">Call option</span> — The right to BUY 100 shares at the strike price. You profit if the stock goes UP.</li>
+            <li><span class="term">Put option</span> — The right to SELL 100 shares at the strike price. You profit if the stock goes DOWN.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Key Terms</h4>
+          <ul>
+            <li><span class="term">Strike price</span> — The price at which you can exercise the option.</li>
+            <li><span class="term">Expiration date</span> — The option expires worthless if not exercised by this date.</li>
+            <li><span class="term">Premium</span> — The price you pay for the option contract.</li>
+            <li><span class="term">In the money (ITM)</span> — The option has intrinsic value (call: stock above strike; put: stock below strike).</li>
+            <li><span class="term">Out of the money (OTM)</span> — The option has no intrinsic value yet. All time value.</li>
+          </ul>
+          <div class="highlight">Each standard option contract covers 100 shares. A call option at $5.00 premium actually costs $500 (5.00 × 100).</div>
+          <div class="warn">Options buyers can lose 100% of their investment. Sellers face theoretically unlimited losses on naked calls. Never trade options without fully understanding the risks.</div>
+        `
+      },
+      {
+        title: 'Options Pricing',
+        content: `
+          <p>The price (premium) of an option is determined by several factors. Understanding what drives premium helps you make better decisions about which options to buy or sell.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Two Components of Premium</h4>
+          <ul>
+            <li><span class="term">Intrinsic value</span> — How much "in the money" the option already is. A call with strike $100 when stock is $110 has $10 intrinsic value.</li>
+            <li><span class="term">Time value (extrinsic)</span> — The extra premium above intrinsic value. Represents the probability of becoming more profitable. Decays to zero at expiration.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Key Pricing Factors</h4>
+          <ul>
+            <li><span class="term">Implied Volatility (IV)</span> — The market's expectation of future price movement. Higher IV → higher option premiums. IV spikes around earnings.</li>
+            <li><span class="term">Time to expiration</span> — More time = more premium. Options lose value as expiration approaches (time decay).</li>
+            <li><span class="term">Stock price vs strike</span> — Distance between stock price and strike directly affects intrinsic value.</li>
+            <li><span class="term">Interest rates</span> — Minor effect; calls slightly more expensive when rates rise.</li>
+          </ul>
+          <div class="warn">Buying options before earnings is risky — even if you're right about direction, "IV crush" (volatility collapsing after the announcement) can still cause losses.</div>
+        `
+      },
+      {
+        title: 'Basic Strategies',
+        content: `
+          <p>Options enable strategies that are impossible with stocks alone — hedging, generating income, or controlling more shares with less capital.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Beginner-Friendly Strategies</h4>
+          <ul>
+            <li><span class="term">Covered Call</span> — Own 100 shares, sell a call above the current price. Collect premium as income. Cap your upside. Ideal for sideways markets.</li>
+            <li><span class="term">Protective Put</span> — Own shares, buy a put below the current price. Insurance against a crash. Costs premium but limits downside.</li>
+            <li><span class="term">Cash-Secured Put</span> — Sell a put and set aside cash to buy the shares if assigned. A way to get paid to buy stocks at a discount you're happy with.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Directional Plays</h4>
+          <ul>
+            <li><span class="term">Long Call</span> — Buy a call if you're bullish. Leveraged upside, max loss = premium paid.</li>
+            <li><span class="term">Long Put</span> — Buy a put if you're bearish. Profit if stock falls below strike price minus premium.</li>
+          </ul>
+          <div class="highlight">Selling options (covered calls, cash-secured puts) is generally lower risk than buying them, because you collect premium instead of paying it. This is how many professionals use options for income.</div>
+        `
+      },
+      {
+        title: 'The Greeks',
+        content: `
+          <p>The "Greeks" are measures that describe how an option's price changes in response to various factors. Understanding them is essential for managing options positions.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">The Main Greeks</h4>
+          <ul>
+            <li><span class="term">Delta (Δ)</span> — How much the option price changes per $1 move in the stock. A call with delta 0.50 gains ~$0.50 for every $1 the stock rises. Range: 0 to 1 for calls, 0 to -1 for puts.</li>
+            <li><span class="term">Theta (Θ)</span> — Time decay. How much the option loses in value each day as expiration approaches. Theta works against buyers, for sellers.</li>
+            <li><span class="term">Gamma (Γ)</span> — Rate of change of delta. High gamma near expiration means delta changes rapidly — big moves have big effects.</li>
+            <li><span class="term">Vega (V)</span> — Sensitivity to implied volatility. A vega of 0.10 means a 1% rise in IV adds ~$0.10 to the premium. Buyers want high IV; sellers want low IV.</li>
+          </ul>
+          <div class="highlight">Think of delta as speed, gamma as acceleration, theta as rust (eating away value), and vega as the wind (volatility can push your position up or down regardless of direction).</div>
+        `
+      }
+    ],
+    quiz: [
+      { q: 'What does a call option give you the right to do?', opts: ['Sell shares at the strike price', 'Buy shares at the strike price', 'Short-sell shares at any price', 'Receive dividends without owning shares'], ans: 1, explain: 'A call option gives the buyer the right (but not obligation) to BUY 100 shares at the strike price before expiration. You profit if the stock rises above the strike plus premium paid.' },
+      { q: 'What is "time decay" in options?', opts: ['The delay in filling option orders', 'The loss of an option\'s value as expiration approaches', 'The time it takes to earn a profit', 'Interest rate changes over time'], ans: 1, explain: 'Time decay (theta) refers to the daily erosion of an option\'s extrinsic value as it approaches expiration. At expiration, only intrinsic value remains.' },
+      { q: 'What is Implied Volatility (IV)?', opts: ['Historical stock price swings', 'The market\'s expectation of future price movement', 'The difference between bid and ask', 'A measure of the stock\'s trading volume'], ans: 1, explain: 'IV reflects the market\'s collective expectation of how much a stock will move. Higher IV = higher option premiums. IV typically spikes before earnings reports.' },
+      { q: 'A covered call involves:', opts: ['Buying a call with no other position', 'Buying a put as insurance', 'Owning 100 shares and selling a call against them', 'Selling a call on shares you don\'t own'], ans: 2, explain: 'A covered call means you own 100 shares (the "cover") and sell a call option against them. You collect premium income but cap your upside at the strike price.' },
+      { q: 'Delta measures:', opts: ['Time decay per day', 'Option price sensitivity to stock price moves', 'Sensitivity to volatility changes', 'The probability of assignment'], ans: 1, explain: 'Delta measures how much an option\'s price changes for every $1 move in the underlying stock. A delta of 0.50 means the option gains/loses $0.50 for each $1 move in the stock.' }
+    ]
+  },
+  {
+    id: 'dividends',
+    icon: '💰',
+    iconBg: '#10b98118',
+    title: 'Dividends & Income',
+    desc: 'Dividend investing, REITs, and building passive income',
+    difficulty: 'beginner',
+    lessons: [
+      {
+        title: 'Understanding Dividends',
+        content: `
+          <p>A <span class="term">dividend</span> is a payment made by a company to its shareholders out of profits. It's a way to share the success of the business directly with investors — real cash in your pocket.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Key Dividend Terms</h4>
+          <ul>
+            <li><span class="term">Dividend yield</span> — Annual dividend / stock price. A stock at $100 paying $4/year has a 4% yield.</li>
+            <li><span class="term">Payout ratio</span> — Dividends paid / net income. A 40% ratio means 40% of earnings go to dividends. Sustainability check.</li>
+            <li><span class="term">Ex-dividend date</span> — You must own the stock BEFORE this date to receive the next dividend.</li>
+            <li><span class="term">Record date</span> — The date the company checks its records to identify shareholders who receive the dividend.</li>
+            <li><span class="term">Payment date</span> — When the dividend is actually paid to shareholders.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Types of Dividends</h4>
+          <ul>
+            <li><span class="term">Regular dividends</span> — Paid quarterly (most US companies), monthly, or annually.</li>
+            <li><span class="term">Special dividends</span> — One-time extra payments, often from a one-time profit event.</li>
+            <li><span class="term">Stock dividends</span> — Additional shares instead of cash. Less common.</li>
+          </ul>
+          <div class="highlight">A high dividend yield can be a red flag — sometimes a yield spikes because the stock price has fallen sharply, suggesting trouble. Always check the payout ratio and earnings stability.</div>
+        `
+      },
+      {
+        title: 'Dividend Growth Investing',
+        content: `
+          <p><span class="term">Dividend growth investing</span> focuses on companies that consistently raise their dividends year after year. The goal is a growing income stream that compounds over time.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Dividend Aristocrats & Kings</h4>
+          <ul>
+            <li><span class="term">Dividend Aristocrats</span> — S&P 500 companies that have raised dividends for 25+ consecutive years. Examples: Coca-Cola, J&J, Procter & Gamble.</li>
+            <li><span class="term">Dividend Kings</span> — Have raised dividends for 50+ consecutive years. The most elite group of dividend payers.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">DRIP — Dividend Reinvestment Plans</h4>
+          <p>A <span class="term">DRIP</span> automatically reinvests your dividends to buy more shares, accelerating compound growth:</p>
+          <ul>
+            <li>More shares → more dividends → even more shares</li>
+            <li>Works best over long time periods (10+ years)</li>
+            <li>Many brokers offer DRIP for free</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Dividend Traps to Avoid</h4>
+          <ul>
+            <li><span class="term">Unsustainable payout ratio</span> — Above 80% is risky; above 100% means paying more than they earn.</li>
+            <li><span class="term">Declining revenue</span> — If sales are shrinking, the dividend may eventually be cut.</li>
+            <li><span class="term">Heavy debt</span> — Debt servicing can compete with dividends during tough times.</li>
+          </ul>
+          <div class="highlight">$10,000 invested in a stock with 3% yield growing 7% per year becomes ~$76,000 in dividends alone after 20 years — that's the power of dividend growth + reinvestment.</div>
+        `
+      },
+      {
+        title: 'REITs & Income Investments',
+        content: `
+          <p>Beyond individual stocks, there are several asset classes specifically designed to generate income for investors.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">REITs (Real Estate Investment Trusts)</h4>
+          <ul>
+            <li>Companies that own income-producing real estate (offices, malls, apartments, data centers)</li>
+            <li><span class="term">Required by law</span> to distribute at least 90% of taxable income as dividends</li>
+            <li>Offer real estate exposure without buying property directly</li>
+            <li>Types: Residential, Commercial, Industrial, Healthcare, Data Centers</li>
+            <li><span class="term">Key metric</span> — Funds From Operations (FFO), not earnings. A more accurate measure of REIT profitability.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Other Income Assets</h4>
+          <ul>
+            <li><span class="term">Preferred stocks</span> — Hybrid between stocks and bonds. Fixed dividend, priority over common shareholders.</li>
+            <li><span class="term">Bond funds</span> — ETFs holding dozens of bonds. Monthly income, lower risk than individual bonds.</li>
+            <li><span class="term">Covered call ETFs</span> — ETFs that sell covered calls to generate above-average income (e.g., JEPI, XYLD). Trade growth for income.</li>
+          </ul>
+          <div class="highlight">REITs are sensitive to interest rates — when rates rise, REIT yields become less attractive compared to bonds, often causing REIT prices to fall. This creates buying opportunities for long-term income investors.</div>
+        `
+      }
+    ],
+    quiz: [
+      { q: 'What is dividend yield?', opts: ['The number of dividends per year', 'Annual dividend divided by stock price', 'Total earnings per share', 'The payout frequency'], ans: 1, explain: 'Dividend yield = Annual Dividend ÷ Stock Price. A $4 annual dividend on a $100 stock = 4% yield. It helps compare income across different stocks.' },
+      { q: 'What is a Dividend Aristocrat?', opts: ['Any stock that pays a dividend', 'An S&P 500 company with 25+ years of consecutive dividend increases', 'A company with a yield above 5%', 'A fund that only invests in dividend stocks'], ans: 1, explain: 'Dividend Aristocrats are S&P 500 companies that have increased their dividend for at least 25 consecutive years. They represent financially stable, shareholder-friendly businesses.' },
+      { q: 'What does DRIP stand for?', opts: ['Daily Rate Income Plan', 'Dividend Reinvestment Plan', 'Diversified Return Income Portfolio', 'Dividend Risk Income Percentage'], ans: 1, explain: 'DRIP stands for Dividend Reinvestment Plan. Instead of receiving cash, your dividends automatically buy more shares, accelerating compound growth over time.' },
+      { q: 'REITs are required by law to distribute at least what percentage of taxable income?', opts: ['50%', '75%', '90%', '100%'], ans: 2, explain: 'REITs must distribute at least 90% of their taxable income as dividends to qualify for their special tax status. This is what makes them high-yield income investments.' },
+      { q: 'A payout ratio above 100% means:', opts: ['Excellent dividend safety', 'The company is paying out more in dividends than it earns', 'The stock has great growth potential', 'The dividend was recently doubled'], ans: 1, explain: 'A payout ratio above 100% means the company is paying out more in dividends than it earns in net income. This is unsustainable and often signals a future dividend cut.' }
+    ]
   }
 ];
+
+// ── Glossary terms ────────────────────────────────────────────────────────────
+const GLOSSARY_TERMS = [
+  { term:'Alpha', def:'Return above a benchmark index. Positive alpha means the investment outperformed.', cat:'Performance' },
+  { term:'Asset Allocation', def:'The mix of different asset classes (stocks, bonds, cash) in a portfolio based on goals and risk tolerance.', cat:'Strategy' },
+  { term:'Bear Market', def:'A market decline of 20% or more from recent highs. Associated with pessimism and falling prices.', cat:'Market' },
+  { term:'Beta', def:'Measure of a stock\'s volatility relative to the market. Beta > 1 means more volatile than the S&P 500.', cat:'Risk' },
+  { term:'Blockchain', def:'A distributed, immutable digital ledger that records transactions across a network of computers.', cat:'Crypto' },
+  { term:'Bond', def:'A fixed-income security representing a loan made by an investor to a borrower (government or corporate).', cat:'Instruments' },
+  { term:'Bull Market', def:'A market rise of 20% or more. Associated with optimism, rising prices, and strong economic growth.', cat:'Market' },
+  { term:'Call Option', def:'A contract giving the right to buy 100 shares at a specific strike price before expiration.', cat:'Options' },
+  { term:'Capital Gains', def:'Profit from selling an asset for more than its purchase price. Short-term (<1yr) taxed as income; long-term at lower rates.', cat:'Tax' },
+  { term:'Compounding', def:'Earning returns on previous returns. A $1,000 investment at 10% becomes $17,449 over 30 years.', cat:'Concepts' },
+  { term:'Correction', def:'A market decline of 10–19% from recent highs. Less severe than a bear market; often a normal, healthy pullback.', cat:'Market' },
+  { term:'Correlation', def:'How two assets move relative to each other. Low or negative correlation is valuable for diversification.', cat:'Risk' },
+  { term:'Covered Call', def:'Selling a call option against shares you own. Generates income but caps upside at the strike price.', cat:'Options' },
+  { term:'Death Cross', def:'When the 50-day moving average crosses below the 200-day MA. Considered a bearish long-term signal.', cat:'Technical' },
+  { term:'Delta', def:'How much an option\'s price changes per $1 move in the underlying stock. Ranges 0–1 for calls.', cat:'Options' },
+  { term:'Depreciation', def:'The reduction in the value of an asset over time. Important for company financial statements.', cat:'Fundamentals' },
+  { term:'Diversification', def:'Spreading investments across assets, sectors, and geographies to reduce risk.', cat:'Strategy' },
+  { term:'Dividend', def:'A portion of a company\'s earnings paid to shareholders, typically quarterly.', cat:'Income' },
+  { term:'Dollar-Cost Averaging', def:'Investing a fixed amount at regular intervals regardless of price, reducing the impact of volatility.', cat:'Strategy' },
+  { term:'EBITDA', def:'Earnings Before Interest, Taxes, Depreciation & Amortization. A proxy for operating profitability.', cat:'Fundamentals' },
+  { term:'EPS (Earnings Per Share)', def:'Net income divided by total shares outstanding. A key measure of company profitability.', cat:'Fundamentals' },
+  { term:'ETF', def:'Exchange-Traded Fund. A basket of securities trading on an exchange like a single stock.', cat:'Instruments' },
+  { term:'Ex-Dividend Date', def:'You must own the stock before this date to receive the upcoming dividend payment.', cat:'Income' },
+  { term:'Free Cash Flow', def:'Operating cash flow minus capital expenditures. The cash available after maintaining the business.', cat:'Fundamentals' },
+  { term:'Fundamental Analysis', def:'Evaluating a company\'s financial health, earnings, assets, and competitive position to determine intrinsic value.', cat:'Analysis' },
+  { term:'Golden Cross', def:'When the 50-day moving average crosses above the 200-day MA. Considered a bullish long-term signal.', cat:'Technical' },
+  { term:'Hedge', def:'An investment made to reduce the risk of adverse price movements in another asset.', cat:'Risk' },
+  { term:'Index Fund', def:'A fund that passively tracks a market index (e.g., S&P 500), offering broad exposure at low cost.', cat:'Instruments' },
+  { term:'Inflation', def:'The rate at which the general level of prices rises, eroding purchasing power over time.', cat:'Economy' },
+  { term:'Interest Rate Risk', def:'The risk that rising interest rates will reduce the value of existing bonds and rate-sensitive stocks.', cat:'Risk' },
+  { term:'Intrinsic Value', def:'The estimated true worth of a company based on its fundamentals, independent of market price.', cat:'Fundamentals' },
+  { term:'IPO', def:'Initial Public Offering. The first time a private company offers shares to the public on a stock exchange.', cat:'Market' },
+  { term:'Liquidity', def:'How easily an asset can be converted to cash without significantly affecting its price.', cat:'Market' },
+  { term:'Long Position', def:'Owning an asset with the expectation that its price will rise.', cat:'Trading' },
+  { term:'Margin of Safety', def:'Buying below intrinsic value to protect against errors in analysis. A core concept in value investing.', cat:'Strategy' },
+  { term:'Market Capitalization', def:'Total value of a company\'s shares: share price × shares outstanding. Small-cap: <$2B; Large-cap: >$10B.', cat:'Fundamentals' },
+  { term:'Moving Average', def:'The average price of a security over a set period. Used to identify trend direction and support/resistance.', cat:'Technical' },
+  { term:'Mutual Fund', def:'A pooled investment vehicle managed by professionals. Unlike ETFs, trades once per day at the closing price.', cat:'Instruments' },
+  { term:'P/E Ratio', def:'Price-to-Earnings ratio. How much investors pay per dollar of earnings. High P/E = growth expectations or overvaluation.', cat:'Fundamentals' },
+  { term:'Portfolio', def:'The complete collection of an investor\'s holdings across all asset classes and accounts.', cat:'Concepts' },
+  { term:'Put Option', def:'A contract giving the right to sell 100 shares at a specific strike price before expiration.', cat:'Options' },
+  { term:'REIT', def:'Real Estate Investment Trust. A company owning income-producing real estate, required to pay 90%+ of income as dividends.', cat:'Income' },
+  { term:'Rebalancing', def:'Periodically buying/selling assets to restore a portfolio to its target allocation.', cat:'Strategy' },
+  { term:'Return on Equity (ROE)', def:'Net income divided by shareholders\' equity. Measures how efficiently a company uses investor funds.', cat:'Fundamentals' },
+  { term:'RSI', def:'Relative Strength Index. A momentum oscillator (0–100). Above 70 = overbought; below 30 = oversold.', cat:'Technical' },
+  { term:'S&P 500', def:'An index of 500 large U.S. companies. The most widely-used benchmark for U.S. stock market performance.', cat:'Market' },
+  { term:'Short Selling', def:'Borrowing and selling shares you don\'t own, hoping to buy them back cheaper. Profits if the stock falls.', cat:'Trading' },
+  { term:'Stablecoin', def:'A cryptocurrency pegged to a stable asset (usually the U.S. dollar). Used for DeFi and crypto trading.', cat:'Crypto' },
+  { term:'Stop-Loss', def:'An order to sell automatically if a price falls to a set level, limiting losses.', cat:'Risk' },
+  { term:'Technical Analysis', def:'Using price charts, patterns, and indicators to forecast future price direction.', cat:'Analysis' },
+  { term:'Theta', def:'The daily rate of time decay in an option\'s price. Works against buyers; benefits sellers.', cat:'Options' },
+  { term:'Trailing Stop', def:'A stop-loss that moves up with the stock price, locking in gains while limiting downside.', cat:'Risk' },
+  { term:'Value Investing', def:'Buying undervalued stocks trading below their intrinsic value, expecting the market to eventually correct the price.', cat:'Strategy' },
+  { term:'Vega', def:'An option\'s sensitivity to changes in implied volatility. Higher vega = more impact from IV changes.', cat:'Options' },
+  { term:'Volatility', def:'The degree of variation in an asset\'s price. High volatility = larger swings. Measured by standard deviation or VIX.', cat:'Risk' },
+  { term:'Volume', def:'The number of shares traded in a period. High volume confirms price moves; low volume suggests weak conviction.', cat:'Technical' },
+  { term:'Yield Curve', def:'A graph of bond yields across different maturities. An inverted yield curve (short rates > long rates) often predicts recessions.', cat:'Economy' },
+];
+
+// ── Badges ────────────────────────────────────────────────────────────────────
+const BADGES = [
+  { id:'first_lesson',  icon:'🌱', name:'First Steps',       desc:'Complete your first lesson' },
+  { id:'five_lessons',  icon:'📖', name:'Quick Learner',     desc:'Complete 5 lessons' },
+  { id:'all_lessons',   icon:'🎓', name:'Scholar',           desc:'Complete every lesson' },
+  { id:'first_quiz',    icon:'✏️', name:'Quiz Taker',        desc:'Complete your first quiz' },
+  { id:'perfect_quiz',  icon:'💯', name:'Perfect Score',     desc:'Score 100% on any quiz' },
+  { id:'all_quizzes',   icon:'🏆', name:'Quiz Champion',     desc:'Pass all topic quizzes' },
+  { id:'streak_3',      icon:'🔥', name:'On a Roll',         desc:'3-day learning streak' },
+  { id:'streak_7',      icon:'⚡', name:'Unstoppable',       desc:'7-day learning streak' },
+  { id:'crypto_done',   icon:'₿',  name:'Crypto Curious',   desc:'Complete the Crypto module' },
+  { id:'options_done',  icon:'📊', name:'Options Aware',     desc:'Complete the Options module' },
+  { id:'full_course',   icon:'🌟', name:'Master Investor',   desc:'Complete all 9 topics' },
+];
+
+function getEarnedBadgeIds() {
+  const s = learnState;
+  const earned = new Set();
+  let totalLessons = 0, completedLessons = 0, passedQuizzes = 0;
+  LEARN_TOPICS.forEach(t => {
+    totalLessons += t.lessons.length;
+    const read = (s[t.id]?.lessonsRead || []).length;
+    completedLessons += read;
+    if (s[t.id]?.quizDone) {
+      passedQuizzes++;
+      if (s[t.id].quizScore === 100) earned.add('perfect_quiz');
+    }
+  });
+  if (completedLessons >= 1) earned.add('first_lesson');
+  if (completedLessons >= 5) earned.add('five_lessons');
+  if (completedLessons >= totalLessons) earned.add('all_lessons');
+  if (passedQuizzes >= 1) earned.add('first_quiz');
+  if (passedQuizzes >= LEARN_TOPICS.length) earned.add('all_quizzes');
+  if ((s._streak || 0) >= 3) earned.add('streak_3');
+  if ((s._streak || 0) >= 7) earned.add('streak_7');
+  if (s.crypto?.quizDone) earned.add('crypto_done');
+  if (s.options?.quizDone) earned.add('options_done');
+  if (passedQuizzes >= LEARN_TOPICS.length && completedLessons >= totalLessons) earned.add('full_course');
+  return earned;
+}
 
 // Learning Hub state — persisted to localStorage
 let learnState = JSON.parse(localStorage.getItem('ie_learn') || '{}');
 function saveLearnState() { localStorage.setItem('ie_learn', JSON.stringify(learnState)); }
+
+function updateStreak() {
+  const today = new Date().toDateString();
+  if (learnState._streakDate === today) return;
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+  learnState._streak = (learnState._streakDate === yesterday.toDateString())
+    ? (learnState._streak || 0) + 1 : 1;
+  learnState._streakDate = today;
+  saveLearnState();
+}
 
 function getTopicProgress(topicId) {
   const data = learnState[topicId] || {};
@@ -4216,6 +4628,7 @@ function markLessonRead(topicId, lessonIdx) {
     learnState[topicId].lessonsRead.push(lessonIdx);
     saveLearnState();
   }
+  updateStreak();
 }
 
 function renderLearn() {
@@ -4230,8 +4643,17 @@ function renderLearn() {
   });
   const overallPct = Math.round(((completedLessons + completedQuizzes) / (totalLessons + totalQuizzes)) * 100);
 
+  const streak = learnState._streak || 0;
+  const earnedBadges = getEarnedBadgeIds();
+
   el.innerHTML = `
-    <div class="section-title"><h2>Learning Hub</h2><p>Master investing concepts at your own pace</p></div>
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+      <div><h2>Learning Hub</h2><p>Master investing concepts at your own pace</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="learn-nav-btn secondary" style="padding:8px 14px;font-size:12px" onclick="renderGlossary()">📖 Glossary</button>
+        <button class="learn-nav-btn secondary" style="padding:8px 14px;font-size:12px" onclick="renderBadgesPage()">🏅 Badges</button>
+      </div>
+    </div>
     <div class="learn-stats">
       <div class="learn-stat-card">
         <div class="learn-stat-num" style="color:var(--green)">${overallPct}%</div>
@@ -4249,21 +4671,37 @@ function renderLearn() {
         <div class="learn-stat-num">${completedQuizzes > 0 ? Math.round(totalScore / completedQuizzes) + '%' : '—'}</div>
         <div class="learn-stat-label">Avg Quiz Score</div>
       </div>
+      <div class="learn-stat-card">
+        <div class="learn-stat-num"><span class="streak-flame">${streak > 0 ? '🔥' : '💤'}</span>${streak}</div>
+        <div class="learn-stat-label">Day Streak</div>
+      </div>
+      <div class="learn-stat-card">
+        <div class="learn-stat-num">${earnedBadges.size}<span style="font-size:14px;color:var(--faint)">/${BADGES.length}</span></div>
+        <div class="learn-stat-label">Badges Earned</div>
+      </div>
     </div>
     <div class="learn-grid">
       ${LEARN_TOPICS.map(t => {
         const p = getTopicProgress(t.id);
         return `
           <div class="learn-topic-card ${p.pct === 100 ? 'completed-card' : ''}" onclick="openTopic('${t.id}')">
-            <div class="learn-topic-icon" style="background:${t.iconBg}">${t.icon}</div>
-            <h3>${t.title}</h3>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div class="learn-topic-icon" style="background:${t.iconBg}">${t.icon}</div>
+              ${p.pct === 100 ? '<span style="font-size:16px">✅</span>' : ''}
+            </div>
+            <h3 style="margin-top:10px">${t.title}</h3>
             <p>${t.desc}</p>
             <div class="learn-topic-meta">
               <span class="learn-difficulty diff-${t.difficulty}">${t.difficulty}</span>
               <span class="learn-lesson-count">${t.lessons.length} lessons + quiz</span>
             </div>
             <div class="learn-progress-bar"><div class="learn-progress-fill" style="width:${p.pct}%"></div></div>
-            ${p.pct === 100 ? '<div style="position:absolute;top:12px;right:12px;font-size:18px">✅</div>' : ''}
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <button class="learn-nav-btn primary" style="flex:1;padding:7px 0;font-size:11px" onclick="event.stopPropagation();openTopic('${t.id}')">
+                ${p.lessonsRead === 0 ? 'Start' : p.pct === 100 ? 'Review' : 'Continue'} →
+              </button>
+              <button class="learn-nav-btn secondary" style="padding:7px 10px;font-size:11px" onclick="event.stopPropagation();renderFlashcards('${t.id}')" title="Flashcards">🃏</button>
+            </div>
           </div>`;
       }).join('')}
     </div>
@@ -4375,6 +4813,7 @@ function renderQuizQuestion() {
 function answerQuiz(choice) {
   if (quizState.showingFeedback) return;
   quizState.showingFeedback = true;
+  updateStreak();
   const topic = LEARN_TOPICS.find(t => t.id === quizState.topicId);
   const q = topic.quiz[quizState.current];
   const correct = choice === q.ans;
@@ -4438,6 +4877,164 @@ function finishQuiz() {
     </div>
   `;
   el.parentElement.scrollTop = 0;
+}
+
+// ── Glossary view ─────────────────────────────────────────────────────────────
+function renderGlossary(search = '') {
+  const el = document.getElementById('tab-learn');
+  const filtered = search.trim()
+    ? GLOSSARY_TERMS.filter(g =>
+        g.term.toLowerCase().includes(search.toLowerCase()) ||
+        g.def.toLowerCase().includes(search.toLowerCase()))
+    : GLOSSARY_TERMS;
+
+  // Group by first letter
+  const groups = {};
+  filtered.forEach(g => {
+    const letter = g.term[0].toUpperCase();
+    if (!groups[letter]) groups[letter] = [];
+    groups[letter].push(g);
+  });
+
+  el.innerHTML = `
+    <div class="learn-detail">
+      <button class="learn-back" onclick="renderLearn()">← Back to Topics</button>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <span style="font-size:28px">📖</span>
+        <div>
+          <h2 style="font-size:20px;font-weight:800;color:var(--text)">Financial Glossary</h2>
+          <p style="font-size:12px;color:var(--faint)">${GLOSSARY_TERMS.length} terms defined</p>
+        </div>
+      </div>
+      <input class="glossary-search" placeholder="Search terms or definitions…" value="${escHtml(search)}"
+        oninput="renderGlossary(this.value)" autofocus>
+      ${filtered.length === 0 ? '<div style="text-align:center;padding:40px;color:var(--faint);font-size:13px">No matching terms found</div>' : ''}
+      ${Object.keys(groups).sort().map(letter => `
+        <div class="glossary-letter">${letter}</div>
+        ${groups[letter].map(g => `
+          <div class="glossary-item">
+            <span class="glossary-term-name">${escHtml(g.term)}</span>
+            <span class="glossary-term-def">${escHtml(g.def)}</span>
+          </div>`).join('')}
+      `).join('')}
+    </div>
+  `;
+  el.parentElement.scrollTop = 0;
+}
+
+// ── Badges page ───────────────────────────────────────────────────────────────
+function renderBadgesPage() {
+  const el = document.getElementById('tab-learn');
+  const earned = getEarnedBadgeIds();
+  el.innerHTML = `
+    <div class="learn-detail">
+      <button class="learn-back" onclick="renderLearn()">← Back to Topics</button>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <span style="font-size:28px">🏅</span>
+        <div>
+          <h2 style="font-size:20px;font-weight:800;color:var(--text)">Achievements</h2>
+          <p style="font-size:12px;color:var(--faint)">${earned.size} of ${BADGES.length} earned</p>
+        </div>
+      </div>
+      <div class="badges-grid">
+        ${BADGES.map(b => `
+          <div class="badge-item ${earned.has(b.id) ? 'earned' : 'locked'}">
+            <div class="badge-icon">${b.icon}</div>
+            <div class="badge-name">${escHtml(b.name)}</div>
+            <div class="badge-desc">${escHtml(b.desc)}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+  `;
+  el.parentElement.scrollTop = 0;
+}
+
+// ── Flashcards view ───────────────────────────────────────────────────────────
+// Build flashcard deck from a topic's key terms in lesson content
+function buildFlashcards(topic) {
+  const cards = [];
+  topic.lessons.forEach(lesson => {
+    const matches = [...lesson.content.matchAll(/<span class="term">([^<]+)<\/span>\s*[—–-]\s*([^<.]+[^<]*?)(?=<|$)/g)];
+    matches.forEach(m => {
+      const term = m[1].trim();
+      const def = m[2].replace(/<[^>]+>/g, '').trim();
+      if (term && def && def.length > 10) cards.push({ term, def });
+    });
+  });
+  // Deduplicate by term
+  const seen = new Set();
+  return cards.filter(c => { if (seen.has(c.term)) return false; seen.add(c.term); return true; });
+}
+
+let fcState = { topicId: null, cards: [], idx: 0, flipped: false };
+
+function renderFlashcards(topicId) {
+  const topic = LEARN_TOPICS.find(t => t.id === topicId);
+  if (!topic) return;
+  const cards = buildFlashcards(topic);
+  if (!cards.length) {
+    // Fallback: use glossary terms matching topic keywords
+    alert('No flashcards available for this topic yet.');
+    return;
+  }
+  // Shuffle
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+  fcState = { topicId, cards, idx: 0, flipped: false };
+  renderFlashcardView();
+}
+
+function renderFlashcardView() {
+  const el = document.getElementById('tab-learn');
+  const topic = LEARN_TOPICS.find(t => t.id === fcState.topicId);
+  const { cards, idx, flipped } = fcState;
+  const card = cards[idx];
+  el.innerHTML = `
+    <div class="learn-detail">
+      <button class="learn-back" onclick="openTopic('${fcState.topicId}')">← Back to ${escHtml(topic.title)}</button>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <span style="font-size:28px">🃏</span>
+        <div>
+          <h2 style="font-size:20px;font-weight:800;color:var(--text)">${escHtml(topic.title)} Flashcards</h2>
+          <p style="font-size:12px;color:var(--faint)">${cards.length} cards — tap to flip</p>
+        </div>
+      </div>
+      <div class="fc-progress">${idx + 1} / ${cards.length}</div>
+      <div class="flashcard-wrap" onclick="fcFlip()">
+        <div class="flashcard ${flipped ? 'flipped' : ''}" id="fc-card">
+          <div class="flashcard-face flashcard-front">
+            <div class="flashcard-label">Term</div>
+            <div class="flashcard-text">${escHtml(card.term)}</div>
+          </div>
+          <div class="flashcard-face flashcard-back">
+            <div class="flashcard-label">Definition</div>
+            <div class="flashcard-text">${escHtml(card.def)}</div>
+          </div>
+        </div>
+      </div>
+      <div class="fc-hint">${flipped ? 'Tap card to see the term again' : 'Tap the card to reveal the definition'}</div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        ${idx > 0 ? `<button class="learn-nav-btn secondary" onclick="fcNav(-1)">← Prev</button>` : ''}
+        ${idx < cards.length - 1
+          ? `<button class="learn-nav-btn primary" onclick="fcNav(1)">Next →</button>`
+          : `<button class="learn-nav-btn primary" onclick="renderFlashcards('${fcState.topicId}')">Shuffle Again 🔀</button>`}
+      </div>
+    </div>
+  `;
+  el.parentElement.scrollTop = 0;
+}
+
+function fcFlip() {
+  fcState.flipped = !fcState.flipped;
+  renderFlashcardView();
+}
+
+function fcNav(dir) {
+  fcState.idx = Math.max(0, Math.min(fcState.cards.length - 1, fcState.idx + dir));
+  fcState.flipped = false;
+  renderFlashcardView();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
