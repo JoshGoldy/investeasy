@@ -46,7 +46,7 @@ button{cursor:pointer}
 
 /* ── SHELL ────────────────────────────────────────────────────── */
 .shell{width:100%;background:var(--bg);display:grid;
-  grid-template-areas:"header header""nav content";
+  grid-template-areas:"nav header""nav content";
   grid-template-columns:240px 1fr;grid-template-rows:auto 1fr;
   height:100vh;overflow:hidden;position:relative}
 .header{grid-area:header;background:var(--card);padding:14px 24px;
@@ -64,7 +64,7 @@ button{cursor:pointer}
 /* ── NAV ──────────────────────────────────────────────────────── */
 .nav{grid-area:nav;background:var(--card);border-right:1px solid var(--border);
   display:flex;flex-direction:column;padding:12px 0;gap:2px;overflow-y:auto}
-.nav-brand{padding:8px 20px 16px;border-bottom:1px solid var(--border);margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.nav-brand{padding:14px 20px 14px;border-bottom:1px solid var(--border);margin-bottom:8px;display:flex;align-items:center;gap:10px}
 .nav-brand-icon{width:34px;height:34px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .nav-brand-name{font-size:14px;font-weight:800;color:var(--text)}
 .nav button{padding:11px 20px;background:none;display:flex;flex-direction:row;
