@@ -691,20 +691,7 @@ button{cursor:pointer}
   <!-- Nav -->
   <div class="nav">
     <div class="nav-brand">
-      <div class="nav-brand-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="34" height="34">
-          <line x1="57" y1="57" x2="74" y2="74" stroke="#43A047" stroke-width="10" stroke-linecap="round"/>
-          <circle cx="34" cy="34" r="28" fill="white" stroke="#43A047" stroke-width="8"/>
-          <rect x="15" y="41" width="8" height="13" rx="1.5" fill="#1E88E5"/>
-          <rect x="27" y="33" width="8" height="21" rx="1.5" fill="#1E88E5"/>
-          <rect x="39" y="26" width="8" height="28" rx="1.5" fill="#1E88E5"/>
-          <polyline points="19,37 31,27 43,20" fill="none" stroke="#1E88E5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="19" cy="37" r="2.5" fill="#1E88E5"/>
-          <circle cx="31" cy="27" r="2.5" fill="#1E88E5"/>
-          <circle cx="43" cy="20" r="2.5" fill="#1E88E5"/>
-        </svg>
-      </div>
-      <span class="nav-brand-name">FinScope</span>
+      <img src="logo.svg" alt="FinScope" style="height:36px;width:auto">
     </div>
     <button class="active" data-tab="news">
       <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M18 18h-8M18 10h-8"/></svg>
@@ -1019,6 +1006,12 @@ function createMiniChart(container, data, color, height = 32) {
   series.setData(data.map((d, i) => ({ time: d.time ?? (i + 1), value: d.value })));
   chart.timeScale().fitContent();
   return chart;
+}
+
+function convertChartData(data) {
+  const rate = curCfg().rate;
+  if (rate === 1) return data;
+  return data.map(d => ({ ...d, value: d.value * rate }));
 }
 
 function createFullChart(container, data, color, height = 300) {
@@ -1554,7 +1547,7 @@ function renderMarkets(filter) {
             ${starBtn}
             <p class="ticker">${m.ticker}</p>
             <p class="name">${m.name}</p>
-            <p class="price">${fmtPrice(m.val)}</p>
+            <p class="price">${fmtUnitPrice(m.val)}</p>
             <div class="bottom">
               <span class="mono ${up?'up':'dn'}" style="font-size:12px;font-weight:700">${up?'▲':'▼'} ${Math.abs(m.chg)}%</span>
               <div class="mini-chart" id="mini-${m.ticker}"></div>
@@ -1665,7 +1658,7 @@ function openStockDetail(idx) {
         </div>
       </div>
       <div style="text-align:right">
-        <p class="mono" style="font-size:24px;font-weight:700;color:#fff">${fmtPrice(stock.val)}</p>
+        <p class="mono" style="font-size:24px;font-weight:700;color:#fff">${fmtUnitPrice(stock.val)}</p>
         <span style="font-size:13px;font-weight:700;color:${color}">${up?'▲':'▼'} ${Math.abs(stock.chg).toFixed(2)}% today</span>
       </div>
     </div>
@@ -1686,8 +1679,8 @@ function openStockDetail(idx) {
         <div style="position:absolute;left:${rangePct}%;transform:translateX(-50%);top:-4px;width:12px;height:12px;background:${color};border-radius:50%;border:2px solid #0c1320;box-shadow:0 0 6px ${color}80"></div>
       </div>
       <div style="display:flex;justify-content:space-between;margin-top:6px">
-        <span style="font-size:11px;color:#64748b;font-family:var(--mono)">${stock.lo52}</span>
-        <span style="font-size:11px;color:#64748b;font-family:var(--mono)">${stock.hi52}</span>
+        <span style="font-size:11px;color:#64748b;font-family:var(--mono)">${fmtUnitPrice(parseFloat(stock.lo52))}</span>
+        <span style="font-size:11px;color:#64748b;font-family:var(--mono)">${fmtUnitPrice(parseFloat(stock.hi52))}</span>
       </div>
     </div>
 
@@ -1697,8 +1690,8 @@ function openStockDetail(idx) {
         {l:'Market Cap',  v:stock.mktcap || '—', c:''},
         {l:'P/E Ratio',   v:stock.pe     || '—', c:''},
         {l:'Volume',      v:stock.vol    || '—', c:''},
-        {l:'52W High',    v:stock.hi52,           c:'#10b981'},
-        {l:'52W Low',     v:stock.lo52,           c:'#ef4444'},
+        {l:'52W High',    v:fmtUnitPrice(parseFloat(stock.hi52)), c:'#10b981'},
+        {l:'52W Low',     v:fmtUnitPrice(parseFloat(stock.lo52)), c:'#ef4444'},
         {l:'Day Change',  v:(stock.chg>0?'+':'')+stock.chg+'%', c:color},
       ].map(s => `<div class="stat-box">
         <p class="label">${s.l}</p>
@@ -1734,13 +1727,13 @@ function openStockDetail(idx) {
     const el = document.getElementById('detail-chart');
     if (el) {
       if (detailChart) detailChart.remove();
-      detailChart = createFullChart(el, stock.charts['1D'], color, 300);
+      detailChart = createFullChart(el, convertChartData(stock.charts['1D']), color, 300);
     }
     // Replace with live data as soon as it arrives
     fetchLiveChart(stock.ticker, '1D', points => {
       stock.charts['1D'] = points;
       const el2 = document.getElementById('detail-chart');
-      if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, points, color, 300); }
+      if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, convertChartData(points), color, 300); }
     });
   });
 }
@@ -1758,12 +1751,12 @@ function switchDetailTF(idx, tf) {
     const el = document.getElementById('detail-chart');
     if (el) {
       if (detailChart) detailChart.remove();
-      detailChart = createFullChart(el, stock.charts[tf], color, 300);
+      detailChart = createFullChart(el, convertChartData(stock.charts[tf]), color, 300);
     }
     fetchLiveChart(stock.ticker, tf, points => {
       stock.charts[tf] = points;
       const el2 = document.getElementById('detail-chart');
-      if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, points, color, 300); }
+      if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, convertChartData(points), color, 300); }
     });
   });
 }

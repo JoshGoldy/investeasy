@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 110">
+  <!-- Magnifying glass handle -->
+  <line x1="76" y1="73" x2="96" y2="93" stroke="#43A047" stroke-width="12" stroke-linecap="round"/>
+  <!-- Magnifying glass circle -->
+  <circle cx="48" cy="46" r="34" fill="white" stroke="#43A047" stroke-width="9"/>
+  <!-- Bar chart bars (left=short, mid=medium, right=tall) -->
+  <rect x="25" y="52" width="9" height="16" rx="2" fill="#1E88E5"/>
+  <rect x="38" y="43" width="9" height="25" rx="2" fill="#1E88E5"/>
+  <rect x="51" y="34" width="9" height="34" rx="2" fill="#1E88E5"/>
+  <!-- Trend line connecting bar tops -->
+  <polyline points="29,48 42,38 55,29" fill="none" stroke="#1E88E5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="29" cy="48" r="3" fill="#1E88E5"/>
+  <circle cx="42" cy="38" r="3" fill="#1E88E5"/>
+  <circle cx="55" cy="29" r="3" fill="#1E88E5"/>
+  <!-- "Fin" in blue -->
+  <text x="108" y="72" font-family="'Arial Black', Arial, sans-serif" font-size="52" font-weight="900" fill="#1E88E5">Fin</text>
+  <!-- "Scope" in green -->
+  <text x="197" y="72" font-family="'Arial Black', Arial, sans-serif" font-size="52" font-weight="900" fill="#43A047">Scope</text>
+</svg>
