@@ -6,8 +6,12 @@ header('Cache-Control: no-store');
 // These files were created when ETH mapped to Ethan Allen (NYSE:ETH, ~$22).
 // Safe to run every request — file_exists() is a no-op once they're gone.
 foreach ([
+    // Old keys (ETH → Ethan Allen raw symbol)
     md5('ETH5m1d'), md5('ETH1d5d'), md5('ETH60m5d'),
     md5('ETH1d1mo'), md5('ETH1d3mo'), md5('ETH1wk1y'),
+    // New keys (ETH-USD) — purge in case a bad response was ever cached under these too
+    md5('ETH-USD5m1d'), md5('ETH-USD1d5d'), md5('ETH-USD60m5d'),
+    md5('ETH-USD1d1mo'), md5('ETH-USD1d3mo'), md5('ETH-USD1wk1y'),
 ] as $_stale) {
     $_f = sys_get_temp_dir() . '/ie_' . $_stale . '.json';
     if (file_exists($_f)) @unlink($_f);
@@ -85,6 +89,9 @@ if ($action === 'quotes') {
         if (!$data || !isset($data['chart']['result'][0])) continue;
 
         $meta      = $data['chart']['result'][0]['meta'];
+        // Reject if Yahoo returned a different symbol (e.g. ETH→Ethan Allen instead of ETH-USD→Ethereum)
+        $retSym = strtolower($meta['symbol'] ?? '');
+        if ($retSym && $retSym !== strtolower($ySym)) continue;
         $price     = $meta['regularMarketPrice'] ?? null;
         $prevClose = $meta['previousClose'] ?? $meta['chartPreviousClose'] ?? null;
         $chgPct    = null;
@@ -137,6 +144,12 @@ if ($action === 'quotes') {
     }
 
     $result     = $data['chart']['result'][0];
+    // Reject if Yahoo returned a different symbol (e.g. ETH→Ethan Allen instead of ETH-USD→Ethereum)
+    $retSym = strtolower($result['meta']['symbol'] ?? '');
+    if ($retSym && $retSym !== strtolower($ySym)) {
+        echo json_encode(['success' => false, 'error' => 'Symbol mismatch: got ' . ($result['meta']['symbol'] ?? '?') . ', expected ' . $ySym]);
+        exit;
+    }
     $closes     = $result['indicators']['quote'][0]['close'] ?? [];
     $timestamps = $result['timestamp'] ?? [];
     $points     = [];
