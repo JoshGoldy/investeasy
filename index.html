@@ -1041,6 +1041,7 @@ function createFullChart(container, data, color, height = 300) {
     handleScroll: { mouseWheel: false, pressedMouseMove: true },
     handleScale:  { mouseWheel: false, pinch: true },
   });
+  const cfg = curCfg();
   const series = chart.addAreaSeries({
     lineColor: color, lineWidth: 2,
     topColor: color + '28', bottomColor: color + '00',
@@ -1048,6 +1049,16 @@ function createFullChart(container, data, color, height = 300) {
     priceLineColor: color, priceLineWidth: 1, priceLineStyle: 2,
     crosshairMarkerRadius: 5, crosshairMarkerBackgroundColor: color,
     crosshairMarkerBorderColor: '#0c1320',
+    priceFormat: {
+      type: 'custom',
+      formatter: (v) => {
+        const c = curCfg();
+        if (v >= 100000) return c.symbol + (v / 1000).toFixed(1) + 'k';
+        if (v >= 10000)  return c.symbol + Math.round(v).toLocaleString('en-US');
+        if (v >= 1)      return c.symbol + v.toFixed(2);
+        return c.symbol + v.toFixed(4);
+      },
+    },
   });
   const baseline = data[0].value;
   chart.addLineSeries({
@@ -1586,6 +1597,7 @@ function renderMarkets(filter) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 let detailChart = null;
+let currentDetailIdx = null;
 
 // ── Live data helpers ─────────────────────────────────────────────────────────
 async function fetchLivePrices() {
@@ -1620,6 +1632,7 @@ async function fetchLiveChart(ticker, tf, callback) {
 }
 
 function openStockDetail(idx) {
+  currentDetailIdx = idx;
   const stock = MARKETS[idx];
   const up    = stock.chg >= 0;
   const color = up ? '#10b981' : '#ef4444';
@@ -1764,6 +1777,7 @@ function switchDetailTF(idx, tf) {
 function closeStockDetail() {
   document.getElementById('stock-detail').classList.add('hidden');
   if (detailChart) { detailChart.remove(); detailChart = null; }
+  currentDetailIdx = null;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -3147,10 +3161,13 @@ function saveSettings(updates) {
   localStorage.setItem('ie_settings', JSON.stringify(next));
   saveSettingsToDB(updates);
   renderSettings();
-  // Re-render portfolio immediately when display-affecting settings change
+  // Re-render all price-displaying views when display-affecting settings change
   if ('currency' in updates || 'hideBalances' in updates) {
     const portTab = document.getElementById('tab-portfolio');
     if (portTab && portTab.classList.contains('active')) renderPortfolio();
+    const mktTab = document.getElementById('tab-markets');
+    if (mktTab && mktTab.classList.contains('active')) renderMarkets();
+    if (currentDetailIdx !== null) openStockDetail(currentDetailIdx);
   }
 }
 
