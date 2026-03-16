@@ -47,9 +47,9 @@ button{cursor:pointer}
 /* ── SHELL ────────────────────────────────────────────────────── */
 .shell{width:100%;background:var(--bg);display:grid;
   grid-template-areas:"nav header""nav content";
-  grid-template-columns:240px 1fr;grid-template-rows:auto 1fr;
+  grid-template-columns:240px 1fr;grid-template-rows:64px 1fr;
   height:100vh;overflow:hidden;position:relative}
-.header{grid-area:header;background:var(--card);padding:14px 24px;
+.header{grid-area:header;background:var(--card);padding:0 24px;
   border-bottom:1px solid var(--border);flex-shrink:0;
   display:flex;justify-content:space-between;align-items:center}
 .header h1{font-size:20px;font-weight:800;color:var(--text)}
@@ -63,8 +63,8 @@ button{cursor:pointer}
 
 /* ── NAV ──────────────────────────────────────────────────────── */
 .nav{grid-area:nav;background:var(--card);border-right:1px solid var(--border);
-  display:flex;flex-direction:column;padding:12px 0;gap:2px;overflow-y:auto}
-.nav-brand{padding:14px 20px 14px;border-bottom:1px solid var(--border);margin-bottom:8px;display:flex;align-items:center;gap:10px}
+  display:flex;flex-direction:column;padding:0 0 12px;gap:2px;overflow-y:auto}
+.nav-brand{height:64px;padding:0 20px;border-bottom:1px solid var(--border);margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-shrink:0;box-sizing:border-box}
 .nav-brand-icon{width:34px;height:34px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .nav-brand-name{font-size:14px;font-weight:800;color:var(--text)}
 .nav button{padding:11px 20px;background:none;display:flex;flex-direction:row;
@@ -730,7 +730,7 @@ button{cursor:pointer}
       <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
       <span>Learn</span><div class="nav-dot"></div>
     </button>
-    <button data-tab="settings" class="auth-only" style="display:none">
+    <button data-tab="settings" class="auth-only" style="display:none;margin-top:auto">
       <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       <span>Settings</span><div class="nav-dot"></div>
     </button>
