@@ -1551,7 +1551,7 @@ Keep the tone professional but accessible. Use Markdown formatting.`;
     });
     const data = await resp.json();
     if (!resp.ok || data.error) throw new Error(data.error || `Error ${resp.status}`);
-    const text = data.content?.[0]?.text ?? '';
+    const text = data.text ?? '';
     content.innerHTML = `
       <div style="padding:4px 0 20px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
@@ -2555,7 +2555,7 @@ async function runFinBot(modeId) {
     });
     const data = await resp.json();
     if (!resp.ok || data.error) throw new Error(data.error || `Server error (${resp.status})`);
-    finbotState.result = data.content?.[0]?.text ?? '';
+    finbotState.result = data.text ?? '';
   } catch (e) {
     finbotState.error = e.message || 'Analysis failed. Please try again.';
   }
