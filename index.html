@@ -164,7 +164,7 @@ button{cursor:pointer}
   padding:3px 10px;border-radius:var(--radius-xs);letter-spacing:0.05em;margin-right:10px}
 
 /* ── NEWS ─────────────────────────────────────────────────────── */
-.news-card{margin-bottom:10px}
+.news-card{margin-bottom:0}
 .news-card .cat{font-weight:700;font-size:10px;padding:3px 10px;border-radius:var(--radius-xs)}
 .news-card .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .news-card h3{font-weight:600;font-size:14px;color:var(--text);line-height:1.4}
@@ -1289,6 +1289,7 @@ function renderNewsContent() {
       <span style="font-size:11px;color:rgba(255,255,255,0.7)">${lastUpdatedStr}</span>
     </div>
     ${list.length === 0 ? '<div style="text-align:center;padding:40px;color:var(--faint);font-size:13px">No articles found</div>' : ''}
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
     ${list.map((n, i) => {
       const actualIdx = source.indexOf(n);
       return `
@@ -1308,6 +1309,7 @@ function renderNewsContent() {
         </div>
       </div>`;
     }).join('')}
+    </div>
   `;
 }
 
