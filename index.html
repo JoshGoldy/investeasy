@@ -493,6 +493,62 @@ button{cursor:pointer}
 .fc-hint{font-size:11px;color:var(--faint);text-align:center;margin-bottom:16px}
 /* ── STREAK ───────────────────────────────────────────────────── */
 .streak-flame{font-size:20px;line-height:1}
+/* ── BADGE TOAST NOTIFICATION ────────────────────────────────── */
+.badge-toast{position:fixed;bottom:80px;right:16px;z-index:9999;background:var(--card);border:2px solid var(--green);
+  border-radius:var(--radius);padding:14px 18px;box-shadow:0 8px 32px rgba(0,0,0,.35);
+  display:flex;align-items:center;gap:14px;min-width:240px;max-width:320px;
+  animation:toastIn 0.4s cubic-bezier(.34,1.56,.64,1) forwards}
+.badge-toast.toast-out{animation:toastOut 0.3s ease forwards}
+@keyframes toastIn{from{opacity:0;transform:translateY(20px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes toastOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(16px)}}
+.badge-toast-icon{font-size:36px;flex-shrink:0}
+.badge-toast-label{font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--green);margin-bottom:2px}
+.badge-toast-name{font-size:14px;font-weight:800;color:var(--text)}
+.badge-toast-desc{font-size:11px;color:var(--faint);margin-top:1px}
+/* ── XP BAR ───────────────────────────────────────────────────── */
+.xp-bar-wrap{margin:4px 0 2px;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.xp-bar-fill{height:100%;background:linear-gradient(90deg,#10b981,#3b82f6);border-radius:3px;transition:width 0.6s ease}
+.xp-level-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;
+  background:linear-gradient(90deg,#10b98118,#3b82f618);border:1px solid #10b98140;
+  font-size:11px;font-weight:700;color:var(--text2)}
+/* ── DAILY CHALLENGE ─────────────────────────────────────────── */
+.daily-card{background:linear-gradient(135deg,#064e35 0%,#0f3460 100%);border-radius:var(--radius);
+  padding:20px 24px;margin-bottom:16px;color:#fff;position:relative;overflow:hidden}
+.daily-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;
+  background:#10b98118;border-radius:50%}
+.daily-card-label{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
+  color:#10b981;margin-bottom:6px}
+.daily-card h3{font-size:16px;font-weight:800;margin-bottom:8px;line-height:1.4}
+.daily-opts{display:flex;flex-direction:column;gap:7px;margin-top:12px}
+.daily-opt{padding:10px 14px;border-radius:var(--radius-xs);background:#ffffff12;font-size:12px;
+  font-weight:600;color:#e2f5ec;cursor:pointer;transition:all 0.2s;border:1.5px solid transparent;text-align:left}
+.daily-opt:hover{background:#ffffff20;border-color:#10b98160}
+.daily-opt.correct{background:#10b98120;border-color:#10b981;color:#10b981}
+.daily-opt.wrong{background:#ef444420;border-color:#ef4444;color:#fca5a5}
+.daily-opt.dimmed{opacity:0.45;pointer-events:none}
+.daily-done-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:20px;
+  background:#10b98120;border:1px solid #10b98150;color:#10b981;font-size:12px;font-weight:700;margin-top:10px}
+/* ── LEARNING PATH ───────────────────────────────────────────── */
+.learn-path{display:flex;flex-direction:column;gap:0;margin-top:12px;position:relative}
+.learn-path::before{content:'';position:absolute;left:28px;top:40px;bottom:40px;width:2px;
+  background:var(--border);z-index:0}
+.path-step{display:flex;align-items:center;gap:16px;position:relative;z-index:1;margin-bottom:4px}
+.path-node{width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-size:22px;transition:all 0.2s;cursor:pointer;border:3px solid transparent}
+.path-node.done{background:var(--green);border-color:var(--green);box-shadow:0 0 12px #10b98140}
+.path-node.active{background:var(--card);border-color:var(--green);box-shadow:0 0 12px #10b98140}
+.path-node.locked{background:var(--border);border-color:var(--border);filter:grayscale(1);opacity:0.5;cursor:default}
+.path-info{flex:1;background:var(--card);border-radius:var(--radius-sm);padding:14px 16px;
+  box-shadow:var(--shadow);cursor:pointer;transition:all 0.2s;border:1.5px solid transparent}
+.path-info:hover{border-color:var(--border2);transform:translateX(3px)}
+.path-info.locked-info{opacity:0.5;pointer-events:none}
+.path-step-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px}
+.path-step-sub{font-size:11px;color:var(--faint)}
+.path-step-status{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:20px;margin-top:6px}
+.status-done{background:var(--green-bg);color:var(--green)}
+.status-active{background:#3b82f615;color:#60a5fa}
+.status-locked{background:var(--border);color:var(--faint)}
 /* ── CALENDAR ─────────────────────────────────────────────────── */
 .cal-group-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;padding:20px 0 8px;border-bottom:1px solid var(--border);margin-bottom:2px}
 .cal-group-label:first-child{padding-top:0}
@@ -5349,14 +5405,191 @@ function getEarnedBadgeIds() {
 let learnState = JSON.parse(localStorage.getItem('ie_learn') || '{}');
 function saveLearnState() { localStorage.setItem('ie_learn', JSON.stringify(learnState)); }
 
+// ── XP & Levels ───────────────────────────────────────────────────────────────
+const XP_LEVELS = [
+  { name: 'Novice',    min: 0    },
+  { name: 'Beginner',  min: 50   },
+  { name: 'Learner',   min: 150  },
+  { name: 'Investor',  min: 350  },
+  { name: 'Analyst',   min: 700  },
+  { name: 'Expert',    min: 1200 },
+  { name: 'Master',    min: 2000 },
+];
+
+function getLevel(xp) {
+  let level = XP_LEVELS[0];
+  for (const l of XP_LEVELS) { if (xp >= l.min) level = l; else break; }
+  const idx = XP_LEVELS.indexOf(level);
+  const next = XP_LEVELS[idx + 1];
+  const pct = next ? Math.round(((xp - level.min) / (next.min - level.min)) * 100) : 100;
+  return { ...level, idx, next, xp, pct };
+}
+
+function awardXP(amount) {
+  const before = learnState._xp || 0;
+  learnState._xp = before + amount;
+  saveLearnState();
+  // Show XP gain toast briefly if on learn tab
+  const el = document.getElementById('tab-learn');
+  if (el && el.closest('.tab-content')) {
+    const chip = document.createElement('div');
+    chip.style.cssText = 'position:fixed;bottom:140px;right:16px;z-index:9998;background:linear-gradient(90deg,#10b981,#3b82f6);color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:20px;animation:toastIn 0.3s ease,toastOut 0.3s 1.5s ease forwards;pointer-events:none';
+    chip.textContent = '+' + amount + ' XP';
+    document.body.appendChild(chip);
+    setTimeout(() => chip.remove(), 2000);
+  }
+}
+
+// ── Badge Toast Notifications ─────────────────────────────────────────────────
+let _toastQueue = [];
+let _toastShowing = false;
+
+function checkNewBadges(prevIds) {
+  const nowIds = getEarnedBadgeIds();
+  const newlyEarned = BADGES.filter(b => nowIds.has(b.id) && !prevIds.has(b.id));
+  newlyEarned.forEach(b => _toastQueue.push(b));
+  if (!_toastShowing) _showNextToast();
+}
+
+function _showNextToast() {
+  if (!_toastQueue.length) { _toastShowing = false; return; }
+  _toastShowing = true;
+  const badge = _toastQueue.shift();
+  const el = document.createElement('div');
+  el.className = 'badge-toast';
+  el.innerHTML = `
+    <div class="badge-toast-icon">${badge.icon}</div>
+    <div>
+      <div class="badge-toast-label">Achievement Unlocked</div>
+      <div class="badge-toast-name">${escHtml(badge.name)}</div>
+      <div class="badge-toast-desc">${escHtml(badge.desc)}</div>
+    </div>`;
+  document.body.appendChild(el);
+  setTimeout(() => {
+    el.classList.add('toast-out');
+    setTimeout(() => { el.remove(); _showNextToast(); }, 350);
+  }, 3500);
+}
+
+// ── Daily Challenge ───────────────────────────────────────────────────────────
+function getDailyChallengeData() {
+  const today = new Date().toDateString();
+  // Pick question deterministically by date
+  const seed = new Date().getFullYear() * 10000 + (new Date().getMonth() + 1) * 100 + new Date().getDate();
+  const allQs = [];
+  LEARN_TOPICS.forEach(t => t.quiz.forEach((q, qi) => allQs.push({ topicId: t.id, topicTitle: t.title, qi, q })));
+  const item = allQs[seed % allQs.length];
+  const state = learnState._daily || {};
+  const answered = state.date === today;
+  return { today, item, answered, wasCorrect: state.correct };
+}
+
+function renderDailyChallengeCard() {
+  const { today, item, answered, wasCorrect } = getDailyChallengeData();
+  const q = item.q;
+  if (answered) {
+    return `<div class="daily-card">
+      <div class="daily-card-label">Daily Challenge</div>
+      <h3>${escHtml(q.q)}</h3>
+      <div class="daily-done-badge">${wasCorrect ? '✓ Correct! +25 XP' : '✗ Incorrect — try again tomorrow'}</div>
+      <p style="font-size:11px;color:#ffffff80;margin-top:10px">${escHtml(q.explain)}</p>
+    </div>`;
+  }
+  return `<div class="daily-card">
+    <div class="daily-card-label">Daily Challenge</div>
+    <h3>${escHtml(q.q)}</h3>
+    <div class="daily-opts">
+      ${q.opts.map((opt, i) => `<button class="daily-opt" onclick="answerDailyChallenge(${i})" id="daily-opt-${i}">${escHtml(opt)}</button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function answerDailyChallenge(choice) {
+  const { today, item } = getDailyChallengeData();
+  const q = item.q;
+  const correct = choice === q.ans;
+  // Update state
+  learnState._daily = { date: today, correct };
+  saveLearnState();
+  // Highlight options
+  q.opts.forEach((_, i) => {
+    const btn = document.getElementById('daily-opt-' + i);
+    if (!btn) return;
+    if (i === q.ans) btn.classList.add('correct');
+    else if (i === choice && !correct) btn.classList.add('wrong');
+    else btn.classList.add('dimmed');
+  });
+  // Award XP if correct
+  if (correct) {
+    awardXP(25);
+  }
+  // Re-render after short delay
+  setTimeout(() => renderLearn(), 1800);
+}
+
+// ── Learning Path ─────────────────────────────────────────────────────────────
+const LEARN_PATH_ORDER = ['basics','strategies','analysis','technical','risk','psychology','dividends','crypto','options'];
+
+function isTopicUnlocked(topicId) {
+  const idx = LEARN_PATH_ORDER.indexOf(topicId);
+  if (idx <= 0) return true; // First topic always unlocked
+  const prev = LEARN_PATH_ORDER[idx - 1];
+  return !!(learnState[prev]?.quizDone);
+}
+
+function renderLearningPath() {
+  const el = document.getElementById('tab-learn');
+  el.innerHTML = `
+    <div class="learn-detail">
+      <button class="learn-back" onclick="renderLearn()">← Back to Topics</button>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <span style="font-size:28px">🗺️</span>
+        <div>
+          <h2 style="font-size:20px;font-weight:800;color:var(--text)">Learning Path</h2>
+          <p style="font-size:12px;color:var(--faint)">Complete topics in order to unlock the next level</p>
+        </div>
+      </div>
+      <div class="learn-path">
+        ${LEARN_PATH_ORDER.map((topicId, idx) => {
+          const topic = LEARN_TOPICS.find(t => t.id === topicId);
+          if (!topic) return '';
+          const p = getTopicProgress(topicId);
+          const unlocked = isTopicUnlocked(topicId);
+          const done = p.pct === 100;
+          const nodeClass = done ? 'done' : (unlocked ? 'active' : 'locked');
+          const infoClass = unlocked ? '' : 'locked-info';
+          const statusHtml = done
+            ? '<span class="path-step-status status-done">✓ Completed</span>'
+            : unlocked
+              ? `<span class="path-step-status status-active">${p.pct}% — In Progress</span>`
+              : '<span class="path-step-status status-locked">🔒 Locked</span>';
+          const clickAction = unlocked ? `onclick="openTopic('${topicId}')"` : '';
+          return `
+            <div class="path-step" style="margin-bottom:${idx < LEARN_PATH_ORDER.length-1?'12':'0'}px">
+              <div class="path-node ${nodeClass}" ${unlocked ? `onclick="openTopic('${topicId}')"` : ''}>${done ? '✓' : topic.icon}</div>
+              <div class="path-info ${infoClass}" ${clickAction}>
+                <div class="path-step-title">${idx + 1}. ${escHtml(topic.title)}</div>
+                <div class="path-step-sub">${topic.lessons.length} lessons · <span class="learn-difficulty diff-${topic.difficulty}" style="display:inline;padding:1px 6px">${topic.difficulty}</span></div>
+                ${statusHtml}
+              </div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  el.parentElement.scrollTop = 0;
+}
+
 function updateStreak() {
   const today = new Date().toDateString();
   if (learnState._streakDate === today) return;
   const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-  learnState._streak = (learnState._streakDate === yesterday.toDateString())
-    ? (learnState._streak || 0) + 1 : 1;
+  const prevStreak = learnState._streak || 0;
+  learnState._streak = (learnState._streakDate === yesterday.toDateString()) ? prevStreak + 1 : 1;
   learnState._streakDate = today;
   saveLearnState();
+  // Bonus XP for streak milestones
+  if (learnState._streak === 3) { const pb = new Set(getEarnedBadgeIds()); awardXP(25); checkNewBadges(pb); }
+  if (learnState._streak === 7) { const pb = new Set(getEarnedBadgeIds()); awardXP(50); checkNewBadges(pb); }
 }
 
 function getTopicProgress(topicId) {
@@ -5379,6 +5612,9 @@ function markLessonRead(topicId, lessonIdx) {
   if (!learnState[topicId].lessonsRead.includes(lessonIdx)) {
     learnState[topicId].lessonsRead.push(lessonIdx);
     saveLearnState();
+    const prevBadges = new Set(getEarnedBadgeIds());
+    awardXP(10);
+    checkNewBadges(prevBadges);
   }
   updateStreak();
 }
@@ -5578,14 +5814,35 @@ function renderLearn() {
   const streak = learnState._streak || 0;
   const earnedBadges = getEarnedBadgeIds();
 
+  const xp = learnState._xp || 0;
+  const lvl = getLevel(xp);
+
   el.innerHTML = `
     <div class="section-title" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
       <div><h2>Learning Hub</h2><p>Master investing concepts at your own pace</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="learn-nav-btn secondary" style="padding:8px 14px;font-size:12px" onclick="renderLearningPath()">🗺️ Path</button>
         <button class="learn-nav-btn secondary" style="padding:8px 14px;font-size:12px" onclick="renderGlossary()">📖 Glossary</button>
         <button class="learn-nav-btn secondary" style="padding:8px 14px;font-size:12px" onclick="renderBadgesPage()">🏅 Badges</button>
       </div>
     </div>
+
+    <!-- XP Level Bar -->
+    <div style="background:var(--card);border-radius:var(--radius-sm);padding:14px 18px;box-shadow:var(--shadow);margin-bottom:14px;display:flex;align-items:center;gap:14px">
+      <span style="font-size:28px">⚡</span>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+          <span class="xp-level-chip">${escHtml(lvl.name)}</span>
+          <span style="font-size:11px;color:var(--faint);font-family:var(--mono)">${xp} XP${lvl.next ? ' / ' + lvl.next.min + ' XP' : ' — MAX'}</span>
+        </div>
+        <div class="xp-bar-wrap"><div class="xp-bar-fill" style="width:${lvl.pct}%"></div></div>
+        ${lvl.next ? `<div style="font-size:10px;color:var(--faint);margin-top:3px">${lvl.next.min - xp} XP to <strong>${escHtml(lvl.next.name)}</strong></div>` : '<div style="font-size:10px;color:var(--green);margin-top:3px">Max level reached!</div>'}
+      </div>
+    </div>
+
+    <!-- Daily Challenge -->
+    ${renderDailyChallengeCard()}
+
     <div class="learn-stats">
       <div class="learn-stat-card">
         <div class="learn-stat-num" style="color:var(--green)">${overallPct}%</div>
@@ -5783,10 +6040,13 @@ function finishQuiz() {
   const passed = pct >= 60;
 
   if (passed) {
+    const prevBadges = new Set(getEarnedBadgeIds());
     if (!learnState[quizState.topicId]) learnState[quizState.topicId] = {};
     learnState[quizState.topicId].quizDone = true;
     learnState[quizState.topicId].quizScore = pct;
     saveLearnState();
+    awardXP(50 + (pct === 100 ? 25 : 0));
+    checkNewBadges(prevBadges);
   }
 
   const el = document.getElementById('tab-learn');
