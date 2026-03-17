@@ -45,21 +45,23 @@ try {
 function initSchema() {
     $db = getDB();
     $db->exec("CREATE TABLE IF NOT EXISTS users (
-        id           INT AUTO_INCREMENT PRIMARY KEY,
-        name         VARCHAR(100)  NOT NULL,
-        email        VARCHAR(150)  NOT NULL,
-        username     VARCHAR(50)   NOT NULL,
-        password_hash VARCHAR(255) NOT NULL,
-        tier         ENUM('free','pro','enterprise') NOT NULL DEFAULT 'free',
-        finbot_credits INT NOT NULL DEFAULT 0,
-        created_at   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+        id               INT AUTO_INCREMENT PRIMARY KEY,
+        name             VARCHAR(100)  NOT NULL,
+        email            VARCHAR(150)  NOT NULL,
+        username         VARCHAR(50)   NOT NULL,
+        password_hash    VARCHAR(255)  NOT NULL,
+        tier             ENUM('free','pro','enterprise') NOT NULL DEFAULT 'free',
+        finbot_credits   INT NOT NULL DEFAULT 0,
+        credits_reset_at TIMESTAMP NULL DEFAULT NULL,
+        created_at       TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
         UNIQUE KEY uq_email    (email),
         UNIQUE KEY uq_username (username)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-    // Add tier/credits columns to existing tables that pre-date this schema
+    // Add columns to existing tables that pre-date this schema
     try { $db->exec("ALTER TABLE users ADD COLUMN tier ENUM('free','pro','enterprise') NOT NULL DEFAULT 'free'"); } catch (Exception $e) {}
     try { $db->exec("ALTER TABLE users ADD COLUMN finbot_credits INT NOT NULL DEFAULT 0"); } catch (Exception $e) {}
+    try { $db->exec("ALTER TABLE users ADD COLUMN credits_reset_at TIMESTAMP NULL DEFAULT NULL"); } catch (Exception $e) {}
 
     $db->exec("CREATE TABLE IF NOT EXISTS user_settings (
         user_id         INT PRIMARY KEY,
@@ -110,6 +112,26 @@ function defaultCredits($tier) {
     return ['free' => 0, 'pro' => 50, 'enterprise' => 200][$tier] ?? 0;
 }
 
+// ── Monthly credit reset ──────────────────────────────────────────────────────
+// If it has been ≥ 30 days since the last reset (or never reset), refill credits.
+
+function resetCreditsIfNeeded($db, $uid) {
+    $stmt = $db->prepare("SELECT tier, credits_reset_at FROM users WHERE id = ?");
+    $stmt->execute([$uid]);
+    $row = $stmt->fetch();
+    if (!$row || $row['tier'] === 'free') return;
+
+    $now       = new DateTime();
+    $resetAt   = $row['credits_reset_at'] ? new DateTime($row['credits_reset_at']) : null;
+    $needReset = !$resetAt || ($now->diff($resetAt)->days >= 30);
+
+    if ($needReset) {
+        $credits = defaultCredits($row['tier']);
+        $upd = $db->prepare("UPDATE users SET finbot_credits = ?, credits_reset_at = NOW() WHERE id = ?");
+        $upd->execute([$credits, $uid]);
+    }
+}
+
 // ── Sanitise username (strip leading @, lowercase) ───────────────────────────
 function cleanUsername($u) { return strtolower(ltrim(trim($u), '@')); }
 
@@ -132,6 +154,7 @@ switch ($action) {
         $uid = currentUid();
         if (!$uid) fail(401, 'Not logged in');
         $db = getDB();
+        resetCreditsIfNeeded($db, $uid);
         $u  = fetchUser($db, $uid);
         if (!$u) { session_destroy(); fail(401, 'Session expired'); }
         ok(['user' => $u]);
@@ -188,6 +211,7 @@ switch ($action) {
 
         session_regenerate_id(true);
         $_SESSION['user_id'] = (int)$u['id'];
+        resetCreditsIfNeeded($db, (int)$u['id']);
         ok(['user' => fetchUser($db, (int)$u['id'])]);
         break;
 
