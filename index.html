@@ -1656,6 +1656,7 @@ Keep the tone professional but accessible. Use Markdown formatting.`;
   try {
     const resp = await fetch('api.php', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt, request_type: 'news' }),
     });
@@ -2732,6 +2733,7 @@ async function runFinBot(modeId) {
   try {
     const resp = await fetch('api.php', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: buildFinBotPrompt(modeId), request_type: 'finbot' }),
     });
