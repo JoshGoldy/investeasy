@@ -18,3 +18,9 @@ desktop.ini
 .cpanel/
 .htpasswd
 error_log
+
+# ── Node / Playwright ─────────────────────────────────────────
+node_modules/
+package-lock.json
+test-results/
+playwright-report/
