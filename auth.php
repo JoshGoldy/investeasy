@@ -88,6 +88,13 @@ function initSchema() {
         UNIQUE KEY uq_user_ticker (user_id, ticker),
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    $db->exec("CREATE TABLE IF NOT EXISTS user_progress (
+        user_id    INT PRIMARY KEY,
+        state      MEDIUMTEXT   NOT NULL DEFAULT '{}',
+        updated_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
 // ── Sanitise username (strip leading @, lowercase) ───────────────────────────

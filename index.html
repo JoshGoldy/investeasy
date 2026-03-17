@@ -4370,7 +4370,7 @@ function updateHeaderUser() {
 }
 
 async function syncAfterLogin() {
-  await Promise.all([loadSettingsFromDB(), loadWatchlistFromDB(), loadPortfolioFromDB(), loadSavedReportsFromDB()]);
+  await Promise.all([loadSettingsFromDB(), loadWatchlistFromDB(), loadPortfolioFromDB(), loadSavedReportsFromDB(), loadLearnProgressFromDB()]);
   updateHeaderUser();
   // If the user was already on a gated tab, re-render it now that they're logged in
   const activePanel = document.querySelector('.tab-content.active');
@@ -4409,6 +4409,54 @@ async function loadPortfolioFromDB() {
 function saveSettingsToDB(updates) {
   if (!currentUser) return;
   apiCall('data.php?action=settings', 'POST', updates).catch(() => {});
+}
+
+// ── Learn progress DB sync ────────────────────────────────────────────────────
+let _learnSaveTimer = null;
+function saveLearnProgressToDB() {
+  if (!currentUser) return;
+  clearTimeout(_learnSaveTimer);
+  _learnSaveTimer = setTimeout(() => {
+    apiCall('data.php?action=learn_progress', 'POST', { state: learnState }).catch(() => {});
+  }, 1500);
+}
+
+async function loadLearnProgressFromDB() {
+  try {
+    const d = await apiCall('data.php?action=learn_progress');
+    if (!d.success) return;
+    const remote = d.state;
+    if (remote && Object.keys(remote).length > 0) {
+      // Server has data — merge additively so no progress is lost from either side
+      const local = learnState;
+      const merged = Object.assign({}, remote);
+      LEARN_TOPICS.forEach(t => {
+        const r = remote[t.id] || {};
+        const l = local[t.id] || {};
+        const lessonsRead = [...new Set([...(r.lessonsRead || []), ...(l.lessonsRead || [])])];
+        const quizDone = !!(r.quizDone || l.quizDone);
+        const quizScore = quizDone ? Math.max(r.quizScore || 0, l.quizScore || 0) : null;
+        merged[t.id] = { lessonsRead, quizDone, ...(quizScore !== null ? { quizScore } : {}) };
+      });
+      // Streak: keep whichever side is more recent
+      const rDate = remote._streakDate, lDate = local._streakDate;
+      if (lDate && (!rDate || new Date(lDate) > new Date(rDate))) {
+        merged._streak = local._streak || 0;
+        merged._streakDate = lDate;
+      }
+      // XP: take higher value (additive; server is the floor)
+      merged._xp = Math.max(remote._xp || 0, local._xp || 0);
+      // Daily challenge: server wins (prevents local manipulation)
+      if (remote._daily) merged._daily = remote._daily;
+      learnState = merged;
+      localStorage.setItem('ie_learn', JSON.stringify(learnState));
+      // Push merged state back if local had extra progress
+      saveLearnProgressToDB();
+    } else {
+      // No server state yet — push whatever local progress exists
+      if (Object.keys(learnState).length > 0) saveLearnProgressToDB();
+    }
+  } catch(e) {}
 }
 
 // ── Profile save: update DB if logged in ─────────────────────────────────────
@@ -5403,7 +5451,10 @@ function getEarnedBadgeIds() {
 
 // Learning Hub state — persisted to localStorage
 let learnState = JSON.parse(localStorage.getItem('ie_learn') || '{}');
-function saveLearnState() { localStorage.setItem('ie_learn', JSON.stringify(learnState)); }
+function saveLearnState() {
+  localStorage.setItem('ie_learn', JSON.stringify(learnState));
+  saveLearnProgressToDB();
+}
 
 // ── XP & Levels ───────────────────────────────────────────────────────────────
 const XP_LEVELS = [

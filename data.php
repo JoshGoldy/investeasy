@@ -1,7 +1,7 @@
 <?php
 /**
  * InvestEasy — Data API
- * Handles: settings, portfolio, watchlist, saved_reports CRUD (all require authentication)
+ * Handles: settings, portfolio, watchlist, saved_reports, learn_progress CRUD (all require authentication)
  *
  * GET  data.php?action=settings             → load settings
  * POST data.php?action=settings             → save settings (partial update ok)
@@ -14,6 +14,8 @@
  * GET  data.php?action=saved_reports        → load all saved reports for user
  * POST data.php?action=saved_reports        → save a report  { id, modeId, modeTitle, ... }
  * DELETE data.php?action=saved_reports      → delete a report  { id }
+ * GET  data.php?action=learn_progress       → load learning hub state for user
+ * POST data.php?action=learn_progress       → save learning hub state  { state: {...} }
  */
 
 session_start();
@@ -202,6 +204,30 @@ switch ($action) {
             $id = trim($body['id'] ?? $_GET['id'] ?? '');
             if (!$id) fail(400, 'Report id is required.');
             $db->prepare("DELETE FROM saved_reports WHERE id = ? AND user_id = ?")->execute([$id, $uid]);
+            ok();
+        }
+        break;
+
+    // ── LEARN PROGRESS ────────────────────────────────────────────────────────
+    case 'learn_progress':
+        $uid = requireAuth();
+        $db  = getDB();
+
+        if ($method === 'GET') {
+            $stmt = $db->prepare("SELECT state FROM user_progress WHERE user_id = ?");
+            $stmt->execute([$uid]);
+            $row = $stmt->fetch();
+            ok(['state' => $row ? json_decode($row['state'], true) : null]);
+
+        } elseif ($method === 'POST') {
+            $state = $body['state'] ?? null;
+            if (!is_array($state)) fail(400, 'Invalid state.');
+            $json = json_encode($state, JSON_UNESCAPED_UNICODE);
+            if (strlen($json) > 500000) fail(400, 'State too large.');
+            $db->prepare(
+                "INSERT INTO user_progress (user_id, state) VALUES (?, ?)
+                 ON DUPLICATE KEY UPDATE state = VALUES(state), updated_at = NOW()"
+            )->execute([$uid, $json]);
             ok();
         }
         break;
