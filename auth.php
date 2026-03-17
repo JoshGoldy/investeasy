@@ -1,13 +1,14 @@
 <?php
 /**
  * InvestEasy — Authentication API
- * Handles: register, login, logout, session check, profile update
+ * Handles: register, login, logout, session check, profile update, credit deduction
  *
  * GET  auth.php?action=me               → check current session
  * POST auth.php?action=register         → create account
  * POST auth.php?action=login            → sign in
  * POST auth.php?action=logout           → sign out
  * POST auth.php?action=update-profile   → update name/email/username
+ * POST auth.php?action=deduct-credits   → deduct FinBot credits (internal)
  */
 
 session_start();
@@ -49,10 +50,16 @@ function initSchema() {
         email        VARCHAR(150)  NOT NULL,
         username     VARCHAR(50)   NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
+        tier         ENUM('free','pro','enterprise') NOT NULL DEFAULT 'free',
+        finbot_credits INT NOT NULL DEFAULT 0,
         created_at   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
         UNIQUE KEY uq_email    (email),
         UNIQUE KEY uq_username (username)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    // Add tier/credits columns to existing tables that pre-date this schema
+    try { $db->exec("ALTER TABLE users ADD COLUMN tier ENUM('free','pro','enterprise') NOT NULL DEFAULT 'free'"); } catch (Exception $e) {}
+    try { $db->exec("ALTER TABLE users ADD COLUMN finbot_credits INT NOT NULL DEFAULT 0"); } catch (Exception $e) {}
 
     $db->exec("CREATE TABLE IF NOT EXISTS user_settings (
         user_id         INT PRIMARY KEY,
@@ -97,8 +104,21 @@ function initSchema() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
+// ── Credit defaults per tier ──────────────────────────────────────────────────
+
+function defaultCredits($tier) {
+    return ['free' => 0, 'pro' => 50, 'enterprise' => 200][$tier] ?? 0;
+}
+
 // ── Sanitise username (strip leading @, lowercase) ───────────────────────────
 function cleanUsername($u) { return strtolower(ltrim(trim($u), '@')); }
+
+// ── Fetch full user row (with tier + credits) ─────────────────────────────────
+function fetchUser($db, $id) {
+    $s = $db->prepare("SELECT id, name, email, username, tier, finbot_credits, created_at FROM users WHERE id = ?");
+    $s->execute([$id]);
+    return $s->fetch();
+}
 
 // ── Route ────────────────────────────────────────────────────────────────────
 
@@ -111,10 +131,8 @@ switch ($action) {
     case 'me':
         $uid = currentUid();
         if (!$uid) fail(401, 'Not logged in');
-        $db   = getDB();
-        $stmt = $db->prepare("SELECT id, name, email, username, created_at FROM users WHERE id = ?");
-        $stmt->execute([$uid]);
-        $u = $stmt->fetch();
+        $db = getDB();
+        $u  = fetchUser($db, $uid);
         if (!$u) { session_destroy(); fail(401, 'Session expired'); }
         ok(['user' => $u]);
         break;
@@ -139,7 +157,7 @@ switch ($action) {
         if ($chk->fetch()) fail(409, 'That email or username is already taken.');
 
         $hash = password_hash($password, PASSWORD_DEFAULT);
-        $ins  = $db->prepare("INSERT INTO users (name, email, username, password_hash) VALUES (?, ?, ?, ?)");
+        $ins  = $db->prepare("INSERT INTO users (name, email, username, password_hash, tier, finbot_credits) VALUES (?, ?, ?, ?, 'free', 0)");
         $ins->execute([$name, $email, $username, $hash]);
         $uid = (int)$db->lastInsertId();
 
@@ -148,7 +166,7 @@ switch ($action) {
 
         session_regenerate_id(true);
         $_SESSION['user_id'] = $uid;
-        ok(['user' => ['id' => $uid, 'name' => $name, 'email' => $email, 'username' => $username]]);
+        ok(['user' => fetchUser($db, $uid)]);
         break;
 
     // ── login ────────────────────────────────────────────────────────────────
@@ -160,7 +178,7 @@ switch ($action) {
         if (!$email || !$password) fail(400, 'Email and password are required.');
 
         $db   = getDB();
-        $stmt = $db->prepare("SELECT id, name, email, username, password_hash FROM users WHERE email = ?");
+        $stmt = $db->prepare("SELECT id, password_hash FROM users WHERE email = ?");
         $stmt->execute([$email]);
         $u = $stmt->fetch();
 
@@ -170,7 +188,7 @@ switch ($action) {
 
         session_regenerate_id(true);
         $_SESSION['user_id'] = (int)$u['id'];
-        ok(['user' => ['id' => $u['id'], 'name' => $u['name'], 'email' => $u['email'], 'username' => $u['username']]]);
+        ok(['user' => fetchUser($db, (int)$u['id'])]);
         break;
 
     // ── logout ───────────────────────────────────────────────────────────────
@@ -199,7 +217,31 @@ switch ($action) {
         $db->prepare("UPDATE users SET name = ?, email = ?, username = ? WHERE id = ?")
            ->execute([$name, $email, $username, $uid]);
 
-        ok(['user' => ['id' => $uid, 'name' => $name, 'email' => $email, 'username' => $username]]);
+        ok(['user' => fetchUser($db, $uid)]);
+        break;
+
+    // ── deduct-credits ───────────────────────────────────────────────────────
+    case 'deduct-credits':
+        $uid = currentUid();
+        if (!$uid) fail(401, 'Not logged in');
+
+        $cost = (int)($body['cost'] ?? 0);
+        if ($cost < 1 || $cost > 10) fail(400, 'Invalid credit cost.');
+
+        $db = getDB();
+        // Atomic check-and-deduct
+        $stmt = $db->prepare("UPDATE users SET finbot_credits = finbot_credits - ? WHERE id = ? AND tier IN ('pro','enterprise') AND finbot_credits >= ?");
+        $stmt->execute([$cost, $uid, $cost]);
+        if ($stmt->rowCount() === 0) {
+            // Check if it's a tier issue or credits issue
+            $u = fetchUser($db, $uid);
+            if (!$u) fail(401, 'Session expired');
+            if ($u['tier'] === 'free') fail(403, 'FinBot requires a Pro or Enterprise plan.');
+            fail(402, 'Insufficient credits. Please upgrade your plan or contact support.');
+        }
+
+        $u = fetchUser($db, $uid);
+        ok(['finbot_credits' => (int)$u['finbot_credits']]);
         break;
 
     default:

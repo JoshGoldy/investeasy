@@ -871,7 +871,7 @@ button{cursor:pointer}
 // STATE — declared first to avoid temporal dead zone errors
 // ═══════════════════════════════════════════════════════════════════════════
 
-let currentUser   = null;          // {id, name, email, username} when logged in
+let currentUser   = null;          // {id, name, email, username, tier, finbot_credits} when logged in
 let dbPortfolio   = [];            // [{ticker,name,shares,avg_cost}]
 let watchlistSet  = new Set();     // Set of tickers on watchlist
 let dbSavedReports = null;         // null = guest (localStorage), array = logged-in (DB)
@@ -1597,6 +1597,21 @@ async function analyzeArticleWithFinBot(idx) {
   const n = liveNews[idx];
   if (!n) return;
 
+  // Tier/credit guard
+  if (!currentUser) {
+    document.getElementById('auth-overlay').classList.remove('hidden');
+    showAuthTab('login');
+    return;
+  }
+  if ((currentUser.tier || 'free') === 'free') {
+    switchTab('finbot');
+    return;
+  }
+  if ((currentUser.finbot_credits ?? 0) <= 0) {
+    switchTab('finbot');
+    return;
+  }
+
   // Reset state for new analysis
   finbotNewsState = { idx, result: null, savedId: null };
 
@@ -1641,10 +1656,14 @@ Keep the tone professional but accessible. Use Markdown formatting.`;
     const resp = await fetch('api.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ prompt, request_type: 'news' }),
     });
     const data = await resp.json();
     if (!resp.ok || data.error) throw new Error(data.error || `Error ${resp.status}`);
+    if (data.credits_remaining !== undefined && currentUser) {
+      currentUser.finbot_credits = data.credits_remaining;
+      updateHeaderUser();
+    }
     const text = data.text ?? '';
     finbotNewsState.result = text;
     renderFinBotNewsResult(idx, text, articleLink, n);
@@ -2713,10 +2732,18 @@ async function runFinBot(modeId) {
     const resp = await fetch('api.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: buildFinBotPrompt(modeId) }),
+      body: JSON.stringify({ prompt: buildFinBotPrompt(modeId), request_type: 'finbot' }),
     });
     const data = await resp.json();
-    if (!resp.ok || data.error) throw new Error(data.error || `Server error (${resp.status})`);
+    if (!resp.ok || data.error) {
+      if (data.code === 'upgrade_required') { finbotState.error = 'upgrade_required'; finbotState.loading = false; renderFinBot(); return; }
+      if (data.code === 'no_credits')       { if (currentUser) currentUser.finbot_credits = 0; finbotState.error = 'no_credits'; finbotState.loading = false; renderFinBot(); return; }
+      throw new Error(data.error || `Server error (${resp.status})`);
+    }
+    if (data.credits_remaining !== undefined && currentUser) {
+      currentUser.finbot_credits = data.credits_remaining;
+      updateHeaderUser();
+    }
     finbotState.result = data.text ?? '';
   } catch (e) {
     finbotState.error = e.message || 'Analysis failed. Please try again.';
@@ -2769,8 +2796,82 @@ function renderFinBot() {
       `).join('')}
       <div style="margin-top:20px;padding:14px 16px;border-radius:14px;background:var(--card);border:1px solid var(--border)">
         <p style="font-size:12px;color:var(--faint);line-height:1.6;text-align:center">
-          🔒 <strong style="color:var(--text)">Free account required</strong> — sign up in seconds, no credit card needed
+          🔒 <strong style="color:var(--text)">Sign in required</strong> — create an account, then upgrade to Pro or Enterprise
         </p>
+      </div>
+    `;
+    return;
+  }
+
+  // ── Free-tier wall ──
+  const userTier = currentUser.tier || 'free';
+  if (userTier === 'free') {
+    el.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 20px 24px">
+        <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#7c3aed,#6d28d9);
+                    display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px">🤖</div>
+        <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:#64748b22;margin-bottom:12px">
+          <span style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em">Free Plan</span>
+        </div>
+        <h2 style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px">Upgrade to Unlock FinBot</h2>
+        <p style="font-size:13.5px;color:var(--muted);line-height:1.65;max-width:320px;margin-bottom:24px">
+          FinBot is available on <strong style="color:#7c3aed">Pro</strong> and <strong style="color:#d97706">Enterprise</strong> plans. Get AI-powered stock analysis, portfolio review, earnings breakdowns, and more.
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:360px;margin-bottom:28px">
+          <div style="padding:16px;border-radius:14px;background:linear-gradient(135deg,#7c3aed18,#6d28d918);border:1px solid #7c3aed44">
+            <div style="font-size:20px;margin-bottom:6px">⚡</div>
+            <p style="font-weight:800;font-size:13px;color:#a78bfa;margin-bottom:4px">Pro</p>
+            <p style="font-size:11.5px;color:var(--faint);line-height:1.5">50 credits<br>News AI: 1 credit<br>Analysis: 2 credits</p>
+          </div>
+          <div style="padding:16px;border-radius:14px;background:linear-gradient(135deg,#d9770618,#b4530918);border:1px solid #d9770644">
+            <div style="font-size:20px;margin-bottom:6px">🏆</div>
+            <p style="font-weight:800;font-size:13px;color:#fbbf24;margin-bottom:4px">Enterprise</p>
+            <p style="font-size:11.5px;color:var(--faint);line-height:1.5">200 credits<br>News AI: 1 credit<br>Analysis: 2 credits</p>
+          </div>
+        </div>
+        <div style="width:100%;max-width:360px;padding:14px 16px;border-radius:14px;background:var(--card);border:1px solid var(--border);margin-bottom:8px">
+          <p style="font-size:12px;color:var(--faint);line-height:1.6;text-align:center">
+            Contact your administrator to upgrade your plan, or reach out at <strong style="color:var(--text)">support@investeasy.app</strong>
+          </p>
+        </div>
+      </div>
+      <p style="font-weight:700;font-size:11px;color:var(--faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;padding:0 4px">6 Analysis Modes — Pro & Enterprise</p>
+      ${FINBOT_MODES.map(m => `
+        <div class="mode-card" style="opacity:.5;cursor:default;border-color:var(--border);pointer-events:none">
+          <div style="display:flex;gap:14px;align-items:flex-start">
+            <div class="mode-icon" style="background:linear-gradient(135deg,${m.col},${m.col}dd)">${m.icon}</div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <p style="font-weight:800;font-size:14px;color:var(--text)">${m.title}</p>
+                <span class="mode-sub" style="color:${m.col};background:${m.col}14">${m.sub}</span>
+              </div>
+              <p style="font-size:12px;color:var(--muted);line-height:1.5;margin-top:4px">${m.desc}</p>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    `;
+    return;
+  }
+
+  // ── No credits wall ──
+  if ((currentUser.finbot_credits ?? 0) <= 0) {
+    el.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 20px 24px">
+        <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#dc2626,#991b1b);
+                    display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px">⚡</div>
+        <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:#dc262622;margin-bottom:12px">
+          <span style="font-size:11px;font-weight:800;color:#f87171;text-transform:uppercase;letter-spacing:0.06em">0 Credits Remaining</span>
+        </div>
+        <h2 style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px">Out of FinBot Credits</h2>
+        <p style="font-size:13.5px;color:var(--muted);line-height:1.65;max-width:320px;margin-bottom:20px">
+          You've used all your FinBot credits. Contact support to top up your account and continue using AI analysis.
+        </p>
+        <div style="width:100%;max-width:360px;padding:14px 16px;border-radius:14px;background:var(--card);border:1px solid var(--border)">
+          <p style="font-size:12px;color:var(--faint);line-height:1.6;text-align:center">
+            Contact <strong style="color:var(--text)">support@investeasy.app</strong> to top up your credits
+          </p>
+        </div>
       </div>
     `;
     return;
@@ -2782,9 +2883,13 @@ function renderFinBot() {
       <div class="section-title">
         <div class="finbot-header">
           <div class="finbot-icon">🤖</div>
-          <div>
+          <div style="flex:1">
             <h2>FinBot</h2>
             <p style="font-size:11px;color:var(--faint)">6 elite analysis modes</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${currentUser.tier==='enterprise'?'#d9770622':'#7c3aed22'};color:${currentUser.tier==='enterprise'?'#fbbf24':'#a78bfa'}">${currentUser.tier==='enterprise'?'Enterprise':'Pro'}</span>
+            <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:#10b98122;color:#10b981">⚡ ${currentUser.finbot_credits??0} credits</span>
           </div>
         </div>
       </div>
@@ -2868,7 +2973,18 @@ function renderFinBot() {
           </button>
         </div>` : ''}
       </div>
-      ${finbotState.error ? `
+      ${finbotState.error === 'upgrade_required' ? `
+        <div class="error-box" style="background:#7c3aed14;border-color:#7c3aed44">
+          <p style="font-weight:700;font-size:14px;color:#a78bfa">Upgrade Required</p>
+          <p style="margin:6px 0 10px;font-size:13px;color:#c4b5fd;line-height:1.5">FinBot is only available on Pro and Enterprise plans.</p>
+          <button onclick="resetFinBot();switchTab('finbot')" style="background:#7c3aed;color:#fff;border-radius:10px;padding:10px 20px;font-weight:700;font-size:13px">View Plans</button>
+        </div>
+      ` : finbotState.error === 'no_credits' ? `
+        <div class="error-box" style="background:#dc262614;border-color:#dc262644">
+          <p style="font-weight:700;font-size:14px;color:#f87171">Out of Credits</p>
+          <p style="margin:6px 0 10px;font-size:13px;color:#fca5a5;line-height:1.5">You have no FinBot credits remaining. Contact support to top up.</p>
+        </div>
+      ` : finbotState.error ? `
         <div class="error-box">
           <p style="font-weight:700;font-size:14px;color:#dc2626">Analysis Failed</p>
           <p style="margin:6px 0 10px;font-size:13px;color:#b91c1c;line-height:1.5">${escHtml(finbotState.error)}</p>
@@ -4363,6 +4479,34 @@ function updateHeaderUser() {
     const ddEmail = document.getElementById('dd-email');
     if (ddName)  ddName.textContent  = currentUser.name || currentUser.username;
     if (ddEmail) ddEmail.textContent = currentUser.email || ('@' + currentUser.username);
+    // Tier badge
+    const tierColors = { free: '#64748b', pro: '#7c3aed', enterprise: '#d97706' };
+    const tierLabels = { free: 'Free', pro: 'Pro', enterprise: 'Enterprise' };
+    const t = currentUser.tier || 'free';
+    let tierBadge = document.getElementById('header-tier-badge');
+    if (!tierBadge) {
+      tierBadge = document.createElement('span');
+      tierBadge.id = 'header-tier-badge';
+      tierBadge.style.cssText = 'font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;letter-spacing:0.05em;text-transform:uppercase;margin-left:4px';
+      un.parentNode.insertBefore(tierBadge, un.nextSibling);
+    }
+    tierBadge.textContent = tierLabels[t] || t;
+    tierBadge.style.background = (tierColors[t] || '#64748b') + '22';
+    tierBadge.style.color = tierColors[t] || '#64748b';
+    // Credits counter (only for pro/enterprise)
+    let credEl = document.getElementById('header-credits');
+    if (t !== 'free') {
+      if (!credEl) {
+        credEl = document.createElement('span');
+        credEl.id = 'header-credits';
+        credEl.style.cssText = 'font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:#10b98122;color:#10b981;margin-left:4px;cursor:default';
+        credEl.title = 'FinBot credits remaining';
+        tierBadge.parentNode.insertBefore(credEl, tierBadge.nextSibling);
+      }
+      credEl.textContent = '⚡ ' + (currentUser.finbot_credits ?? 0) + ' credits';
+    } else if (credEl) {
+      credEl.remove();
+    }
   } else {
     authBtns.style.display = 'flex';
     userEl.style.display = 'none';
