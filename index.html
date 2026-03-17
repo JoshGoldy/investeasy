@@ -1485,7 +1485,7 @@ function renderNewsContent() {
                  font-size:11px;font-weight:700;border:1px solid #7c3aed30;cursor:pointer;
                  display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s"
           onmouseenter="this.style.background='#7c3aed22'" onmouseleave="this.style.background='#7c3aed14'">
-          🤖 Analyze with FinBot <span style="font-size:10px;font-weight:600;opacity:.7">· 1 credit</span>
+          🤖 Analyze with FinBot <span style="font-size:10px;font-weight:600;opacity:.7">· 2 credits</span>
         </button>
       </div>`;
     }).join('')}
@@ -1526,7 +1526,7 @@ function openNewsArticle(idx, fromLive) {
       <div class="news-sheet-title">${escHtml(n.title)}</div>
       ${cleanTickers.length ? `<div class="news-sheet-tickers">${cleanTickers.map(t=>`<span class="news-ticker-chip">${escHtml(t)}</span>`).join('')}</div>` : ''}
       <div id="news-body-box" style="margin:14px 0 16px">${bodyHtml}</div>
-      <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">1 credit</strong></p>
+      <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
       <button onclick="analyzeArticleWithFinBot(${idx})"
         style="width:100%;padding:14px;border-radius:var(--radius-sm);background:linear-gradient(135deg,#7c3aed,#6d28d9);
                color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;margin-bottom:10px;
@@ -2822,12 +2822,12 @@ function renderFinBot() {
           <div style="padding:16px;border-radius:14px;background:linear-gradient(135deg,#7c3aed18,#6d28d918);border:1px solid #7c3aed44">
             <div style="font-size:20px;margin-bottom:6px">⚡</div>
             <p style="font-weight:800;font-size:13px;color:#a78bfa;margin-bottom:4px">Pro</p>
-            <p style="font-size:11.5px;color:var(--faint);line-height:1.5">50 credits<br>News AI: 1 credit<br>Analysis: 2 credits</p>
+            <p style="font-size:11.5px;color:var(--faint);line-height:1.5">50 credits<br>News AI: 2 credits<br>Analysis: 5 credits</p>
           </div>
           <div style="padding:16px;border-radius:14px;background:linear-gradient(135deg,#d9770618,#b4530918);border:1px solid #d9770644">
             <div style="font-size:20px;margin-bottom:6px">🏆</div>
             <p style="font-weight:800;font-size:13px;color:#fbbf24;margin-bottom:4px">Enterprise</p>
-            <p style="font-size:11.5px;color:var(--faint);line-height:1.5">200 credits<br>News AI: 1 credit<br>Analysis: 2 credits</p>
+            <p style="font-size:11.5px;color:var(--faint);line-height:1.5">200 credits<br>News AI: 2 credits<br>Analysis: 5 credits</p>
           </div>
         </div>
         <div style="width:100%;max-width:360px;padding:14px 16px;border-radius:14px;background:var(--card);border:1px solid var(--border);margin-bottom:8px">
@@ -3033,7 +3033,7 @@ function renderFinBot() {
           ${pillsHtml('horizon', [{k:'short',l:'Short',s:'< 1 year'},{k:'medium',l:'Medium',s:'1–5 years'},{k:'long',l:'Long',s:'5+ years'}])}</div>
         <div><label class="form-label">Preferred Sectors (optional)</label>
           <input class="form-input" placeholder="e.g. Tech, Healthcare, Energy" value="${finbotForm.sectors}" oninput="finbotForm.sectors=this.value"></div>
-        <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">2 credits</strong></p>
+        <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
         <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" onclick="runFinBot('screener')">Run Stock Screener →</button>
       </div>`;
   } else if (mode === 'dcf') {
@@ -3044,7 +3044,7 @@ function renderFinBot() {
       <div><label class="form-label">Stock Ticker — one at a time</label>
         <input class="form-input mono" placeholder="e.g. AAPL" value="${finbotForm.ticker}" oninput="finbotForm.ticker=this.value.replace(/[^a-zA-Z]/g,'').toUpperCase()"></div>
       <div style="margin-top:20px">
-        <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">2 credits</strong></p>
+        <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
         <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!finbotForm.ticker.trim()?'disabled':''} onclick="runFinBot('dcf')">Run DCF Valuation →</button>
       </div>`;
   } else if (mode === 'risk') {
@@ -3067,7 +3067,7 @@ function renderFinBot() {
         </div>
         <div><label class="form-label">Total Portfolio Value (optional)</label>
           <input class="form-input mono" placeholder="e.g. $50,000" value="${finbotForm.portVal}" oninput="finbotForm.portVal=this.value"></div>
-        <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">2 credits</strong></p>
+        <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
         <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" onclick="runFinBot('risk')">Run Risk Assessment →</button>
       </div>`;
   } else if (mode === 'earnings') {
@@ -3079,7 +3079,7 @@ function renderFinBot() {
           <input class="form-input" placeholder="e.g. Jan 25, 2025" value="${finbotForm.earnDate}" oninput="finbotForm.earnDate=this.value"></div>
         <div><label class="form-label">Your Position</label>
           ${pillsHtml('ePos', [{k:'none',l:'None'},{k:'Long',e:'📈',l:'Long'},{k:'Short',e:'📉',l:'Short'}])}</div>
-        <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">2 credits</strong></p>
+        <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
         <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!finbotForm.company.trim()?'disabled':''} onclick="runFinBot('earnings')">Run Earnings Preview →</button>
       </div>`;
   } else if (mode === 'builder') {
@@ -3112,7 +3112,7 @@ function renderFinBot() {
             oninput="finbotForm.builderHoldings=this.value">${finbotForm.builderHoldings}</textarea>
           <p class="form-hint">Leo will build around what you already own</p>
         </div>
-        <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">2 credits</strong></p>
+        <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
         <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" onclick="runFinBot('builder')">Build My Portfolio →</button>
       </div>`;
   } else if (mode === 'technical') {
@@ -3125,7 +3125,7 @@ function renderFinBot() {
           <input class="form-input mono" placeholder="e.g. TSLA" value="${finbotForm.techTicker}" oninput="finbotForm.techTicker=this.value.replace(/[^a-zA-Z]/g,'').toUpperCase()"></div>
         <div><label class="form-label">Current Position</label>
           ${pillsHtml('techPos', [{k:'none',l:'No Position'},{k:'Long',e:'📈',l:'Currently Long'},{k:'Short',e:'📉',l:'Currently Short'}])}</div>
-        <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">2 credits</strong></p>
+        <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
         <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!finbotForm.techTicker.trim()?'disabled':''} onclick="runFinBot('technical')">Run Technical Analysis →</button>
       </div>`;
   }
@@ -4321,7 +4321,7 @@ function renderSettings() {
             <div class="settings-row-icon" style="background:#10b98114">⚡</div>
             <div>
               <p class="settings-row-title">Credits Remaining</p>
-              <p class="settings-row-sub">Resets monthly · 2 per analysis, 1 per news AI</p>
+              <p class="settings-row-sub">Resets monthly · 5 per analysis, 2 per news AI</p>
             </div>
           </div>
           <span style="font-size:13px;font-weight:800;color:#10b981">${currentUser.finbot_credits??0}</span>

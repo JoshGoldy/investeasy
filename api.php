@@ -31,8 +31,8 @@ define('MAX_TOKENS', 4096);
 define('ALLOWED_ORIGIN', '*');
 
 // Credit costs per request type
-define('CREDIT_COST_FINBOT', 2);
-define('CREDIT_COST_NEWS',   1);
+define('CREDIT_COST_FINBOT', 5);
+define('CREDIT_COST_NEWS',   2);
 
 // ── CORS HEADERS ───────────────────────────────────────────────────────────
 
