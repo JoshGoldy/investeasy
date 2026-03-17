@@ -91,7 +91,7 @@ function initSchema() {
 
     $db->exec("CREATE TABLE IF NOT EXISTS user_progress (
         user_id    INT PRIMARY KEY,
-        state      MEDIUMTEXT   NOT NULL DEFAULT '{}',
+        state      MEDIUMTEXT   NOT NULL,
         updated_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
