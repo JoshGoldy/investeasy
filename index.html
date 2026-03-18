@@ -1121,7 +1121,10 @@ function parseMd(text) {
 }
 
 function inlineMd(t) {
-  return escHtml(t).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  return escHtml(t)
+    .replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1480,7 +1483,7 @@ function renderNewsContent() {
           <span class="news-source">${escHtml(n.publisher||'')}</span>
           <span style="font-size:11px;color:var(--green);font-weight:600">Read more →</span>
         </div>
-        <button onclick="event.stopPropagation();analyzeArticleWithFinBot(${actualIdx})"
+        <button onclick="event.stopPropagation();confirmAndAnalyzeNews(${actualIdx})"
           style="margin-top:8px;width:100%;padding:7px;border-radius:10px;background:#7c3aed14;color:#a78bfa;
                  font-size:11px;font-weight:700;border:1px solid #7c3aed30;cursor:pointer;
                  display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s"
@@ -1746,6 +1749,32 @@ async function saveNewsAnalysis(idx) {
 
 function closeFinBotNewsModal() {
   document.getElementById('finbot-news-modal').classList.add('hidden');
+}
+
+// ── Credit Confirmation Popup ──────────────────────────────────────────────
+function showCreditConfirm(credits, label, onConfirm) {
+  const remaining = currentUser ? (currentUser.finbot_credits ?? 0) : 0;
+  document.getElementById('credit-confirm-title').textContent =
+    `Use ${credits} Credit${credits !== 1 ? 's' : ''}?`;
+  document.getElementById('credit-confirm-msg').textContent =
+    `${label} will use ${credits} of your ${remaining} remaining credit${remaining !== 1 ? 's' : ''}.`;
+  document.getElementById('credit-confirm-ok').onclick = () => {
+    closeCreditConfirm();
+    onConfirm();
+  };
+  document.getElementById('credit-confirm-modal').classList.remove('hidden');
+}
+
+function closeCreditConfirm() {
+  document.getElementById('credit-confirm-modal').classList.add('hidden');
+}
+
+function confirmAndRunFinBot(modeId) {
+  showCreditConfirm(5, 'This analysis', () => runFinBot(modeId));
+}
+
+function confirmAndAnalyzeNews(idx) {
+  showCreditConfirm(2, 'This news analysis', () => analyzeArticleWithFinBot(idx));
 }
 
 function analyseNewsWithFinBot(headline) {
@@ -3036,7 +3065,7 @@ function renderFinBot() {
         <div><label class="form-label">Preferred Sectors (optional)</label>
           <input class="form-input" placeholder="e.g. Tech, Healthcare, Energy" value="${finbotForm.sectors}" oninput="finbotForm.sectors=this.value"></div>
         <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
-        <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" onclick="runFinBot('screener')">Run Stock Screener →</button>
+        <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" onclick="confirmAndRunFinBot('screener')">Run Stock Screener →</button>
       </div>`;
   } else if (mode === 'dcf') {
     el.innerHTML = `${backBtn}
@@ -3047,7 +3076,7 @@ function renderFinBot() {
         <input class="form-input mono" placeholder="e.g. AAPL" value="${finbotForm.ticker}" oninput="finbotForm.ticker=this.value.replace(/[^a-zA-Z]/g,'').toUpperCase()"></div>
       <div style="margin-top:20px">
         <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
-        <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!finbotForm.ticker.trim()?'disabled':''} onclick="runFinBot('dcf')">Run DCF Valuation →</button>
+        <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!finbotForm.ticker.trim()?'disabled':''} onclick="confirmAndRunFinBot('dcf')">Run DCF Valuation →</button>
       </div>`;
   } else if (mode === 'risk') {
     const riskCanImport = currentUser && dbPortfolio.length > 0;
@@ -3070,7 +3099,7 @@ function renderFinBot() {
         <div><label class="form-label">Total Portfolio Value (optional)</label>
           <input class="form-input mono" placeholder="e.g. $50,000" value="${finbotForm.portVal}" oninput="finbotForm.portVal=this.value"></div>
         <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
-        <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" onclick="runFinBot('risk')">Run Risk Assessment →</button>
+        <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" onclick="confirmAndRunFinBot('risk')">Run Risk Assessment →</button>
       </div>`;
   } else if (mode === 'earnings') {
     el.innerHTML = `${backBtn}
@@ -3082,7 +3111,7 @@ function renderFinBot() {
         <div><label class="form-label">Your Position</label>
           ${pillsHtml('ePos', [{k:'none',l:'None'},{k:'Long',e:'📈',l:'Long'},{k:'Short',e:'📉',l:'Short'}])}</div>
         <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
-        <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!finbotForm.company.trim()?'disabled':''} onclick="runFinBot('earnings')">Run Earnings Preview →</button>
+        <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!finbotForm.company.trim()?'disabled':''} onclick="confirmAndRunFinBot('earnings')">Run Earnings Preview →</button>
       </div>`;
   } else if (mode === 'builder') {
     const bldrCanImport = currentUser && dbPortfolio.length > 0;
@@ -3115,7 +3144,7 @@ function renderFinBot() {
           <p class="form-hint">Leo will build around what you already own</p>
         </div>
         <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
-        <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" onclick="runFinBot('builder')">Build My Portfolio →</button>
+        <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" onclick="confirmAndRunFinBot('builder')">Build My Portfolio →</button>
       </div>`;
   } else if (mode === 'technical') {
     el.innerHTML = `${backBtn}
@@ -3128,7 +3157,7 @@ function renderFinBot() {
         <div><label class="form-label">Current Position</label>
           ${pillsHtml('techPos', [{k:'none',l:'No Position'},{k:'Long',e:'📈',l:'Currently Long'},{k:'Short',e:'📉',l:'Currently Short'}])}</div>
         <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
-        <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!finbotForm.techTicker.trim()?'disabled':''} onclick="runFinBot('technical')">Run Technical Analysis →</button>
+        <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!finbotForm.techTicker.trim()?'disabled':''} onclick="confirmAndRunFinBot('technical')">Run Technical Analysis →</button>
       </div>`;
   }
 }
@@ -6468,6 +6497,27 @@ fetchLivePrices();
 // Retry news after 30s if the initial fetch didn't return live articles
 setTimeout(() => { if (!liveNews.length) fetchLiveNews(true); }, 30 * 1000);
 </script>
+
+<!-- Credit Confirmation Modal -->
+<div id="credit-confirm-modal" class="modal-overlay hidden"
+     onclick="if(event.target===this)closeCreditConfirm()">
+  <div class="modal-sheet" style="max-width:400px;padding:28px 24px 24px">
+    <div style="text-align:center;margin-bottom:22px">
+      <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#f59e0b,#d97706);
+                  display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px">⚡</div>
+      <h2 style="font-size:18px;font-weight:900;color:var(--text);margin-bottom:8px" id="credit-confirm-title">Use Credits?</h2>
+      <p style="font-size:13.5px;color:var(--muted);line-height:1.65" id="credit-confirm-msg"></p>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button onclick="closeCreditConfirm()"
+        style="flex:1;padding:13px;border-radius:12px;background:var(--border);color:var(--muted);
+               font-size:13px;font-weight:700;border:none;cursor:pointer">Cancel</button>
+      <button id="credit-confirm-ok"
+        style="flex:1;padding:13px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;
+               font-size:13px;font-weight:800;border:none;cursor:pointer">Continue →</button>
+    </div>
+  </div>
+</div>
 
 <!-- FinBot News Analysis Modal -->
 <div id="finbot-news-modal" class="news-overlay hidden"
