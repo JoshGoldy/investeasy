@@ -3703,7 +3703,7 @@ function renderSaved(filter) {
 async function updateReport(id, fields) {
   if (currentUser && dbSavedReports !== null) {
     try {
-      const d = await apiCall('data.php?action=saved_reports', 'PUT', { id, ...fields });
+      const d = await apiCall('data.php?action=update_report', 'POST', { id, ...fields });
       if (!d.success) throw new Error(d.error || 'Update failed.');
       const r = dbSavedReports.find(r => r.id === id);
       if (r) Object.assign(r, fields);
@@ -3785,6 +3785,10 @@ function openReportEditModal(id) {
         <button onclick="document.getElementById('saved-edit-modal-bd').remove()"
           style="background:var(--border);border:none;width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:18px;color:var(--muted);display:flex;align-items:center;justify-content:center;line-height:1">×</button>
       </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:6px">Report Name</label>
+        <input id="edit-name" type="text" value="${escHtml(r.modeTitle||'')}" maxlength="255" placeholder="Report name" class="saved-search" style="margin-bottom:0">
+      </div>
       <label style="display:flex;align-items:center;gap:10px;margin-bottom:16px;cursor:pointer">
         <input type="checkbox" id="edit-starred" ${r.starred?'checked':''} style="width:16px;height:16px;accent-color:var(--amber)">
         <span style="font-size:13px;font-weight:600;color:var(--text)">⭐ Starred</span>
@@ -3838,12 +3842,13 @@ function addEditTag() {
 }
 
 async function saveReportEdits(id) {
-  const starred = document.getElementById('edit-starred').checked;
-  const folder  = document.getElementById('edit-folder').value.trim();
-  const note    = document.getElementById('edit-note').value.trim();
-  const tags    = [...document.querySelectorAll('#edit-tags-list [data-tag]')].map(el => el.dataset.tag);
+  const modeTitle = document.getElementById('edit-name').value.trim();
+  const starred   = document.getElementById('edit-starred').checked;
+  const folder    = document.getElementById('edit-folder').value.trim();
+  const note      = document.getElementById('edit-note').value.trim();
+  const tags      = [...document.querySelectorAll('#edit-tags-list [data-tag]')].map(el => el.dataset.tag);
   document.getElementById('saved-edit-modal-bd').remove();
-  const ok = await updateReport(id, { starred, folder, note, tags });
+  const ok = await updateReport(id, { modeTitle, starred, folder, note, tags });
   if (ok) { renderSaved(); showToast('Report updated!'); }
 }
 

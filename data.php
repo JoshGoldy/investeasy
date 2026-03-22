@@ -256,6 +256,45 @@ switch ($action) {
         }
         break;
 
+    // ── UPDATE REPORT (POST, WAF-safe replacement for PUT) ────────────────────
+    case 'update_report':
+        $uid = requireAuth();
+        $db  = getDB();
+        if ($method !== 'POST') fail(405, 'Method not allowed.');
+        $id = trim($body['id'] ?? '');
+        if (!$id) fail(400, 'Report id is required.');
+        $allowed = ['modeTitle', 'tags', 'folder', 'starred', 'note'];
+        $sets = []; $vals = [];
+        foreach ($allowed as $k) {
+            if (!array_key_exists($k, $body)) continue;
+            if ($k === 'modeTitle') {
+                $sets[] = "mode_title = ?";
+                $vals[] = mb_substr(trim($body['modeTitle']), 0, 255);
+            } elseif ($k === 'tags') {
+                $sets[] = "tags = ?";
+                $vals[] = json_encode(array_values(array_slice(array_map('strval', (array)$body['tags']), 0, 20)));
+            } elseif ($k === 'starred') {
+                $sets[] = "starred = ?";
+                $vals[] = (int)$body['starred'];
+            } elseif ($k === 'folder') {
+                $sets[] = "folder = ?";
+                $vals[] = mb_substr(trim($body['folder']), 0, 100);
+            } elseif ($k === 'note') {
+                $sets[] = "note = ?";
+                $vals[] = mb_substr(trim($body['note']), 0, 10000);
+            }
+        }
+        if (!$sets) fail(400, 'Nothing to update.');
+        $vals[] = $id;
+        $vals[] = $uid;
+        try {
+            $db->prepare("UPDATE saved_reports SET " . implode(', ', $sets) . " WHERE id = ? AND user_id = ?")->execute($vals);
+        } catch (Exception $e) {
+            fail(500, 'Database error.');
+        }
+        ok();
+        break;
+
     // ── LEARN PROGRESS ────────────────────────────────────────────────────────
     case 'learn_progress':
         $uid = requireAuth();
