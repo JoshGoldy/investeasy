@@ -3703,7 +3703,7 @@ function renderSaved(filter) {
 async function updateReport(id, fields) {
   if (currentUser && dbSavedReports !== null) {
     try {
-      const d = await apiCall('data.php?action=update_report', 'POST', { id, ...fields });
+      const d = await apiCall('data.php?action=saved_reports', 'POST', { id, ...fields });
       if (!d.success) throw new Error(d.error || 'Update failed.');
       const r = dbSavedReports.find(r => r.id === id);
       if (r) Object.assign(r, fields);

@@ -197,28 +197,64 @@ switch ($action) {
             ok(['reports' => $reports]);
 
         } elseif ($method === 'POST') {
-            $id          = trim($body['id']          ?? '');
-            $modeId      = trim($body['modeId']      ?? '');
-            $modeTitle   = mb_substr(trim($body['modeTitle']   ?? ''), 0, 255);
-            $modeSub     = mb_substr(trim($body['modeSub']     ?? ''), 0, 100);
-            $modeCol     = mb_substr(trim($body['modeCol']     ?? '#10b981'), 0, 20);
-            $modeIcon    = mb_substr(trim($body['modeIcon']    ?? '🤖'), 0, 10);
-            $content     = $body['content']     ?? '';
-            $articleLink = mb_substr(trim($body['articleLink'] ?? ''), 0, 500);
-            $savedAt     = (int)($body['savedAt'] ?? (time() * 1000));
-            $tags        = json_encode(array_values(array_slice(array_map('strval', $body['tags'] ?? []), 0, 20)));
-            $folder      = mb_substr(trim($body['folder']  ?? ''), 0, 100);
-            $starred     = (int)($body['starred'] ?? 0);
-            $note        = mb_substr(trim($body['note']    ?? ''), 0, 10000);
+            $id     = trim($body['id']     ?? '');
+            $modeId = trim($body['modeId'] ?? '');
 
-            if (!$id || !$modeId || !$content) fail(400, 'Missing required fields.');
+            if (!$id) fail(400, 'Missing required fields.');
 
-            $db->prepare(
-                "INSERT IGNORE INTO saved_reports
-                 (id, user_id, mode_id, mode_title, mode_sub, mode_col, mode_icon, content, article_link, saved_at, tags, folder, starred, note)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-            )->execute([$id, $uid, $modeId, $modeTitle, $modeSub, $modeCol, $modeIcon, $content, $articleLink, $savedAt, $tags, $folder, $starred, $note]);
-            ok();
+            if ($modeId) {
+                // ── Create new report ────────────────────────────────────────
+                $modeTitle   = mb_substr(trim($body['modeTitle']   ?? ''), 0, 255);
+                $modeSub     = mb_substr(trim($body['modeSub']     ?? ''), 0, 100);
+                $modeCol     = mb_substr(trim($body['modeCol']     ?? '#10b981'), 0, 20);
+                $modeIcon    = mb_substr(trim($body['modeIcon']    ?? '🤖'), 0, 10);
+                $content     = $body['content']     ?? '';
+                $articleLink = mb_substr(trim($body['articleLink'] ?? ''), 0, 500);
+                $savedAt     = (int)($body['savedAt'] ?? (time() * 1000));
+                $tags        = json_encode(array_values(array_slice(array_map('strval', $body['tags'] ?? []), 0, 20)));
+                $folder      = mb_substr(trim($body['folder']  ?? ''), 0, 100);
+                $starred     = (int)($body['starred'] ?? 0);
+                $note        = mb_substr(trim($body['note']    ?? ''), 0, 10000);
+
+                if (!$content) fail(400, 'Missing required fields.');
+
+                $db->prepare(
+                    "INSERT IGNORE INTO saved_reports
+                     (id, user_id, mode_id, mode_title, mode_sub, mode_col, mode_icon, content, article_link, saved_at, tags, folder, starred, note)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                )->execute([$id, $uid, $modeId, $modeTitle, $modeSub, $modeCol, $modeIcon, $content, $articleLink, $savedAt, $tags, $folder, $starred, $note]);
+                ok();
+
+            } else {
+                // ── Edit mutable fields of existing report ───────────────────
+                $editable = ['modeTitle' => 'mode_title', 'tags' => 'tags',
+                             'folder' => 'folder', 'starred' => 'starred', 'note' => 'note'];
+                $sets = []; $vals = [];
+                foreach ($editable as $field => $col) {
+                    if (!array_key_exists($field, $body)) continue;
+                    if ($field === 'modeTitle') {
+                        $sets[] = "$col = ?";
+                        $vals[] = mb_substr(trim($body[$field]), 0, 255);
+                    } elseif ($field === 'tags') {
+                        $sets[] = "$col = ?";
+                        $vals[] = json_encode(array_values(array_slice(array_map('strval', (array)$body[$field]), 0, 20)));
+                    } elseif ($field === 'starred') {
+                        $sets[] = "$col = ?";
+                        $vals[] = (int)$body[$field];
+                    } elseif ($field === 'folder') {
+                        $sets[] = "$col = ?";
+                        $vals[] = mb_substr(trim($body[$field]), 0, 100);
+                    } elseif ($field === 'note') {
+                        $sets[] = "$col = ?";
+                        $vals[] = mb_substr(trim($body[$field]), 0, 10000);
+                    }
+                }
+                if (!$sets) fail(400, 'Nothing to edit.');
+                $vals[] = $id; $vals[] = $uid;
+                $col_list = implode(', ', $sets);
+                $db->prepare("UPDATE saved_reports SET $col_list WHERE id = ? AND user_id = ?")->execute($vals);
+                ok();
+            }
 
         } elseif ($method === 'PUT') {
             // Update mutable fields on an existing report
@@ -254,45 +290,6 @@ switch ($action) {
             $db->prepare("DELETE FROM saved_reports WHERE id = ? AND user_id = ?")->execute([$id, $uid]);
             ok();
         }
-        break;
-
-    // ── UPDATE REPORT (POST, WAF-safe replacement for PUT) ────────────────────
-    case 'update_report':
-        $uid = requireAuth();
-        $db  = getDB();
-        if ($method !== 'POST') fail(405, 'Method not allowed.');
-        $id = trim($body['id'] ?? '');
-        if (!$id) fail(400, 'Report id is required.');
-        $allowed = ['modeTitle', 'tags', 'folder', 'starred', 'note'];
-        $sets = []; $vals = [];
-        foreach ($allowed as $k) {
-            if (!array_key_exists($k, $body)) continue;
-            if ($k === 'modeTitle') {
-                $sets[] = "mode_title = ?";
-                $vals[] = mb_substr(trim($body['modeTitle']), 0, 255);
-            } elseif ($k === 'tags') {
-                $sets[] = "tags = ?";
-                $vals[] = json_encode(array_values(array_slice(array_map('strval', (array)$body['tags']), 0, 20)));
-            } elseif ($k === 'starred') {
-                $sets[] = "starred = ?";
-                $vals[] = (int)$body['starred'];
-            } elseif ($k === 'folder') {
-                $sets[] = "folder = ?";
-                $vals[] = mb_substr(trim($body['folder']), 0, 100);
-            } elseif ($k === 'note') {
-                $sets[] = "note = ?";
-                $vals[] = mb_substr(trim($body['note']), 0, 10000);
-            }
-        }
-        if (!$sets) fail(400, 'Nothing to update.');
-        $vals[] = $id;
-        $vals[] = $uid;
-        try {
-            $db->prepare("UPDATE saved_reports SET " . implode(', ', $sets) . " WHERE id = ? AND user_id = ?")->execute($vals);
-        } catch (Exception $e) {
-            fail(500, 'Database error.');
-        }
-        ok();
         break;
 
     // ── LEARN PROGRESS ────────────────────────────────────────────────────────
