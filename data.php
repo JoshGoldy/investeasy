@@ -169,17 +169,6 @@ switch ($action) {
         $uid = requireAuth();
         $db  = getDB();
 
-        // Migration: add new columns if they don't exist yet
-        // NOTE: TEXT columns cannot have non-NULL defaults in MySQL 5.x so we omit DEFAULT here.
-        foreach ([
-            "tags    TEXT NULL",
-            "folder  TEXT NULL",
-            "starred TINYINT(1) NOT NULL DEFAULT 0",
-            "note    TEXT NULL",
-        ] as $colDef) {
-            try { $db->exec("ALTER TABLE saved_reports ADD COLUMN $colDef"); } catch (Exception $e) {}
-        }
-
         if ($method === 'GET') {
             $stmt = $db->prepare("SELECT * FROM saved_reports WHERE user_id = ? ORDER BY saved_at DESC");
             $stmt->execute([$uid]);
