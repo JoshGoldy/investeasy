@@ -3280,8 +3280,12 @@ async function loadSavedReportsFromDB() {
       dbSavedReports = d.reports;
       updateSavedBadge();
       if (document.getElementById('tab-saved')?.classList.contains('active')) renderSaved();
+    } else {
+      dbSavedReports = null; // DB unavailable — fall back to localStorage
     }
-  } catch(e) { /* stay with empty array — do not fall back to localStorage for DB users */ }
+  } catch(e) {
+    dbSavedReports = null; // DB unavailable — fall back to localStorage
+  }
 }
 
 // Save a report object — DB when logged in, localStorage for guests.
@@ -3382,14 +3386,34 @@ async function clearAllSavedReports() {
 function downloadReport(id) {
   const r = getSavedReports().find(r => r.id === id);
   if (!r) return;
-  const date     = new Date(r.savedAt).toISOString().slice(0, 10);
-  const filename = `${r.modeTitle.replace(/\s+/g, '-')}_${date}.md`;
-  const blob     = new Blob([r.content], { type: 'text/markdown' });
-  const a        = document.createElement('a');
-  a.href         = URL.createObjectURL(blob);
-  a.download     = filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  const date    = new Date(r.savedAt).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+  const htmlBody = parseMd(r.content);
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>${r.modeTitle}</title>
+    <style>
+      body{font-family:Georgia,serif;max-width:720px;margin:40px auto;color:#111;line-height:1.7;font-size:14px}
+      h1,h2,h3,h4{font-family:Arial,sans-serif;margin-top:1.4em;margin-bottom:.3em;color:#000}
+      h1{font-size:22px}h2{font-size:18px}h3{font-size:15px}h4{font-size:14px}
+      p{margin:.4em 0}.bullet{margin:.2em 0 .2em 1.2em}
+      .md-table{display:grid;gap:1px;margin:8px 0;border:1px solid #ccc}
+      .td,.th{padding:6px 8px;font-size:12px;border:1px solid #ddd}
+      .th{font-weight:700;background:#f5f5f5}
+      .disclaimer{font-size:11px;color:#666;border-top:1px solid #ddd;margin-top:20px;padding-top:10px}
+      .report-header{border-bottom:2px solid #000;padding-bottom:12px;margin-bottom:24px}
+      .report-meta{font-size:12px;color:#555;margin-top:4px}
+      @media print{body{margin:20px}}
+    </style>
+  </head><body>
+    <div class="report-header">
+      <h1>${r.modeTitle}</h1>
+      <div class="report-meta">${r.modeId === 'news' ? 'News Analysis' : r.modeSub} &nbsp;·&nbsp; ${date}</div>
+    </div>
+    <div class="result-content">${htmlBody}</div>
+  </body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); }, 400);
 }
 
 async function shareReport(id) {
@@ -3651,7 +3675,7 @@ function renderSaved(filter) {
             <button class="saved-action-btn" style="background:var(--border);color:var(--text)"
               onclick="downloadReport('${r.id}')">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 3v13M7 12l5 5 5-5"/><path d="M5 20h14"/></svg>
-              Download .md
+              Download PDF
             </button>
             <button class="saved-action-btn" style="background:var(--border);color:var(--text)"
               onclick="shareReport('${r.id}')">
@@ -3677,15 +3701,13 @@ function renderSaved(filter) {
 
 // ── Update mutable fields on an existing saved report via PUT ──
 async function updateReport(id, fields) {
-  if (currentUser) {
+  if (currentUser && dbSavedReports !== null) {
     try {
       const d = await apiCall('data.php?action=saved_reports', 'PUT', { id, ...fields });
       if (!d.success) throw new Error(d.error || 'Update failed.');
-    } catch(e) { showToast('Could not update report.'); return false; }
-    if (dbSavedReports) {
       const r = dbSavedReports.find(r => r.id === id);
       if (r) Object.assign(r, fields);
-    }
+    } catch(e) { showToast('Could not update report.'); return false; }
   } else {
     const reports = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]');
     const r = reports.find(r => r.id === id);
