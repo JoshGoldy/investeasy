@@ -571,6 +571,7 @@ button{cursor:pointer}
 .header-brand{display:none;align-items:center;gap:8px}
 .header-brand-icon{width:28px;height:28px;flex-shrink:0}
 .header-brand-name{font-size:16px;font-weight:800;color:var(--text)}
+.header-right{margin-left:auto}
 
 /* ── NEWS COLUMNS ─────────────────────────────────────────────── */
 .news-cols{columns:2;gap:12px}
@@ -651,8 +652,7 @@ button{cursor:pointer}
       </div>
       <span class="header-brand-name">FinScope</span>
     </div>
-    <div style="display:flex;align-items:center;gap:14px">
-      <div style="display:flex;align-items:center"><span class="live-dot"></span><span class="live-txt">Live</span></div>
+    <div class="header-right" style="display:flex;align-items:center;gap:14px">
       <div id="header-auth-btns" style="display:flex;align-items:center;gap:8px">
         <button onclick="document.getElementById('auth-overlay').classList.remove('hidden');showAuthTab('login')"
           style="padding:7px 16px;border-radius:10px;font-size:12px;font-weight:700;color:var(--text2);background:var(--border);transition:background 0.2s"
