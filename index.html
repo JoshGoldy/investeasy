@@ -3292,6 +3292,10 @@ async function persistReport(report) {
         content:     report.content,
         articleLink: report.articleLink || '',
         savedAt:     report.savedAt,
+        tags:        report.tags        || [],
+        folder:      report.folder      || '',
+        starred:     report.starred     || false,
+        note:        report.note        || '',
       });
       if (!d.success) throw new Error(d.error || 'Server rejected save.');
       if (!dbSavedReports) dbSavedReports = [];
@@ -3364,7 +3368,7 @@ async function clearAllSavedReports() {
   } else {
     localStorage.removeItem(SAVED_KEY);
   }
-  savedFilter = 'all'; // reset filter so the empty state (and future reports) show correctly
+  savedFilter = 'all'; savedSearch = ''; savedSort = 'newest'; savedFolderFilter = ''; savedTagFilter = ''; savedSelected.clear(); // reset all filters
   updateSavedBadge();
   renderSaved();
 }
@@ -3422,6 +3426,15 @@ function updateSavedBadge() {
 }
 
 let savedFilter = 'all';
+let savedSearch = '';
+let savedSort = 'newest';
+let savedFolderFilter = '';
+let savedTagFilter = '';
+let savedSelected = new Set();
+
+// Tag/folder filter helpers — safe to call from onclick with arbitrary values
+function _srTag(t) { savedTagFilter = (savedTagFilter === t ? '' : t); renderSaved(); }
+function _srFolder(f) { savedFolderFilter = (savedFolderFilter === f ? '' : f); renderSaved(); }
 
 function renderSaved(filter) {
   if (filter !== undefined) savedFilter = filter;
@@ -3488,11 +3501,32 @@ function renderSaved(filter) {
     return;
   }
 
+  // ── Apply filters ──
+  let reports = allReports;
+  if (savedFilter === 'finbot')  reports = reports.filter(r => r.modeId !== 'news');
+  else if (savedFilter === 'news')    reports = reports.filter(r => r.modeId === 'news');
+  else if (savedFilter === 'starred') reports = reports.filter(r => r.starred);
+  if (savedFolderFilter) reports = reports.filter(r => (r.folder || '') === savedFolderFilter);
+  if (savedTagFilter)    reports = reports.filter(r => Array.isArray(r.tags) && r.tags.includes(savedTagFilter));
+  if (savedSearch.trim()) {
+    const q = savedSearch.trim().toLowerCase();
+    reports = reports.filter(r =>
+      r.modeTitle.toLowerCase().includes(q) ||
+      r.content.toLowerCase().includes(q) ||
+      (r.note || '').toLowerCase().includes(q) ||
+      (Array.isArray(r.tags) && r.tags.some(t => t.toLowerCase().includes(q))) ||
+      (r.folder || '').toLowerCase().includes(q)
+    );
+  }
+  if (savedSort === 'oldest') reports = [...reports].sort((a, b) => a.savedAt - b.savedAt);
+  else if (savedSort === 'starred') reports = [...reports].sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0));
+
+  // ── UI metadata ──
   const finbotCount = allReports.filter(r => r.modeId !== 'news').length;
   const newsCount   = allReports.filter(r => r.modeId === 'news').length;
-  const reports     = savedFilter === 'finbot' ? allReports.filter(r => r.modeId !== 'news')
-                    : savedFilter === 'news'   ? allReports.filter(r => r.modeId === 'news')
-                    : allReports;
+  const starCount   = allReports.filter(r => r.starred).length;
+  const folders     = [...new Set(allReports.map(r => r.folder || '').filter(Boolean))].sort();
+  const allTags     = [...new Set(allReports.flatMap(r => Array.isArray(r.tags) ? r.tags : []))].sort();
 
   const filterBtn = (id, label, count, col) => {
     const active = savedFilter === id;
@@ -3515,20 +3549,66 @@ function renderSaved(filter) {
         Clear all
       </button>
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-      ${filterBtn('all',    'All',            allReports.length, 'var(--green)')}
-      ${filterBtn('finbot', '🤖 FinBot',      finbotCount,       '#6366f1')}
-      ${filterBtn('news',   '📰 News Analysis', newsCount,        '#7c3aed')}
+
+    <!-- Search + Sort row -->
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input class="saved-search" style="flex:1;margin-bottom:0" placeholder="Search reports…"
+        value="${escHtml(savedSearch)}" oninput="savedSearch=this.value;renderSaved()">
+      <select class="saved-sort-select" onchange="savedSort=this.value;renderSaved()">
+        <option value="newest"  ${savedSort==='newest' ?'selected':''}>Newest</option>
+        <option value="oldest"  ${savedSort==='oldest' ?'selected':''}>Oldest</option>
+        <option value="starred" ${savedSort==='starred'?'selected':''}>⭐ First</option>
+      </select>
     </div>
-    ${reports.length === 0 ? `<div style="text-align:center;padding:40px 20px;color:var(--faint);font-size:13px">No reports in this category</div>` : ''}
+
+    <!-- Type filter tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      ${filterBtn('all',    'All',          allReports.length, 'var(--green)')}
+      ${filterBtn('finbot', '🤖 FinBot',    finbotCount,       '#6366f1')}
+      ${filterBtn('news',   '📰 News',      newsCount,         '#7c3aed')}
+      ${starCount ? filterBtn('starred', '⭐ Starred', starCount, 'var(--amber)') : ''}
+    </div>
+
+    <!-- Folder tabs -->
+    ${folders.length ? `
+    <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px;flex-wrap:wrap">
+      <button class="saved-folder-tab ${!savedFolderFilter?'active':''}" onclick="savedFolderFilter='';renderSaved()">All</button>
+      ${folders.map(f => `<button class="saved-folder-tab ${savedFolderFilter===f?'active':''}" onclick="_srFolder(${escHtml(JSON.stringify(f))})">📁 ${escHtml(f)}</button>`).join('')}
+    </div>` : ''}
+
+    <!-- Tag chips -->
+    ${allTags.length ? `
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+      <span style="font-size:11px;font-weight:700;color:var(--faint);flex-shrink:0">Tags:</span>
+      ${allTags.map(t => `<button class="saved-tag-chip ${savedTagFilter===t?'active':''}" onclick="_srTag(${escHtml(JSON.stringify(t))})">${escHtml(t)}</button>`).join('')}
+    </div>` : ''}
+
+    <!-- Bulk bar / Export all -->
+    ${savedSelected.size ? `
+    <div class="saved-bulk-bar">
+      <span style="font-size:13px;font-weight:700">${savedSelected.size} selected</span>
+      <button onclick="bulkDeleteReports()" style="padding:6px 14px;border-radius:8px;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:700">🗑 Delete</button>
+      <button onclick="exportReportsZip([...savedSelected])" style="padding:6px 14px;border-radius:8px;background:var(--blue);color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:700">↓ Export .zip</button>
+      <button onclick="savedSelected.clear();renderSaved()" style="padding:6px 14px;border-radius:8px;background:var(--border);color:var(--muted);border:none;cursor:pointer;font-size:12px;font-weight:700;margin-left:auto">✕ Deselect</button>
+    </div>` : allReports.length >= 2 ? `
+    <div style="margin-bottom:12px;text-align:right">
+      <button onclick="exportReportsZip()" style="font-size:11px;font-weight:700;color:var(--muted);background:var(--border);border:none;cursor:pointer;padding:6px 12px;border-radius:8px">↓ Export all (.zip)</button>
+    </div>` : ''}
+
+    ${reports.length === 0 ? `<div style="text-align:center;padding:40px 20px;color:var(--faint);font-size:13px">No reports match your filters</div>` : ''}
     ${reports.map(r => {
       const date    = new Date(r.savedAt);
       const dateStr = date.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
       const timeStr = date.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
       const preview = r.content.replace(/[#*_`>~\[\]]/g, '').replace(/\n+/g, ' ').trim().slice(0, 180);
+      const tags    = Array.isArray(r.tags) ? r.tags : [];
+      const checked = savedSelected.has(r.id);
       return `
         <div class="saved-card">
           <div class="saved-card-header">
+            <div class="saved-card-check ${checked?'checked':''}" onclick="toggleSavedSelect('${r.id}')" title="Select">
+              ${checked ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+            </div>
             <div class="saved-card-meta">
               <div class="saved-card-icon" style="background:${r.modeCol}22">${r.modeIcon}</div>
               <div>
@@ -3536,12 +3616,16 @@ function renderSaved(filter) {
                 <div class="saved-card-sub">${r.modeId === 'news' ? '📰 News Analysis' : 'by ' + escHtml(r.modeSub)} &nbsp;·&nbsp; ${dateStr}, ${timeStr}</div>
               </div>
             </div>
+            <button class="saved-card-star ${r.starred?'starred':''}" onclick="toggleReportStar('${r.id}')" title="${r.starred?'Unstar':'Star'}">⭐</button>
             <button onclick="deleteSavedReport('${r.id}')"
               style="background:#ef4444;border:none;cursor:pointer;color:#fff;padding:6px 8px;border-radius:8px;flex-shrink:0;line-height:1;display:flex;align-items:center;justify-content:center;transition:background .15s" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'" title="Delete">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
             </button>
           </div>
+          ${r.folder ? `<div class="saved-card-folder">📁 ${escHtml(r.folder)}</div>` : ''}
+          ${tags.length ? `<div class="saved-card-tags">${tags.map(t => `<span class="saved-tag-chip" onclick="_srTag(${escHtml(JSON.stringify(t))})" title="Filter by tag">${escHtml(t)}</span>`).join('')}</div>` : ''}
           <div class="saved-preview">${escHtml(preview)}</div>
+          ${r.note ? `<div class="saved-card-note-preview" onclick="openReportEditModal('${r.id}')">📝 ${escHtml(r.note.slice(0,120))}${r.note.length>120?'…':''}</div>` : ''}
           <div class="saved-card-actions">
             <button class="saved-action-btn" style="background:${r.modeCol}18;color:${r.modeCol}"
               onclick="viewSavedReport('${r.id}')">
@@ -3563,11 +3647,159 @@ function renderSaved(filter) {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
               Share / Copy
             </button>
+            <button class="saved-action-btn" style="background:var(--border);color:var(--text)"
+              onclick="openReportEditModal('${r.id}')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit Details
+            </button>
           </div>
         </div>
       `;
     }).join('')}
   `;
+}
+
+// ── Update mutable fields on an existing saved report via PUT ──
+async function updateReport(id, fields) {
+  if (currentUser) {
+    try {
+      await apiCall('data.php?action=saved_reports', 'PUT', { id, ...fields });
+    } catch(e) { showToast('Could not update report.'); return false; }
+  }
+  if (dbSavedReports) {
+    const r = dbSavedReports.find(r => r.id === id);
+    if (r) Object.assign(r, fields);
+  }
+  return true;
+}
+
+async function toggleReportStar(id) {
+  const r = getSavedReports().find(r => r.id === id);
+  if (!r) return;
+  const ok = await updateReport(id, { starred: !r.starred });
+  if (ok) renderSaved();
+}
+
+function toggleSavedSelect(id) {
+  if (savedSelected.has(id)) savedSelected.delete(id); else savedSelected.add(id);
+  renderSaved();
+}
+
+async function bulkDeleteReports() {
+  const ids = [...savedSelected];
+  if (!ids.length) return;
+  const confirmed = await showConfirmModal(
+    `Delete ${ids.length} report${ids.length !== 1 ? 's' : ''}?`,
+    'This will permanently delete the selected reports. This action cannot be undone.'
+  );
+  if (!confirmed) return;
+  if (currentUser) {
+    await Promise.all(ids.map(id => apiCall('data.php?action=saved_reports', 'DELETE', { id }).catch(() => {})));
+    if (dbSavedReports) dbSavedReports = dbSavedReports.filter(r => !ids.includes(r.id));
+  } else {
+    const reports = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]').filter(r => !ids.includes(r.id));
+    localStorage.setItem(SAVED_KEY, JSON.stringify(reports));
+  }
+  savedSelected.clear();
+  updateSavedBadge();
+  renderSaved();
+}
+
+async function exportReportsZip(ids) {
+  if (!window.JSZip) { showToast('JSZip not loaded.'); return; }
+  const all = getSavedReports();
+  const subset = ids ? all.filter(r => ids.includes(r.id)) : all;
+  if (!subset.length) return;
+  const zip = new JSZip();
+  subset.forEach(r => {
+    const date = new Date(r.savedAt).toISOString().slice(0, 10);
+    const name = `${r.modeTitle.replace(/[^a-z0-9]/gi, '-').slice(0,40)}_${date}_${r.id.slice(-4)}.md`;
+    zip.file(name, r.content);
+  });
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `investeasy-reports-${new Date().toISOString().slice(0,10)}.zip`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast(`Exported ${subset.length} report${subset.length !== 1 ? 's' : ''}`);
+}
+
+function openReportEditModal(id) {
+  const r = getSavedReports().find(r => r.id === id);
+  if (!r) return;
+  document.getElementById('saved-edit-modal-bd')?.remove();
+  const tags = Array.isArray(r.tags) ? r.tags : [];
+  const bd = document.createElement('div');
+  bd.id = 'saved-edit-modal-bd';
+  bd.className = 'saved-modal-backdrop';
+  bd.innerHTML = `
+    <div class="saved-modal" onclick="event.stopPropagation()">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <div style="font-size:16px;font-weight:800;color:var(--text)">Edit Report Details</div>
+        <button onclick="document.getElementById('saved-edit-modal-bd').remove()"
+          style="background:var(--border);border:none;width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:18px;color:var(--muted);display:flex;align-items:center;justify-content:center;line-height:1">×</button>
+      </div>
+      <label style="display:flex;align-items:center;gap:10px;margin-bottom:16px;cursor:pointer">
+        <input type="checkbox" id="edit-starred" ${r.starred?'checked':''} style="width:16px;height:16px;accent-color:var(--amber)">
+        <span style="font-size:13px;font-weight:600;color:var(--text)">⭐ Starred</span>
+      </label>
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:6px">Folder</label>
+        <input id="edit-folder" type="text" value="${escHtml(r.folder||'')}" maxlength="100" placeholder="e.g. Tech Stocks" class="saved-search" style="margin-bottom:0">
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:6px">Tags</label>
+        <div id="edit-tags-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+          ${tags.map(t => `<span class="saved-tag-chip active" data-tag="${escHtml(t)}">${escHtml(t)}<button onclick="this.closest('[data-tag]').remove()" style="background:none;border:none;cursor:pointer;color:inherit;padding:0;margin-left:3px;font-size:12px;line-height:1">×</button></span>`).join('')}
+        </div>
+        <div style="display:flex;gap:8px">
+          <input id="edit-tag-input" type="text" placeholder="Add tag…" maxlength="30" class="saved-search" style="margin-bottom:0;flex:1"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();addEditTag()}">
+          <button onclick="addEditTag()" style="padding:8px 14px;border-radius:10px;background:var(--amber);color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap">+ Add</button>
+        </div>
+      </div>
+      <div style="margin-bottom:18px">
+        <label style="font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:6px">Private Note</label>
+        <textarea id="edit-note" rows="3" maxlength="10000" placeholder="Your private notes about this report…"
+          style="width:100%;padding:10px 14px;border-radius:12px;background:var(--border);font-size:13px;color:var(--text);border:1.5px solid transparent;resize:vertical;font-family:inherit;transition:all .2s;box-sizing:border-box"
+          onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='transparent'">${escHtml(r.note||'')}</textarea>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="document.getElementById('saved-edit-modal-bd').remove()"
+          style="flex:1;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:transparent;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer">Cancel</button>
+        <button onclick="saveReportEdits('${id}')"
+          style="flex:2;padding:11px;border-radius:12px;border:none;background:var(--green);font-size:13px;font-weight:700;color:#fff;cursor:pointer">Save Changes</button>
+      </div>
+    </div>`;
+  bd.onclick = () => bd.remove();
+  document.body.appendChild(bd);
+}
+
+function addEditTag() {
+  const input = document.getElementById('edit-tag-input');
+  const val = input.value.trim();
+  if (!val) return;
+  const list = document.getElementById('edit-tags-list');
+  const existing = [...list.querySelectorAll('[data-tag]')].map(el => el.dataset.tag);
+  if (existing.includes(val) || existing.length >= 20) return;
+  const chip = document.createElement('span');
+  chip.className = 'saved-tag-chip active';
+  chip.dataset.tag = val;
+  chip.innerHTML = `${escHtml(val)}<button onclick="this.closest('[data-tag]').remove()" style="background:none;border:none;cursor:pointer;color:inherit;padding:0;margin-left:3px;font-size:12px;line-height:1">×</button>`;
+  list.appendChild(chip);
+  input.value = '';
+  input.focus();
+}
+
+async function saveReportEdits(id) {
+  const starred = document.getElementById('edit-starred').checked;
+  const folder  = document.getElementById('edit-folder').value.trim();
+  const note    = document.getElementById('edit-note').value.trim();
+  const tags    = [...document.querySelectorAll('#edit-tags-list [data-tag]')].map(el => el.dataset.tag);
+  document.getElementById('saved-edit-modal-bd').remove();
+  const ok = await updateReport(id, { starred, folder, note, tags });
+  if (ok) { renderSaved(); showToast('Report updated!'); }
 }
 
 function showConfirmModal(title, message) {
