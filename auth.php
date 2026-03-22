@@ -14,7 +14,7 @@
 // Accept session ID from Authorization: Bearer header so cookie failures don't break auth
 if (empty($_COOKIE[session_name()])) {
     $ah = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-    if (preg_match('/^Bearer\s+([a-zA-Z0-9\-]+)$/i', $ah, $m)) {
+    if (preg_match('/^Bearer\s+([a-zA-Z0-9,\-]+)$/i', $ah, $m)) {
         session_id($m[1]);
     }
 }
@@ -23,7 +23,7 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: ' . ($_SERVER['HTTP_ORIGIN'] ?? '*'));
 header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 

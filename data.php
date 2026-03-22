@@ -23,7 +23,7 @@ ob_start();
 // Accept session ID from Authorization: Bearer header so cookie failures don't break auth
 if (empty($_COOKIE[session_name()])) {
     $ah = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-    if (preg_match('/^Bearer\s+([a-zA-Z0-9\-]+)$/i', $ah, $m)) {
+    if (preg_match('/^Bearer\s+([a-zA-Z0-9,\-]+)$/i', $ah, $m)) {
         session_id($m[1]);
     }
 }
@@ -32,7 +32,7 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: ' . ($_SERVER['HTTP_ORIGIN'] ?? '*'));
 header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
@@ -170,11 +170,12 @@ switch ($action) {
         $db  = getDB();
 
         // Migration: add new columns if they don't exist yet
+        // NOTE: TEXT columns cannot have non-NULL defaults in MySQL 5.x so we omit DEFAULT here.
         foreach ([
-            "tags    TEXT DEFAULT '[]'",
-            "folder  TEXT DEFAULT ''",
-            "starred TINYINT DEFAULT 0",
-            "note    TEXT DEFAULT ''",
+            "tags    TEXT NULL",
+            "folder  TEXT NULL",
+            "starred TINYINT(1) NOT NULL DEFAULT 0",
+            "note    TEXT NULL",
         ] as $colDef) {
             try { $db->exec("ALTER TABLE saved_reports ADD COLUMN $colDef"); } catch (Exception $e) {}
         }
@@ -226,11 +227,13 @@ switch ($action) {
 
                 if (!$content) fail(400, 'Missing required fields.');
 
-                $db->prepare(
-                    "INSERT IGNORE INTO saved_reports
-                     (id, user_id, mode_id, mode_title, mode_sub, mode_col, mode_icon, content, article_link, saved_at, tags, folder, starred, note)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-                )->execute([$id, $uid, $modeId, $modeTitle, $modeSub, $modeCol, $modeIcon, $content, $articleLink, $savedAt, $tags, $folder, $starred, $note]);
+                try {
+                    $db->prepare(
+                        "INSERT IGNORE INTO saved_reports
+                         (id, user_id, mode_id, mode_title, mode_sub, mode_col, mode_icon, content, article_link, saved_at, tags, folder, starred, note)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                    )->execute([$id, $uid, $modeId, $modeTitle, $modeSub, $modeCol, $modeIcon, $content, $articleLink, $savedAt, $tags, $folder, $starred, $note]);
+                } catch (Exception $e) { fail(500, 'Save failed: ' . $e->getMessage()); }
                 ok();
 
             } else {

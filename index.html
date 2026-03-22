@@ -3312,7 +3312,12 @@ async function persistReport(report) {
       if (!d.success) throw new Error(d.error || 'Server rejected save.');
       if (!dbSavedReports) dbSavedReports = [];
       dbSavedReports.unshift(report);
-    } catch(e) { showToast('Could not save to server — stored locally.'); localPersistReport(report); }
+    } catch(e) {
+      showToast('Could not save to server — stored locally.');
+      localPersistReport(report);
+      // Keep report visible in current session even though it only went to localStorage
+      if (dbSavedReports !== null) dbSavedReports.unshift(report);
+    }
   } else {
     localPersistReport(report);
   }
