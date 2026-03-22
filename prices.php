@@ -642,7 +642,7 @@ function fetchNewsFromRSS(): ?array {
     $cutoff72h = time() - 72 * 3600;
     $articles = array_values(array_filter($articles, fn($a) => ($a['pubTime'] ?? 0) >= $cutoff72h));
     usort($articles, fn($a, $b) => $b['pubTime'] - $a['pubTime']);
-    $articles = array_values(array_slice($articles, 0, 20));
+    $articles = array_values(array_slice($articles, 0, 30));
     @file_put_contents($cachePath, json_encode($articles));
     return $articles;
 }
