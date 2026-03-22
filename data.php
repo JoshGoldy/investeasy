@@ -12,7 +12,8 @@
  * POST data.php?action=watchlist            → add to watchlist  { ticker, name }
  * DELETE data.php?action=watchlist          → remove from watchlist  { ticker }
  * GET  data.php?action=saved_reports        → load all saved reports for user
- * POST data.php?action=saved_reports        → save a report  { id, modeId, modeTitle, ... }
+ * POST data.php?action=saved_reports        → save a report  { id, modeId, modeTitle, ..., tags, folder, starred, note }
+ * PUT  data.php?action=saved_reports        → update mutable fields  { id, tags?, folder?, starred?, note? }
  * DELETE data.php?action=saved_reports      → delete a report  { id }
  * GET  data.php?action=learn_progress       → load learning hub state for user
  * POST data.php?action=learn_progress       → save learning hub state  { state: {...} }
@@ -160,12 +161,23 @@ switch ($action) {
         $uid = requireAuth();
         $db  = getDB();
 
+        // Migration: add new columns if they don't exist yet
+        foreach ([
+            "tags    TEXT DEFAULT '[]'",
+            "folder  TEXT DEFAULT ''",
+            "starred TINYINT DEFAULT 0",
+            "note    TEXT DEFAULT ''",
+        ] as $colDef) {
+            try { $db->exec("ALTER TABLE saved_reports ADD COLUMN $colDef"); } catch (Exception $e) {}
+        }
+
         if ($method === 'GET') {
             $stmt = $db->prepare("SELECT * FROM saved_reports WHERE user_id = ? ORDER BY saved_at DESC");
             $stmt->execute([$uid]);
             $rows = $stmt->fetchAll();
-            // Rename snake_case to camelCase for the frontend
             $reports = array_map(function($r) {
+                $tags = json_decode($r['tags'] ?? '[]', true);
+                if (!is_array($tags)) $tags = [];
                 return [
                     'id'          => $r['id'],
                     'modeId'      => $r['mode_id'],
@@ -176,6 +188,10 @@ switch ($action) {
                     'content'     => $r['content'],
                     'articleLink' => $r['article_link'],
                     'savedAt'     => (int)$r['saved_at'],
+                    'tags'        => $tags,
+                    'folder'      => $r['folder']  ?? '',
+                    'starred'     => (bool)($r['starred'] ?? false),
+                    'note'        => $r['note']    ?? '',
                 ];
             }, $rows);
             ok(['reports' => $reports]);
@@ -190,14 +206,46 @@ switch ($action) {
             $content     = $body['content']     ?? '';
             $articleLink = mb_substr(trim($body['articleLink'] ?? ''), 0, 500);
             $savedAt     = (int)($body['savedAt'] ?? (time() * 1000));
+            $tags        = json_encode(array_values(array_slice(array_map('strval', $body['tags'] ?? []), 0, 20)));
+            $folder      = mb_substr(trim($body['folder']  ?? ''), 0, 100);
+            $starred     = (int)($body['starred'] ?? 0);
+            $note        = mb_substr(trim($body['note']    ?? ''), 0, 10000);
 
             if (!$id || !$modeId || !$content) fail(400, 'Missing required fields.');
 
             $db->prepare(
                 "INSERT IGNORE INTO saved_reports
-                 (id, user_id, mode_id, mode_title, mode_sub, mode_col, mode_icon, content, article_link, saved_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-            )->execute([$id, $uid, $modeId, $modeTitle, $modeSub, $modeCol, $modeIcon, $content, $articleLink, $savedAt]);
+                 (id, user_id, mode_id, mode_title, mode_sub, mode_col, mode_icon, content, article_link, saved_at, tags, folder, starred, note)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            )->execute([$id, $uid, $modeId, $modeTitle, $modeSub, $modeCol, $modeIcon, $content, $articleLink, $savedAt, $tags, $folder, $starred, $note]);
+            ok();
+
+        } elseif ($method === 'PUT') {
+            // Update mutable fields on an existing report
+            $id = trim($body['id'] ?? '');
+            if (!$id) fail(400, 'Report id is required.');
+            $allowed = ['tags', 'folder', 'starred', 'note'];
+            $sets = []; $vals = [];
+            foreach ($allowed as $k) {
+                if (!array_key_exists($k, $body)) continue;
+                if ($k === 'tags') {
+                    $sets[] = "tags = ?";
+                    $vals[] = json_encode(array_values(array_slice(array_map('strval', $body['tags']), 0, 20)));
+                } elseif ($k === 'starred') {
+                    $sets[] = "starred = ?";
+                    $vals[] = (int)$body['starred'];
+                } elseif ($k === 'folder') {
+                    $sets[] = "folder = ?";
+                    $vals[] = mb_substr(trim($body['folder']), 0, 100);
+                } elseif ($k === 'note') {
+                    $sets[] = "note = ?";
+                    $vals[] = mb_substr(trim($body['note']), 0, 10000);
+                }
+            }
+            if (!$sets) fail(400, 'Nothing to update.');
+            $vals[] = $id;
+            $vals[] = $uid;
+            $db->prepare("UPDATE saved_reports SET " . implode(', ', $sets) . " WHERE id = ? AND user_id = ?")->execute($vals);
             ok();
 
         } elseif ($method === 'DELETE') {

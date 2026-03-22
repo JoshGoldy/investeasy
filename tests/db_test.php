@@ -69,6 +69,10 @@ function getDB(): PDO {
         content      TEXT NOT NULL,
         article_link TEXT DEFAULT '',
         saved_at     INTEGER NOT NULL,
+        tags         TEXT DEFAULT '[]',
+        folder       TEXT DEFAULT '',
+        starred      INTEGER DEFAULT 0,
+        note         TEXT DEFAULT '',
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )");
 
