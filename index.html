@@ -4821,6 +4821,8 @@ function resetAllSettings() {
 async function apiCall(url, method = 'GET', body = null) {
   const opts = { method, credentials: 'include', headers: {} };
   if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  const token = localStorage.getItem('ie_auth_token');
+  if (token) opts.headers['Authorization'] = 'Bearer ' + token;
   const r = await fetch(url, opts);
   return r.json();
 }
@@ -4859,6 +4861,7 @@ async function checkAuth() {
     const d = await apiCall('auth.php?action=me');
     if (d.success) {
       currentUser = d.user;
+      if (d.token) localStorage.setItem('ie_auth_token', d.token);
       await syncAfterLogin();
     }
   } catch(e) { /* db.php not set up yet — run in demo mode */ }
@@ -4878,6 +4881,7 @@ async function doLogin() {
     const d = await apiCall('auth.php?action=login', 'POST', { email, password });
     if (d.success) {
       currentUser = d.user;
+      if (d.token) localStorage.setItem('ie_auth_token', d.token);
       await syncAfterLogin();
       document.getElementById('auth-overlay').classList.add('hidden');
     } else {
@@ -4902,6 +4906,7 @@ async function doRegister() {
     const d = await apiCall('auth.php?action=register', 'POST', { name, email, username, password });
     if (d.success) {
       currentUser = d.user;
+      if (d.token) localStorage.setItem('ie_auth_token', d.token);
       await syncAfterLogin();
       document.getElementById('auth-overlay').classList.add('hidden');
     } else {
@@ -4916,6 +4921,7 @@ async function doRegister() {
 // ── Logout ────────────────────────────────────────────────────────────────────
 async function doLogout() {
   try { await apiCall('auth.php?action=logout', 'POST'); } catch(e) {}
+  localStorage.removeItem('ie_auth_token');
   currentUser            = null;
   dbPortfolio            = [];
   watchlistSet           = new Set();

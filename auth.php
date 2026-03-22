@@ -11,6 +11,13 @@
  * POST auth.php?action=deduct-credits   → deduct FinBot credits (internal)
  */
 
+// Accept session ID from Authorization: Bearer header so cookie failures don't break auth
+if (empty($_COOKIE[session_name()])) {
+    $ah = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+    if (preg_match('/^Bearer\s+([a-zA-Z0-9\-]+)$/i', $ah, $m)) {
+        session_id($m[1]);
+    }
+}
 session_start();
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: ' . ($_SERVER['HTTP_ORIGIN'] ?? '*'));
@@ -175,7 +182,7 @@ switch ($action) {
         resetCreditsIfNeeded($db, $uid);
         $u  = fetchUser($db, $uid);
         if (!$u) { session_destroy(); fail(401, 'Session expired'); }
-        ok(['user' => $u]);
+        ok(['user' => $u, 'token' => session_id()]);
         break;
 
     // ── register ─────────────────────────────────────────────────────────────
@@ -207,7 +214,7 @@ switch ($action) {
 
         session_regenerate_id(true);
         $_SESSION['user_id'] = $uid;
-        ok(['user' => fetchUser($db, $uid)]);
+        ok(['user' => fetchUser($db, $uid), 'token' => session_id()]);
         break;
 
     // ── login ────────────────────────────────────────────────────────────────
@@ -230,7 +237,7 @@ switch ($action) {
         session_regenerate_id(true);
         $_SESSION['user_id'] = (int)$u['id'];
         resetCreditsIfNeeded($db, (int)$u['id']);
-        ok(['user' => fetchUser($db, (int)$u['id'])]);
+        ok(['user' => fetchUser($db, (int)$u['id']), 'token' => session_id()]);
         break;
 
     // ── logout ───────────────────────────────────────────────────────────────

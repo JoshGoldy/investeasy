@@ -11,6 +11,13 @@
  * request_type: 'news'    → costs 1 credit   (Pro/Enterprise only)
  */
 
+// Accept session ID from Authorization: Bearer header so cookie failures don't break auth
+if (empty($_COOKIE[session_name()])) {
+    $ah = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+    if (preg_match('/^Bearer\s+([a-zA-Z0-9\-]+)$/i', $ah, $m)) {
+        session_id($m[1]);
+    }
+}
 session_start();
 
 // ── CONFIGURATION ──────────────────────────────────────────────────────────
