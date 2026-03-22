@@ -78,10 +78,10 @@ CREATE TABLE IF NOT EXISTS saved_reports (
     content      MEDIUMTEXT   NOT NULL,
     article_link VARCHAR(500) NOT NULL DEFAULT '',
     saved_at     BIGINT       NOT NULL DEFAULT 0,
-    tags         TEXT         NOT NULL DEFAULT '[]',
-    folder       TEXT         NOT NULL DEFAULT '',
+    tags         TEXT         NULL,
+    folder       TEXT         NULL,
     starred      TINYINT(1)   NOT NULL DEFAULT 0,
-    note         TEXT         NOT NULL DEFAULT '',
+    note         TEXT         NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
