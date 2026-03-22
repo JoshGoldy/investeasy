@@ -1532,8 +1532,8 @@ function openNewsArticle(idx, fromLive) {
       <div class="news-sheet-title">${escHtml(n.title)}</div>
       ${cleanTickers.length ? `<div class="news-sheet-tickers">${cleanTickers.map(t=>`<span class="news-ticker-chip">${escHtml(t)}</span>`).join('')}</div>` : ''}
       <div id="news-body-box" style="margin:14px 0 16px">${bodyHtml}</div>
-      <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
-      <button onclick="analyzeArticleWithFinBot(${idx})"
+      <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">2 credits</strong></p>
+      <button onclick="confirmAndAnalyzeNews(${idx})"
         style="width:100%;padding:14px;border-radius:var(--radius-sm);background:linear-gradient(135deg,#7c3aed,#6d28d9);
                color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;margin-bottom:10px;
                display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s"
