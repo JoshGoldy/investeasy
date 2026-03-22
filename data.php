@@ -252,7 +252,9 @@ switch ($action) {
                 if (!$sets) fail(400, 'Nothing to edit.');
                 $vals[] = $id; $vals[] = $uid;
                 $col_list = implode(', ', $sets);
-                $db->prepare("UPDATE saved_reports SET $col_list WHERE id = ? AND user_id = ?")->execute($vals);
+                try {
+                    $db->prepare("UPDATE saved_reports SET $col_list WHERE id = ? AND user_id = ?")->execute($vals);
+                } catch (Exception $e) { fail(500, 'Save failed.'); }
                 ok();
             }
 

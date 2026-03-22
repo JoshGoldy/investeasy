@@ -5,6 +5,18 @@
     SetHandler application/x-httpd-ea-php84
 </FilesMatch>
 
+# ── MOD SECURITY ─────────────────────────────────────────────
+# Disable ModSecurity for this site. The app POSTs JSON to its own
+# PHP API (data.php) and ModSecurity's generic SQL/XSS rules keep
+# false-positiving on field names and content, causing 403 blocks.
+<IfModule mod_security.c>
+    SecFilterEngine Off
+    SecFilterScanPOST Off
+</IfModule>
+<IfModule mod_security2.c>
+    SecRuleEngine Off
+</IfModule>
+
 # ── SECURITY ─────────────────────────────────────────────────
 
 # Block access to hidden files (.git, .env, .htpasswd, etc.)
