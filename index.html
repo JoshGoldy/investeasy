@@ -1465,11 +1465,11 @@ function renderNewsContent() {
       <span style="font-size:11px;color:rgba(255,255,255,0.7)">${lastUpdatedStr}</span>
     </div>
     ${list.length === 0 ? '<div style="text-align:center;padding:40px;color:var(--faint);font-size:13px">No articles found</div>' : ''}
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-items:start">
+    <div style="columns:2;gap:12px">
     ${list.map((n, i) => {
       const actualIdx = source.indexOf(n);
       return `
-      <div class="card news-card" onclick="openNewsArticle(${actualIdx},${liveNews.length > 0})">
+      <div class="card news-card" style="break-inside:avoid;margin-bottom:12px" onclick="openNewsArticle(${actualIdx},${liveNews.length > 0})">
         ${n.thumbnail ? `<img class="news-thumb" src="${escHtml(n.thumbnail)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
         <div class="meta">
           <span class="cat" style="background:${CAT_COLORS[n.cat]}18;color:${CAT_COLORS[n.cat]}">${n.cat}</span>
