@@ -1322,10 +1322,10 @@ function switchTab(id) {
   if (id === 'markets') renderMarkets();
   if (id === 'learn') renderLearn();
   if (id === 'calendar') renderCalendar();
-  if (id === 'portfolio') renderPortfolio();
+  if (id === 'portfolio') { renderPortfolio(); if (currentUser && !dbPortfolio.length) loadPortfolioFromDB().then(renderPortfolio); }
   if (id === 'settings') renderSettings();
   if (id === 'finbot') renderFinBot();
-  if (id === 'saved') renderSaved();
+  if (id === 'saved') { savedFilter = 'all'; savedFolderFilter = ''; savedTagFilter = ''; renderSaved(); }
 }
 
 navBtns.forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
@@ -3608,14 +3608,14 @@ function renderSaved(filter) {
     ${folders.length ? `
     <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px;flex-wrap:wrap">
       <button class="saved-folder-tab ${!savedFolderFilter?'active':''}" onclick="savedFolderFilter='';renderSaved()">All</button>
-      ${folders.map(f => `<button class="saved-folder-tab ${savedFolderFilter===f?'active':''}" onclick="_srFolder(${escHtml(JSON.stringify(f))})">📁 ${escHtml(f)}</button>`).join('')}
+      ${folders.map(f => `<button class="saved-folder-tab ${savedFolderFilter===f?'active':''}" onclick="_srFolder(${JSON.stringify(f).replace(/&/g,'&amp;').replace(/"/g,'&quot;')})">📁 ${escHtml(f)}</button>`).join('')}
     </div>` : ''}
 
     <!-- Tag chips -->
     ${allTags.length ? `
     <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
       <span style="font-size:11px;font-weight:700;color:var(--faint);flex-shrink:0">Tags:</span>
-      ${allTags.map(t => `<button class="saved-tag-chip ${savedTagFilter===t?'active':''}" onclick="_srTag(${escHtml(JSON.stringify(t))})">${escHtml(t)}</button>`).join('')}
+      ${allTags.map(t => `<button class="saved-tag-chip ${savedTagFilter===t?'active':''}" onclick="_srTag(${JSON.stringify(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;')})">${escHtml(t)}</button>`).join('')}
     </div>` : ''}
 
     <!-- Bulk bar / Export all -->
@@ -3660,7 +3660,7 @@ function renderSaved(filter) {
             </div>
           </div>
           ${r.folder ? `<div class="saved-card-folder">📁 ${escHtml(r.folder)}</div>` : ''}
-          ${tags.length ? `<div class="saved-card-tags">${tags.map(t => `<span class="saved-tag-chip" onclick="_srTag(${escHtml(JSON.stringify(t))})" title="Filter by tag">${escHtml(t)}</span>`).join('')}</div>` : ''}
+          ${tags.length ? `<div class="saved-card-tags">${tags.map(t => `<span class="saved-tag-chip" onclick="_srTag(${JSON.stringify(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;')})" title="Filter by tag">${escHtml(t)}</span>`).join('')}</div>` : ''}
           <div class="saved-preview">${escHtml(preview)}</div>
           ${r.note ? `<div class="saved-card-note-preview" onclick="openReportEditModal('${r.id}')">📝 ${escHtml(r.note.slice(0,120))}${r.note.length>120?'…':''}</div>` : ''}
           <div class="saved-card-actions">
