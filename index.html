@@ -1363,7 +1363,7 @@ async function fetchNewsClientSide() {
   }
   const cutoff = Math.floor(Date.now() / 1000) - 72 * 60 * 60;
   all.sort((a, b) => b.pubTime - a.pubTime);
-  return all.filter(a => a.pubTime >= cutoff).slice(0, 20);
+  return all.filter(a => a.pubTime >= cutoff).slice(0, 30);
 }
 
 async function fetchLiveNews(force = false) {
@@ -1372,11 +1372,11 @@ async function fetchLiveNews(force = false) {
 
   // 1. Try server-side PHP (works when server has outbound internet access)
   try {
-    const r = await fetch('prices.php?action=news&count=20');
+    const r = await fetch('prices.php?action=news&count=30');
     const d = await r.json();
     if (d.success && d.articles && d.articles.length) {
       const cutoff72h = Math.floor(Date.now() / 1000) - 72 * 60 * 60;
-      liveNews = d.articles.filter(a => (a.pubTime || 0) >= cutoff72h).slice(0, 20);
+      liveNews = d.articles.filter(a => (a.pubTime || 0) >= cutoff72h).slice(0, 30);
       newsLastFetched = now;
       newsFetchedAt = new Date();
       renderNewsContent();
@@ -1448,7 +1448,7 @@ function renderNewsContent() {
     return;
   }
   const cutoff72h = Math.floor(Date.now() / 1000) - 72 * 60 * 60;
-  const source = liveNews.filter(n => (n.pubTime || 0) >= cutoff72h).slice(0, 20);
+  const source = liveNews.filter(n => (n.pubTime || 0) >= cutoff72h).slice(0, 30);
   let list = newsFilter === 'All' ? source : source.filter(n => n.cat === newsFilter);
   if (newsSearch.trim()) {
     const q = newsSearch.toLowerCase();
