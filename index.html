@@ -955,7 +955,8 @@ button{cursor:pointer}
 let currentUser   = null;          // {id, name, email, username, tier, finbot_credits} when logged in
 let dbPortfolio   = [];            // [{ticker,name,shares,avg_cost}]
 let watchlistSet  = new Set();     // Set of tickers on watchlist
-let dbSavedReports = null;         // null = guest (localStorage), array = logged-in (DB)
+let dbSavedReports = null;         // null = guest/fallback (localStorage), array = logged-in (DB)
+let dbSavedReportsLoading = false; // true while fetch is in-flight
 let portSort   = 'value';          // 'value' | 'pnl_pct' | 'ticker'
 let portFilter = 'all';            // 'all' | 'gainers' | 'losers'
 
@@ -3273,19 +3274,20 @@ function getSavedReports() {
 }
 
 async function loadSavedReportsFromDB() {
-  dbSavedReports = []; // initialise now so getSavedReports() never falls back to localStorage mid-load
+  dbSavedReportsLoading = true;
   try {
     const d = await apiCall('data.php?action=saved_reports');
     if (d.success && Array.isArray(d.reports)) {
       dbSavedReports = d.reports;
       updateSavedBadge();
-      if (document.getElementById('tab-saved')?.classList.contains('active')) renderSaved();
     } else {
       dbSavedReports = null; // DB unavailable — fall back to localStorage
     }
   } catch(e) {
     dbSavedReports = null; // DB unavailable — fall back to localStorage
   }
+  dbSavedReportsLoading = false;
+  if (document.getElementById('tab-saved')?.classList.contains('active')) renderSaved();
 }
 
 // Save a report object — DB when logged in, localStorage for guests.
@@ -3471,7 +3473,7 @@ function renderSaved(filter) {
   const el = document.getElementById('tab-saved');
 
   // ── Loading state (logged-in, DB fetch still in-flight) ──
-  if (currentUser && dbSavedReports === null) {
+  if (currentUser && dbSavedReportsLoading) {
     el.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;padding:60px 20px;color:var(--faint);font-size:13px">Loading saved reports…</div>`;
     return;
   }
@@ -4914,10 +4916,11 @@ async function doRegister() {
 // ── Logout ────────────────────────────────────────────────────────────────────
 async function doLogout() {
   try { await apiCall('auth.php?action=logout', 'POST'); } catch(e) {}
-  currentUser     = null;
-  dbPortfolio     = [];
-  watchlistSet    = new Set();
-  dbSavedReports  = null;
+  currentUser            = null;
+  dbPortfolio            = [];
+  watchlistSet           = new Set();
+  dbSavedReports         = null;
+  dbSavedReportsLoading  = false;
   // Portfolio/settings require login — redirect; finbot/saved show their own guest wall
   const activeTab = document.querySelector('.tab-content.active');
   if (activeTab && (activeTab.id === 'tab-portfolio' || activeTab.id === 'tab-settings')) {
@@ -4987,8 +4990,9 @@ async function syncAfterLogin() {
   updateHeaderUser();
   // If the user was already on a gated tab, re-render it now that they're logged in
   const activePanel = document.querySelector('.tab-content.active');
-  if (activePanel?.id === 'tab-finbot') renderFinBot();
-  if (activePanel?.id === 'tab-saved')  renderSaved();
+  if (activePanel?.id === 'tab-finbot')    renderFinBot();
+  if (activePanel?.id === 'tab-saved')     renderSaved();
+  if (activePanel?.id === 'tab-portfolio') renderPortfolio();
 }
 
 async function loadSettingsFromDB() {
