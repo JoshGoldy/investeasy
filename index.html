@@ -93,11 +93,11 @@ button{cursor:pointer}
 .saved-search{width:100%;padding:10px 14px;border-radius:12px;background:var(--border);font-size:13px;color:var(--text);border:1.5px solid transparent;transition:all .2s;margin-bottom:12px}
 .saved-search:focus{background:var(--card);border-color:var(--green);box-shadow:0 0 0 3px #10b98120}
 .saved-search::placeholder{color:var(--faint)}
-.saved-sort-select{padding:7px 12px;border-radius:10px;font-size:12px;font-weight:600;background:var(--border);color:var(--muted);border:none;cursor:pointer;appearance:none;-webkit-appearance:none}
-.saved-tag-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:var(--border);color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
-.saved-tag-chip.active{background:var(--amber);color:#fff}
-.saved-folder-tab{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
-.saved-folder-tab.active{border-color:var(--cyan);background:#06b6d418;color:var(--cyan)}
+.saved-sort-select{padding:8px 12px;border-radius:10px;font-size:12px;font-weight:600;background:var(--border);color:var(--muted);border:none;cursor:pointer;appearance:none;-webkit-appearance:none;outline:none}
+.saved-tag-chip{display:inline-flex;align-items:center;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;background:var(--card);color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;border:none}
+.saved-tag-chip.active{background:#f59e0b;color:#fff}
+.saved-folder-tab{flex-shrink:0;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:700;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
+.saved-folder-tab.active{background:#06b6d422;color:var(--cyan)}
 .saved-card-star{background:none;border:none;cursor:pointer;font-size:16px;opacity:.35;padding:2px;transition:all .15s;line-height:1;flex-shrink:0}
 .saved-card-star.starred{opacity:1}
 .saved-card-note-preview{font-size:11px;color:var(--blue);background:#3b82f615;border-radius:7px;padding:5px 10px;margin-top:7px;line-height:1.45;cursor:pointer}
@@ -3568,9 +3568,12 @@ function renderSaved(filter) {
   const filterBtn = (id, label, count, col) => {
     const active = savedFilter === id;
     return `<button onclick="renderSaved('${id}')"
-      style="padding:6px 13px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid ${active ? col : 'var(--border)'};
-             background:${active ? col + '18' : 'transparent'};color:${active ? col : 'var(--muted)'};cursor:pointer;white-space:nowrap;transition:all .15s">
-      ${label}${count ? ` <span style="font-size:10px;opacity:.7">${count}</span>` : ''}
+      style="flex:1;min-width:0;padding:8px 6px;border-radius:10px;font-size:12px;font-weight:700;border:none;cursor:pointer;
+             background:${active ? 'var(--card)' : 'transparent'};
+             color:${active ? col : 'var(--muted)'};
+             box-shadow:${active ? '0 1px 4px rgba(0,0,0,.12)' : 'none'};
+             transition:all .15s;white-space:nowrap;text-align:center">
+      ${label} <span style="font-size:10px;font-weight:800;opacity:${active ? '.85' : '.45'}">${count}</span>
     </button>`;
   };
 
@@ -3591,36 +3594,44 @@ function renderSaved(filter) {
     </div>
 
     <!-- Search + Sort row -->
-    <div style="display:flex;gap:8px;margin-bottom:12px">
-      <input id="saved-search-input" class="saved-search" style="flex:1;margin-bottom:0" placeholder="Search reports…"
-        value="${escHtml(savedSearch)}" oninput="savedSearch=this.value;renderSaved()">
+    <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
+      <div style="flex:1;position:relative">
+        <svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;opacity:.35" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="saved-search-input" class="saved-search" style="margin-bottom:0;padding-left:32px" placeholder="Search reports…"
+          value="${escHtml(savedSearch)}" oninput="savedSearch=this.value;renderSaved()">
+      </div>
       <select class="saved-sort-select" onchange="savedSort=this.value;renderSaved()">
-        <option value="newest"  ${savedSort==='newest' ?'selected':''}>Newest</option>
-        <option value="oldest"  ${savedSort==='oldest' ?'selected':''}>Oldest</option>
+        <option value="newest"  ${savedSort==='newest' ?'selected':''}>↓ Newest</option>
+        <option value="oldest"  ${savedSort==='oldest' ?'selected':''}>↑ Oldest</option>
         <option value="starred" ${savedSort==='starred'?'selected':''}>⭐ First</option>
       </select>
     </div>
 
-    <!-- Type filter tabs -->
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-      ${filterBtn('all',    'All',          allReports.length, 'var(--green)')}
-      ${filterBtn('finbot', '🤖 FinBot',    finbotCount,       '#6366f1')}
-      ${filterBtn('news',   '📰 News',      newsCount,         '#7c3aed')}
-      ${starCount ? filterBtn('starred', '⭐ Starred', starCount, 'var(--amber)') : ''}
+    <!-- Segmented type filter -->
+    <div style="background:var(--border);border-radius:13px;padding:4px;display:flex;gap:2px;margin-bottom:12px">
+      ${filterBtn('all',    'All',       allReports.length, 'var(--green)')}
+      ${filterBtn('finbot', '🤖 FinBot', finbotCount,       '#6366f1')}
+      ${filterBtn('news',   '📰 News',   newsCount,         '#7c3aed')}
+      ${starCount ? filterBtn('starred', '⭐ Starred', starCount, '#f59e0b') : ''}
     </div>
 
-    <!-- Folder tabs -->
-    ${folders.length ? `
-    <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px;flex-wrap:wrap">
-      <button class="saved-folder-tab ${!savedFolderFilter?'active':''}" onclick="savedFolderFilter='';renderSaved()">All</button>
-      ${folders.map(f => `<button class="saved-folder-tab ${savedFolderFilter===f?'active':''}" onclick="_srFolder(${JSON.stringify(f).replace(/&/g,'&amp;').replace(/"/g,'&quot;')})">📁 ${escHtml(f)}</button>`).join('')}
-    </div>` : ''}
-
-    <!-- Tag chips -->
-    ${allTags.length ? `
-    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-      <span style="font-size:11px;font-weight:700;color:var(--faint);flex-shrink:0">Tags:</span>
-      ${allTags.map(t => `<button class="saved-tag-chip ${savedTagFilter===t?'active':''}" onclick="_srTag(${JSON.stringify(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;')})">${escHtml(t)}</button>`).join('')}
+    <!-- Folders + Tags panel -->
+    ${(folders.length || allTags.length) ? `
+    <div style="margin-bottom:14px;border-radius:12px;border:1.5px solid var(--border);overflow:hidden">
+      ${folders.length ? `
+      <div style="display:flex;align-items:center;gap:2px;padding:6px 8px;overflow-x:auto;scrollbar-width:none">
+        <span style="font-size:9px;font-weight:800;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;flex-shrink:0;padding:0 6px">📁 Folder</span>
+        <div style="width:1px;height:14px;background:var(--border);flex-shrink:0;margin:0 4px"></div>
+        <button class="saved-folder-tab ${!savedFolderFilter?'active':''}" onclick="savedFolderFilter='';renderSaved()">All</button>
+        ${folders.map(f => `<button class="saved-folder-tab ${savedFolderFilter===f?'active':''}" onclick="_srFolder(${JSON.stringify(f).replace(/&/g,'&amp;').replace(/"/g,'&quot;')})">${escHtml(f)}</button>`).join('')}
+      </div>` : ''}
+      ${folders.length && allTags.length ? `<div style="height:1px;background:var(--border)"></div>` : ''}
+      ${allTags.length ? `
+      <div style="display:flex;align-items:center;gap:2px;padding:6px 8px;flex-wrap:wrap">
+        <span style="font-size:9px;font-weight:800;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;flex-shrink:0;padding:0 6px">🏷 Tags</span>
+        <div style="width:1px;height:14px;background:var(--border);flex-shrink:0;margin:0 4px"></div>
+        ${allTags.map(t => `<button class="saved-tag-chip ${savedTagFilter===t?'active':''}" onclick="_srTag(${JSON.stringify(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;')})">${escHtml(t)}</button>`).join('')}
+      </div>` : ''}
     </div>` : ''}
 
     <!-- Bulk bar / Export all -->
