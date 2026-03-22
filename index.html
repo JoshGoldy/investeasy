@@ -1103,6 +1103,7 @@ function escHtml(s) {
 
 function parseMd(text) {
   return text.split('\n').map(line => {
+    if (line.startsWith('#### ')) return `<h4>${inlineMd(line.slice(5))}</h4>`;
     if (line.startsWith('# ')) return `<h1>${inlineMd(line.slice(2))}</h1>`;
     if (line.startsWith('## ')) return `<h2>${inlineMd(line.slice(3))}</h2>`;
     if (line.startsWith('### ')) return `<h3>${inlineMd(line.slice(4))}</h3>`;
@@ -1111,7 +1112,7 @@ function parseMd(text) {
     if (line.startsWith('|')) {
       const cells = line.split('|').filter(c => c.trim());
       if (!cells.length || cells.every(c => /^[-: ]+$/.test(c))) return '';
-      return `<div class="md-table" style="grid-template-columns:repeat(${cells.length},1fr)">${cells.map(c => `<div class="td">${c.trim()}</div>`).join('')}</div>`;
+      return `<div class="md-table" style="grid-template-columns:repeat(${cells.length},1fr)">${cells.map(c => `<div class="td">${inlineMd(c.trim())}</div>`).join('')}</div>`;
     }
     if (line.toLowerCase().includes('legal disclaimer') || line.toLowerCase().includes('informational and educational'))
       return `<p class="disclaimer">${inlineMd(line.replace(/^\*|\*$/g, ''))}</p>`;
