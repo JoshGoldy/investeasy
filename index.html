@@ -3186,6 +3186,7 @@ function getSavedReports() {
 }
 
 async function loadSavedReportsFromDB() {
+  dbSavedReports = []; // initialise now so getSavedReports() never falls back to localStorage mid-load
   try {
     const d = await apiCall('data.php?action=saved_reports');
     if (d.success && Array.isArray(d.reports)) {
@@ -3193,7 +3194,7 @@ async function loadSavedReportsFromDB() {
       updateSavedBadge();
       if (document.getElementById('tab-saved')?.classList.contains('active')) renderSaved();
     }
-  } catch(e) { /* silently fall back to localStorage */ }
+  } catch(e) { /* stay with empty array — do not fall back to localStorage for DB users */ }
 }
 
 // Save a report object — DB when logged in, localStorage for guests.
@@ -3282,6 +3283,7 @@ async function clearAllSavedReports() {
   } else {
     localStorage.removeItem(SAVED_KEY);
   }
+  savedFilter = 'all'; // reset filter so the empty state (and future reports) show correctly
   updateSavedBadge();
   renderSaved();
 }
@@ -3343,6 +3345,12 @@ let savedFilter = 'all';
 function renderSaved(filter) {
   if (filter !== undefined) savedFilter = filter;
   const el = document.getElementById('tab-saved');
+
+  // ── Loading state (logged-in, DB fetch still in-flight) ──
+  if (currentUser && dbSavedReports === null) {
+    el.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;padding:60px 20px;color:var(--faint);font-size:13px">Loading saved reports…</div>`;
+    return;
+  }
 
   // ── Guest wall ──
   if (!currentUser) {
@@ -3418,7 +3426,7 @@ function renderSaved(filter) {
     <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
       <div>
         <h2>Saved Reports</h2>
-        <p style="font-size:12px;color:var(--faint);margin-top:4px">${allReports.length} report${allReports.length !== 1 ? 's' : ''} saved locally</p>
+        <p style="font-size:12px;color:var(--faint);margin-top:4px">${allReports.length} report${allReports.length !== 1 ? 's' : ''} saved to your account</p>
       </div>
       <button onclick="clearAllSavedReports()"
         style="font-size:12px;font-weight:600;color:#fff;background:#ef4444;border:none;cursor:pointer;padding:7px 14px;border-radius:8px;display:flex;align-items:center;gap:6px;transition:background .15s" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
