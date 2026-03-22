@@ -1123,8 +1123,7 @@ function parseMd(text) {
 function inlineMd(t) {
   return escHtml(t)
     .replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>')
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
