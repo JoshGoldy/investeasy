@@ -82,7 +82,7 @@ button{cursor:pointer}
 .saved-empty-icon{font-size:48px;opacity:.35;line-height:1}
 .saved-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px 18px;margin-bottom:12px}
 .saved-card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
-.saved-card-meta{display:flex;align-items:center;gap:10px}
+.saved-card-meta{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
 .saved-card-icon{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .saved-card-title{font-size:14px;font-weight:800;color:var(--text);line-height:1.2}
 .saved-card-sub{font-size:11px;color:var(--faint);margin-top:3px}
@@ -3616,11 +3616,13 @@ function renderSaved(filter) {
                 <div class="saved-card-sub">${r.modeId === 'news' ? '📰 News Analysis' : 'by ' + escHtml(r.modeSub)} &nbsp;·&nbsp; ${dateStr}, ${timeStr}</div>
               </div>
             </div>
-            <button class="saved-card-star ${r.starred?'starred':''}" onclick="toggleReportStar('${r.id}')" title="${r.starred?'Unstar':'Star'}">⭐</button>
-            <button onclick="deleteSavedReport('${r.id}')"
-              style="background:#ef4444;border:none;cursor:pointer;color:#fff;padding:6px 8px;border-radius:8px;flex-shrink:0;line-height:1;display:flex;align-items:center;justify-content:center;transition:background .15s" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'" title="Delete">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-            </button>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+              <button class="saved-card-star ${r.starred?'starred':''}" onclick="toggleReportStar('${r.id}')" title="${r.starred?'Unstar':'Star'}">⭐</button>
+              <button onclick="deleteSavedReport('${r.id}')"
+                style="background:#ef4444;border:none;cursor:pointer;color:#fff;padding:6px 8px;border-radius:8px;line-height:1;display:flex;align-items:center;justify-content:center;transition:background .15s" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'" title="Delete">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              </button>
+            </div>
           </div>
           ${r.folder ? `<div class="saved-card-folder">📁 ${escHtml(r.folder)}</div>` : ''}
           ${tags.length ? `<div class="saved-card-tags">${tags.map(t => `<span class="saved-tag-chip" onclick="_srTag(${escHtml(JSON.stringify(t))})" title="Filter by tag">${escHtml(t)}</span>`).join('')}</div>` : ''}
