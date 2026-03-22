@@ -1484,6 +1484,12 @@ function renderNews(filter, search) {
   const cats = ['All','Markets','Economy','Tech','Crypto'];
   const el = document.getElementById('tab-news');
 
+  // If only search changed and the structure is already built, just re-filter articles
+  if (search !== undefined && filter === undefined && document.getElementById('news-search-input')) {
+    renderNewsContent();
+    return;
+  }
+
   el.innerHTML = `
     <div class="section-title" style="display:flex;justify-content:space-between;align-items:flex-start">
       <div><h2>News Feed</h2><p>Live market insights & analysis</p></div>
@@ -3537,6 +3543,9 @@ function renderSaved(filter) {
     </button>`;
   };
 
+  const _srSearchFocused = document.activeElement && document.activeElement.id === 'saved-search-input';
+  const _srSel = _srSearchFocused ? [document.activeElement.selectionStart, document.activeElement.selectionEnd] : null;
+
   el.innerHTML = `
     <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
       <div>
@@ -3552,7 +3561,7 @@ function renderSaved(filter) {
 
     <!-- Search + Sort row -->
     <div style="display:flex;gap:8px;margin-bottom:12px">
-      <input class="saved-search" style="flex:1;margin-bottom:0" placeholder="Search reports…"
+      <input id="saved-search-input" class="saved-search" style="flex:1;margin-bottom:0" placeholder="Search reports…"
         value="${escHtml(savedSearch)}" oninput="savedSearch=this.value;renderSaved()">
       <select class="saved-sort-select" onchange="savedSort=this.value;renderSaved()">
         <option value="newest"  ${savedSort==='newest' ?'selected':''}>Newest</option>
@@ -3659,6 +3668,11 @@ function renderSaved(filter) {
       `;
     }).join('')}
   `;
+
+  if (_srSearchFocused) {
+    const inp = document.getElementById('saved-search-input');
+    if (inp) { inp.focus(); if (_srSel) inp.setSelectionRange(_srSel[0], _srSel[1]); }
+  }
 }
 
 // ── Update mutable fields on an existing saved report via PUT ──
