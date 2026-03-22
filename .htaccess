@@ -5,18 +5,6 @@
     SetHandler application/x-httpd-ea-php84
 </FilesMatch>
 
-# ── MOD SECURITY ─────────────────────────────────────────────
-# Disable ModSecurity for this site. The app POSTs JSON to its own
-# PHP API (data.php) and ModSecurity's generic SQL/XSS rules keep
-# false-positiving on field names and content, causing 403 blocks.
-<IfModule mod_security.c>
-    SecFilterEngine Off
-    SecFilterScanPOST Off
-</IfModule>
-<IfModule mod_security2.c>
-    SecRuleEngine Off
-</IfModule>
-
 # ── SECURITY ─────────────────────────────────────────────────
 
 # Block access to hidden files (.git, .env, .htpasswd, etc.)
@@ -68,9 +56,9 @@ Options -Indexes
     Header always set X-XSS-Protection "1; mode=block"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
     
-    # Cache control for HTML (don't cache too aggressively so updates show quickly)
+    # Cache control for HTML — no-cache so browsers always fetch latest version
     <FilesMatch "\.html$">
-        Header set Cache-Control "public, max-age=3600, must-revalidate"
+        Header set Cache-Control "no-cache, must-revalidate"
     </FilesMatch>
     
     # Cache control for PHP (no caching for API responses)

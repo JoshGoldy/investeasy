@@ -19,6 +19,7 @@
  * POST data.php?action=learn_progress       → save learning hub state  { state: {...} }
  */
 
+ob_start();
 session_start();
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: ' . ($_SERVER['HTTP_ORIGIN'] ?? '*'));
