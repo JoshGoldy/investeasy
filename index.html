@@ -1361,7 +1361,7 @@ async function fetchNewsClientSide() {
       if (!seen.has(key)) { seen.add(key); all.push(a); }
     }
   }
-  const cutoff = Date.now() - 72 * 60 * 60 * 1000;
+  const cutoff = Math.floor(Date.now() / 1000) - 72 * 60 * 60;
   all.sort((a, b) => b.pubTime - a.pubTime);
   return all.filter(a => a.pubTime >= cutoff).slice(0, 20);
 }
@@ -1375,7 +1375,7 @@ async function fetchLiveNews(force = false) {
     const r = await fetch('prices.php?action=news&count=20');
     const d = await r.json();
     if (d.success && d.articles && d.articles.length) {
-      const cutoff72h = Date.now() - 72 * 60 * 60 * 1000;
+      const cutoff72h = Math.floor(Date.now() / 1000) - 72 * 60 * 60;
       liveNews = d.articles.filter(a => (a.pubTime || 0) >= cutoff72h).slice(0, 20);
       newsLastFetched = now;
       newsFetchedAt = new Date();
@@ -1447,7 +1447,7 @@ function renderNewsContent() {
     c.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--faint);font-size:13px">Loading latest news…</div>';
     return;
   }
-  const cutoff72h = Date.now() - 72 * 60 * 60 * 1000;
+  const cutoff72h = Math.floor(Date.now() / 1000) - 72 * 60 * 60;
   const source = liveNews.filter(n => (n.pubTime || 0) >= cutoff72h).slice(0, 20);
   let list = newsFilter === 'All' ? source : source.filter(n => n.cat === newsFilter);
   if (newsSearch.trim()) {
