@@ -98,6 +98,24 @@ function initSchema() {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
+    $db->exec("CREATE TABLE IF NOT EXISTS saved_reports (
+        id           VARCHAR(64)  NOT NULL PRIMARY KEY,
+        user_id      INT          NOT NULL,
+        mode_id      VARCHAR(50)  NOT NULL,
+        mode_title   VARCHAR(255) NOT NULL DEFAULT '',
+        mode_sub     VARCHAR(100) NOT NULL DEFAULT '',
+        mode_col     VARCHAR(20)  NOT NULL DEFAULT '#10b981',
+        mode_icon    VARCHAR(10)  NOT NULL DEFAULT '',
+        content      MEDIUMTEXT   NOT NULL,
+        article_link VARCHAR(500) NOT NULL DEFAULT '',
+        saved_at     BIGINT       NOT NULL DEFAULT 0,
+        tags         TEXT         NOT NULL DEFAULT '[]',
+        folder       TEXT         NOT NULL DEFAULT '',
+        starred      TINYINT(1)   NOT NULL DEFAULT 0,
+        note         TEXT         NOT NULL DEFAULT '',
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
     $db->exec("CREATE TABLE IF NOT EXISTS user_progress (
         user_id    INT PRIMARY KEY,
         state      MEDIUMTEXT   NOT NULL,
