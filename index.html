@@ -3679,12 +3679,19 @@ function renderSaved(filter) {
 async function updateReport(id, fields) {
   if (currentUser) {
     try {
-      await apiCall('data.php?action=saved_reports', 'PUT', { id, ...fields });
+      const d = await apiCall('data.php?action=saved_reports', 'PUT', { id, ...fields });
+      if (!d.success) throw new Error(d.error || 'Update failed.');
     } catch(e) { showToast('Could not update report.'); return false; }
-  }
-  if (dbSavedReports) {
-    const r = dbSavedReports.find(r => r.id === id);
-    if (r) Object.assign(r, fields);
+    if (dbSavedReports) {
+      const r = dbSavedReports.find(r => r.id === id);
+      if (r) Object.assign(r, fields);
+    }
+  } else {
+    const reports = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]');
+    const r = reports.find(r => r.id === id);
+    if (!r) { showToast('Report not found.'); return false; }
+    Object.assign(r, fields);
+    localStorage.setItem(SAVED_KEY, JSON.stringify(reports));
   }
   return true;
 }
