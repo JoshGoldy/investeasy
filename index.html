@@ -1465,7 +1465,7 @@ function renderNewsContent() {
       <span style="font-size:11px;color:rgba(255,255,255,0.7)">${lastUpdatedStr}</span>
     </div>
     ${list.length === 0 ? '<div style="text-align:center;padding:40px;color:var(--faint);font-size:13px">No articles found</div>' : ''}
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-items:start">
     ${list.map((n, i) => {
       const actualIdx = source.indexOf(n);
       return `
