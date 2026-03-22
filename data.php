@@ -294,6 +294,47 @@ switch ($action) {
         }
         break;
 
+    // ── PRICE ALERTS ──────────────────────────────────────────────────────────
+    case 'price_alerts':
+        $uid = requireAuth();
+        $db  = getDB();
+
+        if ($method === 'GET') {
+            $stmt = $db->prepare("SELECT id, ticker, name, target, direction, triggered, created_at FROM price_alerts WHERE user_id = ? ORDER BY created_at DESC");
+            $stmt->execute([$uid]);
+            $rows = $stmt->fetchAll();
+            foreach ($rows as &$r) {
+                $r['id']        = (int)$r['id'];
+                $r['target']    = (float)$r['target'];
+                $r['triggered'] = (bool)$r['triggered'];
+            }
+            ok(['alerts' => $rows]);
+
+        } elseif ($method === 'POST') {
+            $ticker    = strtoupper(trim($body['ticker']    ?? ''));
+            $name      = trim($body['name']      ?? $ticker);
+            $target    = (float)($body['target']   ?? 0);
+            $direction = trim($body['direction'] ?? '');
+            if (!$ticker || !$target || !in_array($direction, ['above','below'])) fail(400, 'Invalid alert data.');
+            $db->prepare("INSERT INTO price_alerts (user_id, ticker, name, target, direction) VALUES (?, ?, ?, ?, ?)")
+               ->execute([$uid, $ticker, $name, $target, $direction]);
+            ok(['id' => (int)$db->lastInsertId()]);
+
+        } elseif ($method === 'DELETE') {
+            $id = (int)($body['id'] ?? $_GET['id'] ?? 0);
+            if (!$id) fail(400, 'Alert id is required.');
+            $db->prepare("DELETE FROM price_alerts WHERE id = ? AND user_id = ?")->execute([$id, $uid]);
+            ok();
+
+        } elseif ($method === 'PUT') {
+            // Mark alert as triggered
+            $id = (int)($body['id'] ?? 0);
+            if (!$id) fail(400, 'Alert id is required.');
+            $db->prepare("UPDATE price_alerts SET triggered = 1 WHERE id = ? AND user_id = ?")->execute([$id, $uid]);
+            ok();
+        }
+        break;
+
     // ── LEARN PROGRESS ────────────────────────────────────────────────────────
     case 'learn_progress':
         $uid = requireAuth();
