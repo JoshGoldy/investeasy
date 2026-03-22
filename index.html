@@ -3020,8 +3020,8 @@ function renderFinBot() {
             ${isSaved ? '🔖 View in Saved →' : '🔖 Save Report'}
           </button>
         ` : ''}
-        <button onclick="finbotState.result=null;finbotState.error=null;renderFinBot()"
-          class="finbot-save-btn-big" style="background:var(--border);color:var(--muted);border:none">← Back to ${modeObj.title}</button>
+        <button onclick="${finbotState.fromSaved ? 'finbotState.result=null;finbotState.error=null;finbotState.fromSaved=false;switchTab(\'saved\')' : 'finbotState.result=null;finbotState.error=null;renderFinBot()'}"
+          class="finbot-save-btn-big" style="background:var(--border);color:var(--muted);border:none">← ${finbotState.fromSaved ? 'Back to All Reports' : 'Back to ' + modeObj.title}</button>
       </div>
     `;
     return;
@@ -3312,11 +3312,12 @@ function viewSavedReport(id) {
     renderFinBotNewsResult(null, r.content, articleLink, fakeN);
     return;
   }
-  finbotState.mode    = r.modeId;
-  finbotState.result  = r.content;
-  finbotState.loading = false;
-  finbotState.error   = null;
-  finbotState.savedId = r.id;
+  finbotState.mode      = r.modeId;
+  finbotState.result    = r.content;
+  finbotState.loading   = false;
+  finbotState.error     = null;
+  finbotState.savedId   = r.id;
+  finbotState.fromSaved = true;
   switchTab('finbot');
 }
 
