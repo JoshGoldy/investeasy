@@ -567,6 +567,9 @@ button{cursor:pointer}
 .cal-badge-holiday{background:#64748b15;color:#94a3b8}
 .cal-ticker-chip{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;background:var(--border);color:var(--muted);padding:2px 7px;border-radius:20px;cursor:pointer;transition:background .15s}
 .cal-ticker-chip:hover{background:var(--green-bg);color:var(--green)}
+/* ── NEWS COLUMNS ─────────────────────────────────────────────── */
+.news-cols{columns:2;gap:12px}
+
 /* ── RESPONSIVE ───────────────────────────────────────────────── */
 @media(max-width:768px){
   body{overflow:auto}
@@ -580,7 +583,47 @@ button{cursor:pointer}
   .nav button.active{border-left-color:transparent;border-top-color:var(--green)}
   .nav button svg{width:22px;height:22px}
   .nav button span{font-size:10px}
-  .tab-content{padding:16px 16px 24px}
+  .tab-content{padding:12px 12px 24px}
+
+  /* News: single column on mobile */
+  .news-cols{columns:1}
+
+  /* Markets: tighter grid */
+  .featured-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .featured-card{padding:12px}
+  .market-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+
+  /* Section titles */
+  .section-title h2{font-size:18px}
+  .section-title{padding:12px 0 8px}
+
+  /* Header: less padding */
+  .header{padding:0 14px}
+
+  /* Stock detail: compress timeframe buttons */
+  .sd-timeframes{gap:5px;padding:10px 12px}
+  .tf-btn{padding:6px 12px;font-size:11px}
+  .sd-stats{padding:6px 12px 4px}
+
+  /* Glossary: stack term above definition */
+  .glossary-item{grid-template-columns:1fr;gap:2px}
+
+  /* Badge toast: clear mobile bottom nav */
+  .badge-toast{bottom:90px}
+
+  /* Pills: 2 cols on mobile instead of 3 */
+  .pills.cols-3{grid-template-columns:1fr 1fr}
+
+  /* Learn grid: full width cards */
+  .learn-grid{grid-template-columns:1fr}
+
+  /* Finbot: save row wrap nicely */
+  .finbot-save-row{flex-direction:column}
+  .finbot-save-btn-big{min-width:unset}
+
+  /* Auth popup: full width on small screens */
+  .auth-overlay{padding:12px}
+  .auth-popup{border-radius:18px;padding:20px 16px 16px}
 }
 </style>
 </head>
@@ -1468,7 +1511,7 @@ function renderNewsContent() {
       <span style="font-size:11px;color:rgba(255,255,255,0.7)">${lastUpdatedStr}</span>
     </div>
     ${list.length === 0 ? '<div style="text-align:center;padding:40px;color:var(--faint);font-size:13px">No articles found</div>' : ''}
-    <div style="columns:2;gap:12px">
+    <div class="news-cols">
     ${list.map((n, i) => {
       const actualIdx = source.indexOf(n);
       return `
