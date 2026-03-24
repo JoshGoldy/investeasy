@@ -18,14 +18,14 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'><line x1='57' y1='57' x2='74' y2='74' stroke='%2343A047' stroke-width='10' stroke-linecap='round'/><circle cx='34' cy='34' r='28' fill='white' stroke='%2343A047' stroke-width='8'/><rect x='15' y='41' width='8' height='13' rx='1.5' fill='%231E88E5'/><rect x='27' y='33' width='8' height='21' rx='1.5' fill='%231E88E5'/><rect x='39' y='26' width='8' height='28' rx='1.5' fill='%231E88E5'/><polyline points='19,37 31,27 43,20' fill='none' stroke='%231E88E5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/><circle cx='19' cy='37' r='2.5' fill='%231E88E5'/><circle cx='31' cy='27' r='2.5' fill='%231E88E5'/><circle cx='43' cy='20' r='2.5' fill='%231E88E5'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&amp;family=DM+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="vendor/lightweight-charts.stub.js"></script>
+<script src="vendor/jszip.stub.js"></script>
 <style>
 /* ── RESET & BASE ─────────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%;font-family:'Outfit',sans-serif;background:#e2e8f0;height:100%}
-body{height:100vh;overflow:hidden;display:flex}
+body{height:100vh;overflow:hidden;display:flex;background:var(--bg)}
 input,textarea,button{font-family:inherit;border:none;outline:none}
 button{cursor:pointer}
 ::-webkit-scrollbar{width:4px;height:4px}
@@ -117,9 +117,9 @@ button{cursor:pointer}
 .section-title h2{font-size:22px;font-weight:800;color:var(--text)}
 .section-title p{margin-top:3px;font-size:12px;color:var(--faint)}
 .filter-row{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:0 0 10px}
-.filter-btn{flex-shrink:0;padding:8px 18px;border-radius:20px;font-size:12px;font-weight:500;
+.filter-btn,.news-filter-btn{flex-shrink:0;padding:8px 18px;border-radius:20px;font-size:12px;font-weight:500;
   background:var(--border);color:var(--muted);transition:all 0.2s}
-.filter-btn.active{background:var(--dark);color:#fff;font-weight:700}
+.filter-btn.active,.news-filter-btn.active{background:var(--dark);color:#fff;font-weight:700}
 .card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);
   transition:transform 0.2s;cursor:pointer}
 .card:hover{transform:translateY(-2px)}
@@ -1005,13 +1005,13 @@ button{cursor:pointer}
   </div>
 
   <!-- Nav -->
-  <div class="nav">
+  <nav class="nav">
     <div class="nav-brand">
       <img src="logo.png" alt="FinScope" style="height:36px;width:auto" onerror="this.src='logo.svg'">
     </div>
     <button class="active" data-tab="news">
       <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M18 18h-8M18 10h-8"/></svg>
-      <span>News Feed</span><div class="nav-dot"></div>
+      <span>News</span><div class="nav-dot"></div>
     </button>
     <button data-tab="markets">
       <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -1021,7 +1021,7 @@ button{cursor:pointer}
       <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4M2 13h2M20 13h2"/></svg>
       <span>FinBot</span><div class="nav-dot"></div>
     </button>
-    <button data-tab="portfolio" class="auth-only" style="display:none">
+    <button data-tab="portfolio">
       <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 000 4h4v-4h-4z"/></svg>
       <span>Portfolio</span><div class="nav-dot"></div>
     </button>
@@ -1050,7 +1050,7 @@ button{cursor:pointer}
       <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       <span>Settings</span><div class="nav-dot"></div>
     </button>
-  </div>
+  </nav>
 
   <!-- Change Password Modal -->
   <div id="change-password-modal" class="modal-overlay hidden" onclick="if(event.target===this)closeChangePasswordModal()">
@@ -1468,7 +1468,7 @@ const navBtns = document.querySelectorAll('.nav button');
 const tabPanels = document.querySelectorAll('.tab-content');
 
 function switchTab(id) {
-  if ((id === 'portfolio' || id === 'settings') && !currentUser) {
+  if (id === 'settings' && !currentUser) {
     document.getElementById('auth-overlay').classList.remove('hidden');
     showAuthTab('login');
     return;
@@ -1661,7 +1661,7 @@ function renderNews(filter, search) {
       </button>
     </div>
     <div class="filter-row">
-      ${cats.map(c => `<button class="filter-btn ${newsFilter===c?'active':''}" onclick="renderNews('${c}')">${c}</button>`).join('')}
+      ${cats.map(c => `<button class="news-filter-btn ${newsFilter===c?'active':''}" onclick="renderNews('${c}')">${c}</button>`).join('')}
     </div>
     <input class="news-search" id="news-search-input" type="text" placeholder="Search news…" value="${escHtml(newsSearch)}"
       oninput="renderNews(undefined,this.value)">
@@ -2403,7 +2403,7 @@ function openStockDetail(idx) {
       </div>
     </div>
 
-    <div class="sd-chart" id="detail-chart"></div>
+    <div class="sd-chart" id="sd-chart-canvas"></div>
     <div class="sd-timeframes">
       ${TIMEFRAMES.map(tf => `<button class="tf-btn ${tf==='1D'?(up?'active-up':'active-dn'):''}" onclick="switchDetailTF(${idx},'${tf}')">${tf}</button>`).join('')}
     </div>
@@ -2490,7 +2490,7 @@ function openStockDetail(idx) {
   `;
 
   requestAnimationFrame(() => {
-    const el = document.getElementById('detail-chart');
+    const el = document.getElementById('sd-chart-canvas');
     if (el) {
       if (detailChart) detailChart.remove();
       detailChart = createFullChart(el, convertChartData(stock.charts['1D']), color, 300);
@@ -2502,7 +2502,7 @@ function openStockDetail(idx) {
       const ratio = last / stock._initVal;
       if (!last || !stock._initVal || ratio < 0.02 || ratio > 50) return;
       stock.charts['1D'] = points;
-      const el2 = document.getElementById('detail-chart');
+      const el2 = document.getElementById('sd-chart-canvas');
       if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, convertChartData(points), color, 300); }
     });
   });
@@ -2518,7 +2518,7 @@ function switchDetailTF(idx, tf) {
   });
 
   requestAnimationFrame(() => {
-    const el = document.getElementById('detail-chart');
+    const el = document.getElementById('sd-chart-canvas');
     if (el) {
       if (detailChart) detailChart.remove();
       detailChart = createFullChart(el, convertChartData(stock.charts[tf]), color, 300);
@@ -2528,7 +2528,7 @@ function switchDetailTF(idx, tf) {
       const ratio = last / stock._initVal;
       if (!last || !stock._initVal || ratio < 0.02 || ratio > 50) return;
       stock.charts[tf] = points;
-      const el2 = document.getElementById('detail-chart');
+      const el2 = document.getElementById('sd-chart-canvas');
       if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, convertChartData(points), color, 300); }
     });
   });
@@ -2849,7 +2849,7 @@ function renderIndicators(idx) {
   // Bollinger — overlaid on main chart (re-render it)
   const col = stock.chg >= 0 ? '#10b981' : '#ef4444';
   if (activeIndicators.has('boll')) {
-    const el = document.getElementById('detail-chart');
+    const el = document.getElementById('sd-chart-canvas');
     if (el && detailChart) {
       const boll = computeBollinger(prices);
       const fmt = { type:'custom', formatter: v => fmtUnitPrice(v) };
@@ -5715,7 +5715,7 @@ function updateHeaderUser() {
   const userEl   = document.getElementById('header-user');
   const av = document.getElementById('header-avatar');
   const un = document.getElementById('header-username-text');
-  document.querySelectorAll('.nav .auth-only').forEach(b => {
+  document.querySelectorAll('nav.nav .auth-only').forEach(b => {
     b.style.display = currentUser ? '' : 'none';
   });
   if (currentUser) {

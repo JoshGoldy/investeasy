@@ -118,7 +118,8 @@ test.describe('Markets page', () => {
   });
 
   test('filter buttons render', async ({ page }) => {
-    await expect(page.locator('.filter-btn')).toHaveCount({ greaterThan: 4 });
+    const count = await page.locator('.filter-btn').count();
+    expect(count).toBeGreaterThan(4);
   });
 
   test('JSE filter button exists', async ({ page }) => {
@@ -129,7 +130,8 @@ test.describe('Markets page', () => {
     await page.locator('.filter-btn:has-text("JSE")').click();
     await page.waitForTimeout(300);
     // Should show NPN (Naspers) — a known JSE stock
-    await expect(page.locator('.market-tile')).toHaveCount({ greaterThan: 0 });
+    const jseCount = await page.locator('.market-tile').count();
+    expect(jseCount).toBeGreaterThan(0);
     await expect(page.locator('text=NPN')).toBeVisible();
   });
 
@@ -233,7 +235,8 @@ test.describe('Auth overlay', () => {
     if (await headerBtn.count() > 0) {
       await headerBtn.click();
       await page.waitForTimeout(300);
-      await expect(page.locator('text=Login, text=Sign In').first()).toBeVisible();
+      await expect(page.locator('#auth-overlay')).toBeVisible();
+      await expect(page.locator('#tab-login-btn, #tab-register-btn').first()).toBeVisible();
     }
   });
 
@@ -243,10 +246,10 @@ test.describe('Auth overlay', () => {
       await headerBtn.click();
       await page.waitForTimeout(300);
       // Switch to register tab if needed
-      const regTab = page.locator('button:has-text("Register"), button:has-text("Sign up")').first();
+      const regTab = page.locator('#tab-register-btn').first();
       if (await regTab.count() > 0) await regTab.click();
       // Submit empty form
-      const submitBtn = page.locator('button[type="submit"], button:has-text("Create")').first();
+      const submitBtn = page.locator('#register-btn').first();
       if (await submitBtn.count() > 0) {
         await submitBtn.click();
         await page.waitForTimeout(300);
