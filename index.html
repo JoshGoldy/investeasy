@@ -610,6 +610,7 @@ button{cursor:pointer}
   .nav button svg{width:22px;height:22px}
   .nav button span{font-size:10px}
   .tab-content{padding:12px 12px 24px}
+  .sector-bar{padding:0 12px 10px;margin:0 -12px 12px}
 
   /* News: single column on mobile */
   .news-cols{columns:1}
@@ -654,7 +655,7 @@ button{cursor:pointer}
 }
 
 /* ── SECTOR BAR ───────────────────────────────────────────────── */
-.sector-bar{display:flex;gap:6px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none;margin-bottom:12px}
+.sector-bar{display:flex;gap:6px;overflow-x:auto;padding:0 36px 10px;margin:0 -36px 12px;scrollbar-width:none;-webkit-overflow-scrolling:touch;cursor:grab}
 .sector-bar::-webkit-scrollbar{display:none}
 .sector-chip{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;border:none;background:var(--card);box-shadow:var(--shadow)}
 .sector-chip.pos{color:#10b981;background:#10b98112;border:1px solid #10b98130}
