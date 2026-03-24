@@ -23,11 +23,16 @@ if (function_exists('opcache_invalidate')) opcache_invalidate(__FILE__, true);
 
 // ── Ticker map: app symbol → Yahoo Finance symbol ─────────────────────────────
 const TICKER_MAP = [
-    // Indices
+    // Indices — US
     'SPX'   => '^GSPC',
     'NDX'   => '^NDX',
     'DJI'   => '^DJI',
     'UKX'   => '^FTSE',
+    // Indices — International
+    'N225'  => '^N225',
+    'DAX'   => '^GDAXI',
+    'HSI'   => '^HSI',
+    'AXJO'  => '^AXJO',
     // Tech / equities
     'AAPL'  => 'AAPL',
     'MSFT'  => 'MSFT',
@@ -36,20 +41,34 @@ const TICKER_MAP = [
     'AMZN'  => 'AMZN',
     'GOOGL' => 'GOOGL',
     'META'  => 'META',
+    'NFLX'  => 'NFLX',
+    'AMD'   => 'AMD',
+    'AVGO'  => 'AVGO',
+    'CRM'   => 'CRM',
+    'ADBE'  => 'ADBE',
+    'INTC'  => 'INTC',
+    'TM'    => 'TM',
     // Finance
     'JPM'   => 'JPM',
     'BAC'   => 'BAC',
     'GS'    => 'GS',
+    'V'     => 'V',
+    'MA'    => 'MA',
+    'BRK.B' => 'BRK-B',   // Yahoo Finance uses hyphen, not period
     // Healthcare
     'JNJ'   => 'JNJ',
     'PFE'   => 'PFE',
     'MRK'   => 'MRK',
+    'UNH'   => 'UNH',
     // Energy
     'XOM'   => 'XOM',
     'CVX'   => 'CVX',
     // Consumer
     'WMT'   => 'WMT',
     'COST'  => 'COST',
+    'KO'    => 'KO',
+    'MCD'   => 'MCD',
+    'NKE'   => 'NKE',
     // Industrial
     'BA'    => 'BA',
     'CAT'   => 'CAT',
@@ -71,7 +90,28 @@ const TICKER_MAP = [
     'DOGE'  => 'DOGE-USD',
     'AVAX'  => 'AVAX-USD',
     'LINK'  => 'LINK-USD',
-    'MATIC' => 'MATIC-USD',
+    'MATIC' => 'POL-USD',   // Polygon rebranded MATIC → POL (Sep 2023); Yahoo Finance ticker is POL-USD
+    // JSE (Johannesburg Stock Exchange) — Yahoo Finance uses .JO suffix
+    'NPN'   => 'NPN.JO',
+    'PRX'   => 'PRX.JO',
+    'BHG'   => 'BHP.JO',   // BHP Group on JSE trades as BHP.JO
+    'AGL'   => 'AGL.JO',
+    'GLN'   => 'GLN.JO',
+    'CFR'   => 'CFR.JO',
+    'FSR'   => 'FSR.JO',
+    'SBK'   => 'SBK.JO',
+    'CPI'   => 'CPI.JO',   // Capitec Bank (not Consumer Price Index)
+    'ABG'   => 'ABG.JO',
+    'NED'   => 'NED.JO',
+    'SHP'   => 'SHP.JO',
+    'MTN'   => 'MTN.JO',
+    'SLM'   => 'SLM.JO',
+    'DSY'   => 'DSY.JO',
+    'OMU'   => 'OMU.JO',
+    'SOLJ'  => 'SOL.JO',   // Sasol on JSE; app uses SOLJ to avoid clash with SOL crypto
+    'ANG'   => 'ANG.JO',
+    'MNP'   => 'MNP.JO',
+    'IMP'   => 'IMP.JO',
 ];
 
 $action = $_GET['action'] ?? '';
@@ -243,16 +283,27 @@ function fetchEarningsCalendar(string $from, string $to): array {
 
     // Only equity tickers (skip indices, commodities, crypto)
     $stockTickers = ['AAPL','MSFT','NVDA','TSLA','AMZN','GOOGL','META',
-                     'JPM','BAC','GS','JNJ','PFE','MRK','XOM','CVX','WMT','COST','BA','CAT'];
+                     'NFLX','AMD','AVGO','CRM','ADBE','INTC','TM',
+                     'JPM','BAC','GS','V','MA','BRK.B',
+                     'JNJ','PFE','MRK','UNH',
+                     'XOM','CVX',
+                     'WMT','COST','KO','MCD','NKE',
+                     'BA','CAT'];
 
     $nameMap = [
-        'AAPL' => 'Apple',           'MSFT' => 'Microsoft',       'NVDA' => 'NVIDIA',
-        'TSLA' => 'Tesla',           'AMZN' => 'Amazon',           'GOOGL' => 'Alphabet',
-        'META' => 'Meta Platforms',  'JPM'  => 'JPMorgan Chase',   'BAC'  => 'Bank of America',
-        'GS'   => 'Goldman Sachs',   'JNJ'  => 'Johnson & Johnson','PFE'  => 'Pfizer',
-        'MRK'  => 'Merck',           'XOM'  => 'ExxonMobil',       'CVX'  => 'Chevron',
-        'WMT'  => 'Walmart',         'COST' => 'Costco',           'BA'   => 'Boeing',
-        'CAT'  => 'Caterpillar',
+        'AAPL'  => 'Apple',            'MSFT'  => 'Microsoft',        'NVDA'  => 'NVIDIA',
+        'TSLA'  => 'Tesla',            'AMZN'  => 'Amazon',            'GOOGL' => 'Alphabet',
+        'META'  => 'Meta Platforms',   'NFLX'  => 'Netflix',           'AMD'   => 'AMD',
+        'AVGO'  => 'Broadcom',         'CRM'   => 'Salesforce',        'ADBE'  => 'Adobe',
+        'INTC'  => 'Intel',            'TM'    => 'Toyota',
+        'JPM'   => 'JPMorgan Chase',   'BAC'   => 'Bank of America',   'GS'    => 'Goldman Sachs',
+        'V'     => 'Visa',             'MA'    => 'Mastercard',        'BRK.B' => 'Berkshire Hathaway B',
+        'JNJ'   => 'Johnson & Johnson','PFE'   => 'Pfizer',            'MRK'   => 'Merck',
+        'UNH'   => 'UnitedHealth',
+        'XOM'   => 'ExxonMobil',       'CVX'   => 'Chevron',
+        'WMT'   => 'Walmart',          'COST'  => 'Costco',            'KO'    => 'Coca-Cola',
+        'MCD'   => "McDonald's",       'NKE'   => 'Nike',
+        'BA'    => 'Boeing',           'CAT'   => 'Caterpillar',
     ];
 
     $fromTs = strtotime($from);
