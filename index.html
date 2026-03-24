@@ -881,11 +881,33 @@ button{cursor:pointer}
             <input id="login-email" class="form-input" type="email" placeholder="you@example.com" autocomplete="email">
           </div>
           <div class="auth-field">
-            <label class="form-label">Password</label>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <label class="form-label" style="margin:0">Password</label>
+              <span class="auth-link" style="font-size:12px" onclick="showAuthTab('forgot')">Forgot password?</span>
+            </div>
             <input id="login-password" class="form-input" type="password" placeholder="••••••••" autocomplete="current-password"
               onkeydown="if(event.key==='Enter')doLogin()">
           </div>
           <button class="auth-btn" id="login-btn" onclick="doLogin()">Sign In</button>
+        </div>
+
+        <!-- Forgot password form -->
+        <div id="auth-forgot-form" style="display:none">
+          <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.5">Enter your email and choose a new password.</p>
+          <div class="auth-field">
+            <label class="form-label">Email</label>
+            <input id="forgot-email" class="form-input" type="email" placeholder="you@example.com" autocomplete="email">
+          </div>
+          <div class="auth-field">
+            <label class="form-label">New Password</label>
+            <input id="forgot-new-password" class="form-input" type="password" placeholder="Min. 6 characters" autocomplete="new-password">
+          </div>
+          <div class="auth-field">
+            <label class="form-label">Confirm New Password</label>
+            <input id="forgot-confirm-password" class="form-input" type="password" placeholder="Repeat new password" autocomplete="new-password"
+              onkeydown="if(event.key==='Enter')doResetPassword()">
+          </div>
+          <button class="auth-btn" id="forgot-btn" onclick="doResetPassword()">Reset Password</button>
         </div>
 
         <!-- Register form -->
@@ -901,6 +923,10 @@ button{cursor:pointer}
           <div class="auth-field">
             <label class="form-label">Username</label>
             <input id="reg-username" class="form-input" type="text" placeholder="alexj" maxlength="30" autocomplete="username">
+          </div>
+          <div class="auth-field">
+            <label class="form-label">Age <span style="color:var(--faint);font-weight:400">(optional)</span></label>
+            <input id="reg-age" class="form-input" type="number" placeholder="e.g. 25" min="13" max="120" autocomplete="off">
           </div>
           <div class="auth-field">
             <label class="form-label">Password</label>
@@ -1032,6 +1058,30 @@ button{cursor:pointer}
       <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       <span>Settings</span><div class="nav-dot"></div>
     </button>
+  </div>
+
+  <!-- Change Password Modal -->
+  <div id="change-password-modal" class="modal-overlay hidden" onclick="if(event.target===this)closeChangePasswordModal()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <p class="modal-title">Change Password</p>
+      <div class="modal-field">
+        <label class="form-label">Current Password</label>
+        <input id="cp-current" class="form-input" type="password" placeholder="Your current password" autocomplete="current-password">
+      </div>
+      <div class="modal-field">
+        <label class="form-label">New Password</label>
+        <input id="cp-new" class="form-input" type="password" placeholder="Min. 6 characters" autocomplete="new-password">
+      </div>
+      <div class="modal-field">
+        <label class="form-label">Confirm New Password</label>
+        <input id="cp-confirm" class="form-input" type="password" placeholder="Repeat new password" autocomplete="new-password"
+          onkeydown="if(event.key==='Enter')doChangePassword()">
+      </div>
+      <div id="change-password-error" class="auth-error"></div>
+      <button class="modal-save-btn" id="change-password-save-btn" onclick="doChangePassword()">Update Password</button>
+      <button class="modal-cancel" onclick="closeChangePasswordModal()">Cancel</button>
+    </div>
   </div>
 
   <!-- Edit Profile Modal -->
@@ -5433,13 +5483,62 @@ function renderSettings() {
     <div class="settings-section">
       <p class="settings-section-label">Account</p>
       <div class="settings-group" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
-        ${currentUser ? `<button class="modal-save-btn" style="background:#1e293b" onclick="doLogout()">Sign Out</button>` : `<button class="modal-save-btn" onclick="document.getElementById('auth-overlay').classList.remove('hidden')">Sign In / Create Account</button>`}
+        ${currentUser ? `
+          <button class="modal-save-btn" style="background:#3b82f6" onclick="openChangePasswordModal()">Change Password</button>
+          <button class="modal-save-btn" style="background:#1e293b" onclick="doLogout()">Sign Out</button>
+        ` : `<button class="modal-save-btn" onclick="document.getElementById('auth-overlay').classList.remove('hidden')">Sign In / Create Account</button>`}
         <button class="danger-btn" onclick="resetAllSettings()">Reset All Settings</button>
       </div>
     </div>
 
     <div style="height:8px"></div>
   `;
+}
+
+function openChangePasswordModal() {
+  document.getElementById('cp-current').value = '';
+  document.getElementById('cp-new').value = '';
+  document.getElementById('cp-confirm').value = '';
+  const errEl = document.getElementById('change-password-error');
+  if (errEl) { errEl.textContent = ''; errEl.classList.remove('show'); }
+  document.getElementById('change-password-modal').classList.remove('hidden');
+}
+
+function closeChangePasswordModal() {
+  document.getElementById('change-password-modal').classList.add('hidden');
+}
+
+async function doChangePassword() {
+  const current = document.getElementById('cp-current').value;
+  const newPass = document.getElementById('cp-new').value;
+  const confirm = document.getElementById('cp-confirm').value;
+  const errEl   = document.getElementById('change-password-error');
+  const saveBtn = document.getElementById('change-password-save-btn');
+
+  const showErr = msg => { errEl.textContent = msg; errEl.classList.add('show'); errEl.style.color = ''; };
+  errEl.classList.remove('show');
+
+  if (!current || !newPass || !confirm) { showErr('All fields are required.'); return; }
+  if (newPass.length < 6) { showErr('New password must be at least 6 characters.'); return; }
+  if (newPass !== confirm) { showErr('New passwords do not match.'); return; }
+
+  saveBtn.disabled = true; saveBtn.textContent = 'Updating…';
+  try {
+    const d = await apiCall('auth.php?action=change-password', 'POST', {
+      current_password: current, new_password: newPass, confirm_password: confirm
+    });
+    if (d.success) {
+      errEl.textContent = 'Password updated successfully!';
+      errEl.style.color = '#10b981';
+      errEl.classList.add('show');
+      setTimeout(() => closeChangePasswordModal(), 1500);
+    } else {
+      showErr(d.error || 'Failed to update password.');
+    }
+  } catch(e) {
+    showErr('Connection error. Please try again.');
+  }
+  saveBtn.disabled = false; saveBtn.textContent = 'Update Password';
 }
 
 function promptSectors() {
@@ -5470,14 +5569,24 @@ async function apiCall(url, method = 'GET', body = null) {
 
 // ── Auth overlay helpers ──────────────────────────────────────────────────────
 function showAuthTab(mode) {
-  const isLogin = mode === 'login';
+  const isLogin    = mode === 'login';
+  const isRegister = mode === 'register';
+  const isForgot   = mode === 'forgot';
   document.getElementById('tab-login-btn').classList.toggle('active', isLogin);
-  document.getElementById('tab-register-btn').classList.toggle('active', !isLogin);
-  document.getElementById('auth-login-form').style.display    = isLogin ? '' : 'none';
-  document.getElementById('auth-register-form').style.display = isLogin ? 'none' : '';
-  document.getElementById('auth-footer-text').innerHTML = isLogin
-    ? 'Don\'t have an account? <span class="auth-link" onclick="showAuthTab(\'register\')">Sign up free</span>'
-    : 'Already have an account? <span class="auth-link" onclick="showAuthTab(\'login\')">Sign in</span>';
+  document.getElementById('tab-register-btn').classList.toggle('active', isRegister);
+  document.getElementById('auth-login-form').style.display    = isLogin    ? '' : 'none';
+  document.getElementById('auth-register-form').style.display = isRegister ? '' : 'none';
+  document.getElementById('auth-forgot-form').style.display   = isForgot   ? '' : 'none';
+  if (isForgot) {
+    document.getElementById('auth-footer-text').innerHTML =
+      'Remember your password? <span class="auth-link" onclick="showAuthTab(\'login\')">Sign in</span>';
+  } else if (isLogin) {
+    document.getElementById('auth-footer-text').innerHTML =
+      'Don\'t have an account? <span class="auth-link" onclick="showAuthTab(\'register\')">Sign up free</span>';
+  } else {
+    document.getElementById('auth-footer-text').innerHTML =
+      'Already have an account? <span class="auth-link" onclick="showAuthTab(\'login\')">Sign in</span>';
+  }
   clearAuthError();
 }
 
@@ -5494,6 +5603,7 @@ function clearAuthError() {
 function setAuthLoading(loading) {
   document.getElementById('login-btn').disabled    = loading;
   document.getElementById('register-btn').disabled = loading;
+  document.getElementById('forgot-btn').disabled   = loading;
 }
 
 // ── Session check on load ─────────────────────────────────────────────────────
@@ -5540,11 +5650,14 @@ async function doRegister() {
   const email    = document.getElementById('reg-email').value.trim();
   const username = document.getElementById('reg-username').value.trim();
   const password = document.getElementById('reg-password').value;
+  const ageVal   = document.getElementById('reg-age').value.trim();
+  const age      = ageVal !== '' ? parseInt(ageVal, 10) : null;
   if (!name || !email || !username || !password) { showAuthError('All fields are required.'); return; }
+  if (age !== null && (isNaN(age) || age < 13 || age > 120)) { showAuthError('Please enter a valid age (13–120).'); return; }
   clearAuthError();
   setAuthLoading(true);
   try {
-    const d = await apiCall('auth.php?action=register', 'POST', { name, email, username, password });
+    const d = await apiCall('auth.php?action=register', 'POST', { name, email, username, password, age });
     if (d.success) {
       currentUser = d.user;
       if (d.token) localStorage.setItem('ie_auth_token', d.token);
@@ -5552,6 +5665,36 @@ async function doRegister() {
       document.getElementById('auth-overlay').classList.add('hidden');
     } else {
       showAuthError(d.error || 'Registration failed. Please try again.');
+    }
+  } catch(e) {
+    showAuthError('Connection error. Check that auth.php and db.php are on the server.');
+  }
+  setAuthLoading(false);
+}
+
+// ── Reset Password (Forgot Password flow) ────────────────────────────────────
+async function doResetPassword() {
+  const email   = document.getElementById('forgot-email').value.trim();
+  const newPass = document.getElementById('forgot-new-password').value;
+  const confirm = document.getElementById('forgot-confirm-password').value;
+  if (!email || !newPass || !confirm) { showAuthError('All fields are required.'); return; }
+  if (newPass !== confirm) { showAuthError('Passwords do not match.'); return; }
+  if (newPass.length < 6) { showAuthError('Password must be at least 6 characters.'); return; }
+  clearAuthError();
+  setAuthLoading(true);
+  try {
+    const d = await apiCall('auth.php?action=reset-password', 'POST', {
+      email, new_password: newPass, confirm_password: confirm
+    });
+    if (d.success) {
+      document.getElementById('forgot-email').value = '';
+      document.getElementById('forgot-new-password').value = '';
+      document.getElementById('forgot-confirm-password').value = '';
+      showAuthError('Password reset! You can now sign in.');
+      document.getElementById('auth-error').style.color = '#10b981';
+      setTimeout(() => { showAuthTab('login'); document.getElementById('login-email').value = email; }, 2000);
+    } else {
+      showAuthError(d.error || 'Reset failed. Please try again.');
     }
   } catch(e) {
     showAuthError('Connection error. Check that auth.php and db.php are on the server.');

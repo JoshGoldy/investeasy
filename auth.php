@@ -8,6 +8,8 @@
  * POST auth.php?action=login            → sign in
  * POST auth.php?action=logout           → sign out
  * POST auth.php?action=update-profile   → update name/email/username
+ * POST auth.php?action=change-password  → change password (logged-in user)
+ * POST auth.php?action=reset-password   → reset password by email (forgot password)
  * POST auth.php?action=deduct-credits   → deduct FinBot credits (internal)
  */
 
@@ -57,6 +59,7 @@ function initSchema() {
         email            VARCHAR(150)  NOT NULL,
         username         VARCHAR(50)   NOT NULL,
         password_hash    VARCHAR(255)  NOT NULL,
+        age              TINYINT UNSIGNED NULL DEFAULT NULL,
         tier             ENUM('free','pro','enterprise') NOT NULL DEFAULT 'free',
         finbot_credits   INT NOT NULL DEFAULT 0,
         credits_reset_at TIMESTAMP NULL DEFAULT NULL,
@@ -69,6 +72,7 @@ function initSchema() {
     try { $db->exec("ALTER TABLE users ADD COLUMN tier ENUM('free','pro','enterprise') NOT NULL DEFAULT 'free'"); } catch (Exception $e) {}
     try { $db->exec("ALTER TABLE users ADD COLUMN finbot_credits INT NOT NULL DEFAULT 0"); } catch (Exception $e) {}
     try { $db->exec("ALTER TABLE users ADD COLUMN credits_reset_at TIMESTAMP NULL DEFAULT NULL"); } catch (Exception $e) {}
+    try { $db->exec("ALTER TABLE users ADD COLUMN age TINYINT UNSIGNED NULL DEFAULT NULL"); } catch (Exception $e) {}
 
     $db->exec("CREATE TABLE IF NOT EXISTS user_settings (
         user_id         INT PRIMARY KEY,
@@ -174,7 +178,7 @@ function cleanUsername($u) { return strtolower(ltrim(trim($u), '@')); }
 
 // ── Fetch full user row (with tier + credits) ─────────────────────────────────
 function fetchUser($db, $id) {
-    $s = $db->prepare("SELECT id, name, email, username, tier, finbot_credits, created_at FROM users WHERE id = ?");
+    $s = $db->prepare("SELECT id, name, email, username, age, tier, finbot_credits, created_at FROM users WHERE id = ?");
     $s->execute([$id]);
     return $s->fetch();
 }
@@ -204,12 +208,14 @@ switch ($action) {
         $email    = strtolower(trim($body['email']    ?? ''));
         $username = cleanUsername($body['username'] ?? '');
         $password = $body['password'] ?? '';
+        $age      = isset($body['age']) && $body['age'] !== '' ? (int)$body['age'] : null;
 
         if (!$name || !$email || !$username || !$password) fail(400, 'All fields are required.');
         if (!filter_var($email, FILTER_VALIDATE_EMAIL))    fail(400, 'Please enter a valid email address.');
         if (strlen($password) < 6)                         fail(400, 'Password must be at least 6 characters.');
         if (!preg_match('/^[a-z0-9_]+$/', $username))      fail(400, 'Username can only contain letters, numbers and underscores.');
         if (strlen($username) < 3)                         fail(400, 'Username must be at least 3 characters.');
+        if ($age !== null && ($age < 13 || $age > 120))    fail(400, 'Please enter a valid age (13–120).');
 
         $db = getDB();
         $chk = $db->prepare("SELECT id FROM users WHERE email = ? OR username = ?");
@@ -217,8 +223,8 @@ switch ($action) {
         if ($chk->fetch()) fail(409, 'That email or username is already taken.');
 
         $hash = password_hash($password, PASSWORD_DEFAULT);
-        $ins  = $db->prepare("INSERT INTO users (name, email, username, password_hash, tier, finbot_credits) VALUES (?, ?, ?, ?, 'free', 0)");
-        $ins->execute([$name, $email, $username, $hash]);
+        $ins  = $db->prepare("INSERT INTO users (name, email, username, password_hash, age, tier, finbot_credits) VALUES (?, ?, ?, ?, ?, 'free', 0)");
+        $ins->execute([$name, $email, $username, $hash, $age]);
         $uid = (int)$db->lastInsertId();
 
         // Create default settings row
@@ -279,6 +285,55 @@ switch ($action) {
            ->execute([$name, $email, $username, $uid]);
 
         ok(['user' => fetchUser($db, $uid)]);
+        break;
+
+    // ── change-password (logged-in) ──────────────────────────────────────────
+    case 'change-password':
+        $uid = currentUid();
+        if (!$uid) fail(401, 'Not logged in');
+
+        $current  = $body['current_password'] ?? '';
+        $newPass  = $body['new_password']     ?? '';
+        $confirm  = $body['confirm_password'] ?? '';
+
+        if (!$current || !$newPass || !$confirm) fail(400, 'All fields are required.');
+        if (strlen($newPass) < 6)                fail(400, 'New password must be at least 6 characters.');
+        if ($newPass !== $confirm)               fail(400, 'New passwords do not match.');
+
+        $db   = getDB();
+        $stmt = $db->prepare("SELECT password_hash FROM users WHERE id = ?");
+        $stmt->execute([$uid]);
+        $u = $stmt->fetch();
+        if (!$u || !password_verify($current, $u['password_hash'])) {
+            fail(401, 'Current password is incorrect.');
+        }
+
+        $newHash = password_hash($newPass, PASSWORD_DEFAULT);
+        $db->prepare("UPDATE users SET password_hash = ? WHERE id = ?")->execute([$newHash, $uid]);
+        ok();
+        break;
+
+    // ── reset-password (forgot password — no email token, uses email lookup) ──
+    case 'reset-password':
+        initSchema();
+        $email    = strtolower(trim($body['email']    ?? ''));
+        $newPass  = $body['new_password']  ?? '';
+        $confirm  = $body['confirm_password'] ?? '';
+
+        if (!$email || !$newPass || !$confirm) fail(400, 'All fields are required.');
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) fail(400, 'Invalid email address.');
+        if (strlen($newPass) < 6)  fail(400, 'Password must be at least 6 characters.');
+        if ($newPass !== $confirm) fail(400, 'Passwords do not match.');
+
+        $db   = getDB();
+        $stmt = $db->prepare("SELECT id FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        $u = $stmt->fetch();
+        if (!$u) fail(404, 'No account found with that email address.');
+
+        $newHash = password_hash($newPass, PASSWORD_DEFAULT);
+        $db->prepare("UPDATE users SET password_hash = ? WHERE id = ?")->execute([$newHash, $u['id']]);
+        ok();
         break;
 
     // ── deduct-credits ───────────────────────────────────────────────────────
