@@ -298,6 +298,17 @@ switch ($action) {
     case 'price_alerts':
         $uid = requireAuth();
         $db  = getDB();
+        $db->exec("CREATE TABLE IF NOT EXISTS price_alerts (
+            id         INT AUTO_INCREMENT PRIMARY KEY,
+            user_id    INT              NOT NULL,
+            ticker     VARCHAR(20)      NOT NULL,
+            name       VARCHAR(100)     NOT NULL,
+            target     DECIMAL(15,4)    NOT NULL,
+            direction  ENUM('above','below') NOT NULL,
+            triggered  TINYINT(1)       NOT NULL DEFAULT 0,
+            created_at TIMESTAMP        DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
         if ($method === 'GET') {
             $stmt = $db->prepare("SELECT id, ticker, name, target, direction, triggered, created_at FROM price_alerts WHERE user_id = ? ORDER BY created_at DESC");
