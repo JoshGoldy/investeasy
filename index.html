@@ -1902,7 +1902,7 @@ Keep the tone professional but accessible. Use Markdown formatting.`;
       <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#6d28d9);
                   display:flex;align-items:center;justify-content:center;font-size:24px">🤖</div>
       <p style="font-weight:800;font-size:16px;color:var(--text)">Analyzing article…</p>
-      <p style="font-size:12px;color:var(--faint);text-align:center;line-height:1.6">Claude is reading and breaking down<br>this article for you</p>
+      <p style="font-size:12px;color:var(--faint);text-align:center;line-height:1.6">FinBot is reading and breaking down<br>this article for you</p>
       <div class="loading-dots" style="margin-top:4px">
         ${[0,1,2].map(i=>`<span style="background:#7c3aed;animation:bd 1.4s ease-in-out ${i*0.2}s infinite"></span>`).join('')}
       </div>
@@ -1948,7 +1948,7 @@ function renderFinBotNewsResult(idx, text, articleLink, n) {
         <span style="font-size:20px">🤖</span>
         <div>
           <p style="font-weight:800;font-size:14px;color:var(--text)">FinBot Analysis</p>
-          <p style="font-size:11px;color:#a78bfa;font-weight:600">Powered by Claude</p>
+          <p style="font-size:11px;color:#a78bfa;font-weight:600">AI Financial Analyst</p>
         </div>
         <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;font-weight:700;color:#10b981;background:#10b98115;padding:3px 10px;border-radius:20px">✓ Complete</span>
@@ -3570,7 +3570,7 @@ function renderFinBot() {
                     display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px">🤖</div>
         <h2 style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px">Meet FinBot</h2>
         <p style="font-size:13.5px;color:var(--muted);line-height:1.65;max-width:300px;margin-bottom:24px">
-          Your personal AI financial analyst, powered by Claude. Run deep analysis on stocks, portfolios, news, and more — all in seconds.
+          Your personal AI financial analyst. Run deep analysis on stocks, portfolios, news, and more — all in seconds.
         </p>
         <button onclick="document.getElementById('auth-overlay').classList.remove('hidden');showAuthTab('login')"
           style="padding:14px 32px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;
@@ -7736,7 +7736,7 @@ setTimeout(() => { if (!liveNews.length) fetchLiveNews(true); }, 30 * 1000);
         <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#6d28d9);
                     display:flex;align-items:center;justify-content:center;font-size:16px">🤖</div>
         <span style="font-weight:800;font-size:16px;color:var(--text)">FinBot</span>
-        <span style="font-size:12px;color:#a78bfa;font-weight:600">by Claude</span>
+        <span style="font-size:12px;color:#a78bfa;font-weight:600">AI Analyst</span>
       </div>
       <button onclick="closeFinBotNewsModal()"
         style="width:32px;height:32px;border-radius:50%;background:var(--border);color:var(--muted);
