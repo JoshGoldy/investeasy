@@ -13,6 +13,9 @@
  * POST auth.php?action=deduct-credits   → deduct FinBot credits (internal)
  */
 
+// Buffer output so any PHP warnings/notices don't corrupt the JSON response
+ob_start();
+
 // Accept session ID from Authorization: Bearer header so cookie failures don't break auth
 if (empty($_COOKIE[session_name()])) {
     $ah = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
@@ -27,12 +30,12 @@ header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { ob_end_clean(); http_response_code(204); exit; }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function ok($data = [])       { echo json_encode(['success' => true]  + $data); exit; }
-function fail($code, $msg)    { http_response_code($code); echo json_encode(['success' => false, 'error' => $msg]); exit; }
+function ok($data = [])       { ob_end_clean(); echo json_encode(['success' => true]  + $data); exit; }
+function fail($code, $msg)    { http_response_code($code); ob_end_clean(); echo json_encode(['success' => false, 'error' => $msg]); exit; }
 function currentUid()         { return $_SESSION['user_id'] ?? null; }
 
 // ── DB check ─────────────────────────────────────────────────────────────────
@@ -196,7 +199,7 @@ function fetchUser($db, $id) {
 $action = $_GET['action'] ?? '';
 $body   = json_decode(file_get_contents('php://input'), true) ?? [];
 
-switch ($action) {
+try { switch ($action) {
 
     // ── me ───────────────────────────────────────────────────────────────────
     case 'me':
@@ -417,4 +420,4 @@ switch ($action) {
 
     default:
         fail(400, 'Unknown action.');
-}
+} } catch (Throwable $e) { fail(500, 'Server error: ' . $e->getMessage()); }
