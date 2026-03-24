@@ -893,21 +893,13 @@ button{cursor:pointer}
 
         <!-- Forgot password form -->
         <div id="auth-forgot-form" style="display:none">
-          <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.5">Enter your email and choose a new password.</p>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.5">Enter your email address and we'll send you a link to reset your password.</p>
           <div class="auth-field">
             <label class="form-label">Email</label>
-            <input id="forgot-email" class="form-input" type="email" placeholder="you@example.com" autocomplete="email">
+            <input id="forgot-email" class="form-input" type="email" placeholder="you@example.com" autocomplete="email"
+              onkeydown="if(event.key==='Enter')doForgotPassword()">
           </div>
-          <div class="auth-field">
-            <label class="form-label">New Password</label>
-            <input id="forgot-new-password" class="form-input" type="password" placeholder="Min. 6 characters" autocomplete="new-password">
-          </div>
-          <div class="auth-field">
-            <label class="form-label">Confirm New Password</label>
-            <input id="forgot-confirm-password" class="form-input" type="password" placeholder="Repeat new password" autocomplete="new-password"
-              onkeydown="if(event.key==='Enter')doResetPassword()">
-          </div>
-          <button class="auth-btn" id="forgot-btn" onclick="doResetPassword()">Reset Password</button>
+          <button class="auth-btn" id="forgot-btn" onclick="doForgotPassword()">Send Reset Link</button>
         </div>
 
         <!-- Register form -->
@@ -5672,29 +5664,20 @@ async function doRegister() {
   setAuthLoading(false);
 }
 
-// ── Reset Password (Forgot Password flow) ────────────────────────────────────
-async function doResetPassword() {
-  const email   = document.getElementById('forgot-email').value.trim();
-  const newPass = document.getElementById('forgot-new-password').value;
-  const confirm = document.getElementById('forgot-confirm-password').value;
-  if (!email || !newPass || !confirm) { showAuthError('All fields are required.'); return; }
-  if (newPass !== confirm) { showAuthError('Passwords do not match.'); return; }
-  if (newPass.length < 6) { showAuthError('Password must be at least 6 characters.'); return; }
+// ── Forgot Password — send reset link via email ───────────────────────────────
+async function doForgotPassword() {
+  const email = document.getElementById('forgot-email').value.trim();
+  if (!email) { showAuthError('Please enter your email address.'); return; }
   clearAuthError();
   setAuthLoading(true);
   try {
-    const d = await apiCall('auth.php?action=reset-password', 'POST', {
-      email, new_password: newPass, confirm_password: confirm
-    });
+    const d = await apiCall('auth.php?action=forgot-password', 'POST', { email });
     if (d.success) {
       document.getElementById('forgot-email').value = '';
-      document.getElementById('forgot-new-password').value = '';
-      document.getElementById('forgot-confirm-password').value = '';
-      showAuthError('Password reset! You can now sign in.');
+      showAuthError('Check your email for a password reset link.');
       document.getElementById('auth-error').style.color = '#10b981';
-      setTimeout(() => { showAuthTab('login'); document.getElementById('login-email').value = email; }, 2000);
     } else {
-      showAuthError(d.error || 'Reset failed. Please try again.');
+      showAuthError(d.error || 'Failed to send reset email. Please try again.');
     }
   } catch(e) {
     showAuthError('Connection error. Check that auth.php and db.php are on the server.');

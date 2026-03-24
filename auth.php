@@ -144,6 +144,15 @@ function initSchema() {
         created_at TIMESTAMP        DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    $db->exec("CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id         INT AUTO_INCREMENT PRIMARY KEY,
+        user_id    INT         NOT NULL,
+        token      VARCHAR(64) NOT NULL,
+        expires_at TIMESTAMP   NOT NULL,
+        UNIQUE KEY uq_token (token),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
 // ── Credit defaults per tier ──────────────────────────────────────────────────
@@ -312,26 +321,73 @@ switch ($action) {
         ok();
         break;
 
-    // ── reset-password (forgot password — no email token, uses email lookup) ──
+    // ── forgot-password — generate token and send reset email ────────────────
+    case 'forgot-password':
+        initSchema();
+        $email = strtolower(trim($body['email'] ?? ''));
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) fail(400, 'Please enter a valid email address.');
+
+        $db   = getDB();
+        $stmt = $db->prepare("SELECT id, name FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        $u = $stmt->fetch();
+
+        // Always return success to prevent email enumeration
+        if ($u) {
+            // Remove any existing reset tokens for this user
+            $db->prepare("DELETE FROM password_reset_tokens WHERE user_id = ?")->execute([$u['id']]);
+
+            // Generate a secure random token
+            $token = bin2hex(random_bytes(32));
+            $db->prepare("INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR))")
+               ->execute([$u['id'], $token]);
+
+            // Build the reset URL
+            $scheme   = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $host     = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $dir      = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+            $resetUrl = "$scheme://$host$dir/reset-password.html?token=" . urlencode($token);
+
+            // Send the email
+            $name    = $u['name'];
+            $subject = 'Reset your FinScope password';
+            $body_text = "Hi $name,\r\n\r\n"
+                . "You requested a password reset for your FinScope account.\r\n\r\n"
+                . "Click the link below to set a new password (link expires in 1 hour):\r\n\r\n"
+                . "$resetUrl\r\n\r\n"
+                . "If you didn't request this, you can safely ignore this email — your password will not change.\r\n\r\n"
+                . "— The FinScope Team";
+            $headers = implode("\r\n", [
+                'From: FinScope <noreply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '>',
+                'Content-Type: text/plain; charset=UTF-8',
+                'X-Mailer: PHP/' . PHP_VERSION,
+            ]);
+            mail($email, $subject, $body_text, $headers);
+        }
+
+        ok(['message' => 'If that email is registered, a reset link has been sent.']);
+        break;
+
+    // ── reset-password — validate token and set new password ─────────────────
     case 'reset-password':
         initSchema();
-        $email    = strtolower(trim($body['email']    ?? ''));
-        $newPass  = $body['new_password']  ?? '';
-        $confirm  = $body['confirm_password'] ?? '';
+        $token   = trim($body['token']           ?? '');
+        $newPass = $body['new_password']          ?? '';
+        $confirm = $body['confirm_password']      ?? '';
 
-        if (!$email || !$newPass || !$confirm) fail(400, 'All fields are required.');
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) fail(400, 'Invalid email address.');
+        if (!$token || !$newPass || !$confirm) fail(400, 'All fields are required.');
         if (strlen($newPass) < 6)  fail(400, 'Password must be at least 6 characters.');
         if ($newPass !== $confirm) fail(400, 'Passwords do not match.');
 
         $db   = getDB();
-        $stmt = $db->prepare("SELECT id FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        $u = $stmt->fetch();
-        if (!$u) fail(404, 'No account found with that email address.');
+        $stmt = $db->prepare("SELECT user_id FROM password_reset_tokens WHERE token = ? AND expires_at > NOW()");
+        $stmt->execute([$token]);
+        $row = $stmt->fetch();
+        if (!$row) fail(400, 'This reset link is invalid or has expired. Please request a new one.');
 
         $newHash = password_hash($newPass, PASSWORD_DEFAULT);
-        $db->prepare("UPDATE users SET password_hash = ? WHERE id = ?")->execute([$newHash, $u['id']]);
+        $db->prepare("UPDATE users SET password_hash = ? WHERE id = ?")->execute([$newHash, $row['user_id']]);
+        $db->prepare("DELETE FROM password_reset_tokens WHERE token = ?")->execute([$token]);
         ok();
         break;
 
