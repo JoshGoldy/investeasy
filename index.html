@@ -4743,6 +4743,22 @@ function genPortHistory(totalCost, total) {
   });
 }
 
+function portCurrencyBar() {
+  const cur = loadSettings().currency;
+  return `<div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+    ${Object.entries(CURRENCY_CONFIG).map(([code, cfg]) => `
+      <button onclick="saveSettings({currency:'${code}'})"
+        style="flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;
+               border:1.5px solid ${cur===code?'var(--green)':'var(--border)'};
+               background:${cur===code?'var(--green-bg)':'transparent'};
+               color:${cur===code?'var(--green)':'var(--muted)'};cursor:pointer;white-space:nowrap;
+               transition:all .15s">
+        ${cfg.symbol}&thinsp;${code}
+      </button>
+    `).join('')}
+  </div>`;
+}
+
 function renderPortfolio() {
   // If logged in and have DB portfolio data, render that instead of demo data
   if (currentUser && dbPortfolio.length > 0) {
@@ -4766,6 +4782,8 @@ function renderPortfolio() {
 
   document.getElementById('tab-portfolio').innerHTML = `
     <div class="section-title"><h2>My Portfolio</h2><p>Demo portfolio · 5 holdings</p></div>
+
+    ${portCurrencyBar()}
 
     <!-- Hero: summary numbers only -->
     <div class="port-hero">
@@ -5048,6 +5066,8 @@ function renderDBPortfolio() {
       <button onclick="openAddHoldingModal()" style="padding:9px 16px;border-radius:12px;
         background:var(--green);color:#fff;font-weight:800;font-size:12px;flex-shrink:0">+ Add</button>
     </div>
+
+    ${portCurrencyBar()}
 
     <div class="port-hero">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
