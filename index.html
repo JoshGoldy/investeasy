@@ -385,10 +385,17 @@ button{cursor:pointer}
 .modal-overlay.hidden{display:none}
 .modal-sheet{background:var(--bg);border-radius:24px 24px 0 0;padding:20px 20px 36px;
   width:100%;max-width:520px;animation:slideUp 0.3s ease;max-height:90vh;overflow-y:auto}
-.quick-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
-.quick-chip{display:inline-flex;align-items:center;gap:3px;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:none;line-height:1;transition:opacity .15s;white-space:nowrap}.quick-chip:active{opacity:.65}
+.quick-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.quick-chip{display:inline-flex;align-items:center;gap:4px;padding:7px 13px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid transparent;line-height:1;transition:all .15s;white-space:nowrap}.quick-chip:active{transform:scale(.94)}
+.quick-chip.selected{border-color:currentColor;box-shadow:0 0 0 3px color-mix(in srgb,currentColor 20%,transparent)}
 .qc-commodity{background:#fef3c7;color:#92400e}.qc-crypto{background:#f3e8ff;color:#6d28d9}
 .qc-etf{background:#dbeafe;color:#1e40af}.qc-stock{background:#dcfce7;color:#166534}
+.qc-section-label{font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;margin:12px 0 5px;display:flex;align-items:center;gap:5px}
+.qc-section-label:first-child{margin-top:0}
+.holding-form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.holding-input-wrap{position:relative}
+.holding-input-prefix{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:700;color:var(--faint);pointer-events:none;z-index:1}
+.holding-price-hint{font-size:10px;color:var(--green);margin-top:5px;font-weight:600;min-height:14px}
 .import-port-btn{font-size:11px;font-weight:700;color:var(--green);background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:2px 0;flex-shrink:0}
 .user-chip{position:relative;cursor:pointer;border-radius:10px;padding:4px 6px;transition:background .15s}.user-chip:hover{background:var(--border)}
 .user-dropdown{position:absolute;top:calc(100% + 10px);right:0;min-width:220px;background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.3);z-index:2000;overflow:hidden;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .2s ease,transform .2s ease}
@@ -939,67 +946,105 @@ button{cursor:pointer}
   <div id="add-holding-modal" class="modal-overlay hidden">
     <div class="modal-sheet">
       <div class="modal-handle"></div>
-      <p class="modal-title">Add Holding</p>
 
-      <!-- Quick-pick chips by asset type -->
-      <div class="modal-field">
-        <label class="form-label">Quick Add</label>
-
-        <p style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Commodities</p>
-        <div class="quick-chips">
-          <button class="quick-chip qc-commodity" onclick="holdingQuickPick('GLD','Gold (SPDR ETF)')">🥇 Gold</button>
-          <button class="quick-chip qc-commodity" onclick="holdingQuickPick('SLV','Silver (iShares ETF)')">🥈 Silver</button>
-          <button class="quick-chip qc-commodity" onclick="holdingQuickPick('USO','US Oil Fund (USO)')">🛢 Oil</button>
-          <button class="quick-chip qc-commodity" onclick="holdingQuickPick('PDBC','Invesco Commodity ETF')">📦 Commodities</button>
-          <button class="quick-chip qc-commodity" onclick="holdingQuickPick('PLTM','Platinum ETF')">⬡ Platinum</button>
-        </div>
-
-        <p style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 4px">Crypto</p>
-        <div class="quick-chips">
-          <button class="quick-chip qc-crypto" onclick="holdingQuickPick('BTC','Bitcoin')">₿ Bitcoin</button>
-          <button class="quick-chip qc-crypto" onclick="holdingQuickPick('ETH','Ethereum')">Ξ Ethereum</button>
-          <button class="quick-chip qc-crypto" onclick="holdingQuickPick('SOL','Solana')">◎ Solana</button>
-          <button class="quick-chip qc-crypto" onclick="holdingQuickPick('XRP','Ripple (XRP)')">✕ XRP</button>
-          <button class="quick-chip qc-crypto" onclick="holdingQuickPick('ADA','Cardano (ADA)')">ADA</button>
-          <button class="quick-chip qc-crypto" onclick="holdingQuickPick('DOGE','Dogecoin')">Ð DOGE</button>
-        </div>
-
-        <p style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 4px">Popular ETFs</p>
-        <div class="quick-chips">
-          <button class="quick-chip qc-etf" onclick="holdingQuickPick('SPY','S&amp;P 500 ETF (SPY)')">SPY</button>
-          <button class="quick-chip qc-etf" onclick="holdingQuickPick('QQQ','NASDAQ 100 ETF (QQQ)')">QQQ</button>
-          <button class="quick-chip qc-etf" onclick="holdingQuickPick('VOO','Vanguard S&amp;P 500 (VOO)')">VOO</button>
-          <button class="quick-chip qc-etf" onclick="holdingQuickPick('VTI','Vanguard Total Market (VTI)')">VTI</button>
-          <button class="quick-chip qc-etf" onclick="holdingQuickPick('ARKK','ARK Innovation ETF')">ARKK</button>
-        </div>
-
-        <div style="margin-top:10px;padding:10px 12px;background:var(--border);border-radius:12px">
-          <p style="font-size:11px;color:var(--faint);line-height:1.5">
-            💡 <strong>Any asset works</strong> — stocks (AAPL, TSLA), bonds (TLT), REITs, mutual funds, or type a ticker manually below.
-          </p>
+      <!-- Header -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <div style="width:40px;height:40px;border-radius:12px;background:var(--green-bg);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📥</div>
+        <div>
+          <p style="font-size:17px;font-weight:800;color:var(--text);line-height:1.2">Add Holding</p>
+          <p style="font-size:11px;color:var(--faint);margin-top:1px">Stocks · ETFs · Crypto · Commodities</p>
         </div>
       </div>
 
+      <!-- Quick-pick chips -->
       <div class="modal-field">
-        <label class="form-label">Ticker Symbol</label>
-        <input id="holding-ticker" class="form-input mono" type="text"
-          placeholder="e.g. AAPL · GLD · BTC · ETH · SPY" maxlength="10" style="text-transform:uppercase">
+        <label class="form-label" style="margin-bottom:8px">Quick Add</label>
+
+        <p class="qc-section-label">📈 Popular Stocks</p>
+        <div class="quick-chips">
+          <button class="quick-chip qc-stock" onclick="holdingQuickPick('AAPL','Apple Inc.',this)">AAPL</button>
+          <button class="quick-chip qc-stock" onclick="holdingQuickPick('MSFT','Microsoft Corp.',this)">MSFT</button>
+          <button class="quick-chip qc-stock" onclick="holdingQuickPick('NVDA','NVIDIA Corp.',this)">NVDA</button>
+          <button class="quick-chip qc-stock" onclick="holdingQuickPick('TSLA','Tesla Inc.',this)">TSLA</button>
+          <button class="quick-chip qc-stock" onclick="holdingQuickPick('AMZN','Amazon.com Inc.',this)">AMZN</button>
+          <button class="quick-chip qc-stock" onclick="holdingQuickPick('GOOGL','Alphabet Inc.',this)">GOOGL</button>
+          <button class="quick-chip qc-stock" onclick="holdingQuickPick('META','Meta Platforms',this)">META</button>
+        </div>
+
+        <p class="qc-section-label">₿ Crypto</p>
+        <div class="quick-chips">
+          <button class="quick-chip qc-crypto" onclick="holdingQuickPick('BTC','Bitcoin',this)">₿ Bitcoin</button>
+          <button class="quick-chip qc-crypto" onclick="holdingQuickPick('ETH','Ethereum',this)">Ξ Ethereum</button>
+          <button class="quick-chip qc-crypto" onclick="holdingQuickPick('SOL','Solana',this)">◎ Solana</button>
+          <button class="quick-chip qc-crypto" onclick="holdingQuickPick('XRP','Ripple (XRP)',this)">XRP</button>
+          <button class="quick-chip qc-crypto" onclick="holdingQuickPick('ADA','Cardano (ADA)',this)">ADA</button>
+          <button class="quick-chip qc-crypto" onclick="holdingQuickPick('DOGE','Dogecoin',this)">Ð Doge</button>
+        </div>
+
+        <p class="qc-section-label">📊 ETFs</p>
+        <div class="quick-chips">
+          <button class="quick-chip qc-etf" onclick="holdingQuickPick('SPY','S&amp;P 500 ETF (SPY)',this)">SPY</button>
+          <button class="quick-chip qc-etf" onclick="holdingQuickPick('QQQ','NASDAQ 100 ETF (QQQ)',this)">QQQ</button>
+          <button class="quick-chip qc-etf" onclick="holdingQuickPick('VOO','Vanguard S&amp;P 500 (VOO)',this)">VOO</button>
+          <button class="quick-chip qc-etf" onclick="holdingQuickPick('VTI','Vanguard Total Market (VTI)',this)">VTI</button>
+          <button class="quick-chip qc-etf" onclick="holdingQuickPick('ARKK','ARK Innovation ETF',this)">ARKK</button>
+          <button class="quick-chip qc-etf" onclick="holdingQuickPick('GLD','Gold ETF (GLD)',this)">GLD</button>
+        </div>
+
+        <p class="qc-section-label">🥇 Commodities</p>
+        <div class="quick-chips">
+          <button class="quick-chip qc-commodity" onclick="holdingQuickPick('GLD','Gold (SPDR ETF)',this)">🥇 Gold</button>
+          <button class="quick-chip qc-commodity" onclick="holdingQuickPick('SLV','Silver (iShares ETF)',this)">🥈 Silver</button>
+          <button class="quick-chip qc-commodity" onclick="holdingQuickPick('USO','US Oil Fund (USO)',this)">🛢 Oil</button>
+          <button class="quick-chip qc-commodity" onclick="holdingQuickPick('PDBC','Invesco Commodity ETF',this)">📦 Multi</button>
+          <button class="quick-chip qc-commodity" onclick="holdingQuickPick('PLTM','Platinum ETF',this)">Platinum</button>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div style="display:flex;align-items:center;gap:10px;margin:4px 0 16px">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <p style="font-size:10px;font-weight:700;color:var(--faint);letter-spacing:.06em">OR ENTER MANUALLY</p>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+
+      <!-- Ticker + Name -->
+      <div class="modal-field">
+        <label class="form-label">Ticker Symbol <span style="color:var(--red)">*</span></label>
+        <div class="holding-input-wrap">
+          <span class="holding-input-prefix" style="font-size:14px">$</span>
+          <input id="holding-ticker" class="form-input mono" type="text"
+            placeholder="AAPL, BTC, GLD, SPY…" maxlength="10"
+            style="text-transform:uppercase;padding-left:28px">
+        </div>
       </div>
       <div class="modal-field">
-        <label class="form-label">Asset Name</label>
+        <label class="form-label">Asset Name <span style="font-size:10px;color:var(--faint);font-weight:500">(optional — auto-filled by quick add)</span></label>
         <input id="holding-name" class="form-input" type="text"
-          placeholder="e.g. Apple Inc. / Gold ETF / Bitcoin" maxlength="60">
+          placeholder="e.g. Apple Inc." maxlength="60">
       </div>
-      <div class="modal-field">
-        <label class="form-label">Units / Shares / Oz / Coins</label>
-        <input id="holding-shares" class="form-input mono" type="number" placeholder="10" min="0.0001" step="0.0001">
+
+      <!-- Quantity + Cost side-by-side -->
+      <div class="holding-form-row" style="margin-bottom:14px">
+        <div>
+          <label class="form-label">Quantity <span style="color:var(--red)">*</span></label>
+          <input id="holding-shares" class="form-input mono" type="number"
+            placeholder="0" min="0.0001" step="0.0001">
+          <p style="font-size:10px;color:var(--faint);margin-top:4px">Shares / Units / Coins</p>
+        </div>
+        <div>
+          <label class="form-label">Avg. Cost / Unit <span style="color:var(--red)">*</span></label>
+          <div class="holding-input-wrap">
+            <span id="holding-cost-sym" class="holding-input-prefix">$</span>
+            <input id="holding-cost" class="form-input mono" type="number"
+              placeholder="0.00" min="0" step="0.01" style="padding-left:22px">
+          </div>
+          <p id="holding-price-hint" class="holding-price-hint"></p>
+        </div>
       </div>
-      <div class="modal-field">
-        <label class="form-label">Avg. Cost per Unit</label>
-        <input id="holding-cost" class="form-input mono" type="number" placeholder="150.00" min="0" step="0.01">
-      </div>
+
       <div id="holding-error" class="auth-error"></div>
-      <button class="modal-save-btn" onclick="saveHolding()">Save Holding</button>
+      <button class="modal-save-btn" onclick="saveHolding()">Add to Portfolio</button>
       <button class="modal-cancel" onclick="closeAddHoldingModal()">Cancel</button>
     </div>
   </div>
@@ -5983,12 +6028,34 @@ async function toggleWatchlist(ticker, name) {
 }
 
 // ── Add / Remove Portfolio Holdings ──────────────────────────────────────────
-function holdingQuickPick(ticker, name) {
-  // Decode HTML entities (e.g. &amp; → &) for display in the input
+function holdingQuickPick(ticker, name, chipEl) {
+  // Decode HTML entities (e.g. &amp; → &) for display
   const txt = document.createElement('textarea');
   txt.innerHTML = name;
   document.getElementById('holding-ticker').value = ticker;
   document.getElementById('holding-name').value   = txt.value;
+
+  // Highlight selected chip, clear others
+  document.querySelectorAll('.quick-chip').forEach(c => c.classList.remove('selected'));
+  if (chipEl) chipEl.classList.add('selected');
+
+  // Show current market price as a hint
+  const mkt      = RAW_MARKETS.find(m => m.ticker === ticker);
+  const hintEl   = document.getElementById('holding-price-hint');
+  if (hintEl) {
+    if (mkt) {
+      hintEl.textContent = 'Market price: ' + fmtUnitPrice(mkt.val);
+      hintEl.style.display = 'block';
+    } else {
+      hintEl.textContent = '';
+    }
+  }
+
+  // Clear stale values and move focus to quantity
+  document.getElementById('holding-shares').value = '';
+  document.getElementById('holding-cost').value   = '';
+  document.getElementById('holding-error').textContent = '';
+  document.getElementById('holding-error').classList.remove('show');
   document.getElementById('holding-shares').focus();
 }
 
@@ -6020,6 +6087,23 @@ function openAddHoldingModal(ticker = '', name = '') {
   document.getElementById('holding-cost').value   = '';
   const e = document.getElementById('holding-error');
   e.textContent = ''; e.classList.remove('show');
+
+  // Sync currency symbol prefix
+  const sym = curCfg().symbol;
+  const symEl = document.getElementById('holding-cost-sym');
+  if (symEl) symEl.textContent = sym;
+
+  // Clear any previous chip selection + price hint
+  document.querySelectorAll('.quick-chip').forEach(c => c.classList.remove('selected'));
+  const hint = document.getElementById('holding-price-hint');
+  if (hint) hint.textContent = '';
+
+  // If pre-filled from a quick-pick context (e.g. stock detail), show market price hint
+  if (ticker) {
+    const mkt = RAW_MARKETS.find(m => m.ticker === ticker);
+    if (mkt && hint) hint.textContent = 'Market price: ' + fmtUnitPrice(mkt.val);
+  }
+
   document.getElementById('add-holding-modal').classList.remove('hidden');
 }
 function closeAddHoldingModal() {
