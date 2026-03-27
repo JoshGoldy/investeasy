@@ -29,7 +29,7 @@ define('ANTHROPIC_API_KEY', 'sk-ant-api03-QF8gzCtk0VGus6dIdwz7xIf2kXKvri7QmmH9Fu
 define('RATE_LIMIT', 20);
 
 // Claude model to use
-define('MODEL', 'claude-sonnet-4-20250514');
+define('MODEL', 'claude-sonnet-4-6');
 
 // Max tokens per response
 define('MAX_TOKENS', 4096);
