@@ -683,6 +683,61 @@ button{cursor:pointer}
 .alert-bell:hover{transform:scale(1.2)}
 .alert-bell.active{filter:drop-shadow(0 0 3px #f59e0b)}
 
+/* ── NEWS FEATURE ADDITIONS ───────────────────────────────────── */
+/* Read/Unread dimming */
+.news-card.read{opacity:0.52;transition:opacity .2s}
+.news-card.read:hover{opacity:0.85}
+
+/* Bookmark button on card */
+.news-bookmark-btn{background:none;border:none;cursor:pointer;font-size:15px;line-height:1;
+  padding:3px;transition:transform .15s,filter .15s;flex-shrink:0}
+.news-bookmark-btn:hover{transform:scale(1.2)}
+.news-bookmark-btn.saved{filter:drop-shadow(0 0 4px #f59e0b)}
+
+/* Time range filter row */
+.time-range-row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:0 0 10px;align-items:center}
+.time-filter-btn{flex-shrink:0;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:600;
+  background:var(--border);color:var(--muted);border:none;cursor:pointer;transition:all .2s}
+.time-filter-btn.active{background:#3b82f6;color:#fff;font-weight:700}
+
+/* My Stocks filter active state */
+.news-filter-btn.mystocks-active{background:#f59e0b;color:#fff}
+
+/* Bookmarks filter active state */
+.news-filter-btn.bookmarks-active{background:#ec4899;color:#fff}
+
+/* News alert badge on nav */
+.news-alert-nav-badge{display:none;position:absolute;top:6px;right:12px;min-width:16px;height:16px;
+  background:#ef4444;color:#fff;border-radius:8px;font-size:9px;font-weight:800;
+  align-items:center;justify-content:center;padding:0 4px;line-height:1}
+.news-alert-nav-badge.visible{display:flex}
+
+/* Alerts modal */
+.news-alerts-modal-bg{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.5);
+  backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center}
+.news-alerts-modal-bg.hidden{display:none}
+.news-alerts-modal{background:var(--card);border-radius:20px;padding:24px;width:90%;max-width:440px;
+  max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.news-alerts-modal h3{font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px}
+.news-alerts-modal .sub{font-size:12px;color:var(--faint);margin-bottom:16px}
+.alert-item{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--bg);
+  border-radius:10px;margin-bottom:8px}
+.alert-item .kw{flex:1;font-size:13px;font-weight:600;color:var(--text)}
+.alert-item .type-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px}
+.alert-item .type-badge.ticker{background:#10b98118;color:#10b981}
+.alert-item .type-badge.keyword{background:#3b82f618;color:#3b82f6}
+.alert-remove-btn{background:none;border:none;cursor:pointer;color:var(--faint);font-size:14px;
+  padding:2px 6px;border-radius:6px;transition:all .15s}
+.alert-remove-btn:hover{background:var(--red-bg);color:var(--red)}
+.alert-add-row{display:flex;gap:8px;margin-top:12px}
+.alert-add-input{flex:1;padding:10px 14px;border-radius:10px;background:var(--border);
+  font-size:13px;color:var(--text);border:1.5px solid transparent;transition:all .2s}
+.alert-add-input:focus{background:var(--card);border-color:var(--green);box-shadow:0 0 0 3px #10b98120}
+.alert-add-input::placeholder{color:var(--faint)}
+.alert-add-btn{padding:10px 18px;border-radius:10px;background:var(--green);color:#fff;
+  font-size:13px;font-weight:700;border:none;cursor:pointer;transition:opacity .15s;white-space:nowrap}
+.alert-add-btn:hover{opacity:.88}
+
 /* ── ALERT MODAL ──────────────────────────────────────────────── */
 .alert-modal-bg{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px}
 .alert-modal-bg.hidden{display:none}
@@ -857,6 +912,26 @@ button{cursor:pointer}
     <div class="news-sheet">
       <div class="news-sheet-handle"></div>
       <div class="news-sheet-inner" id="news-sheet-inner"></div>
+    </div>
+  </div>
+
+  <!-- News Alerts Modal -->
+  <div id="news-alerts-modal-bg" class="news-alerts-modal-bg hidden" onclick="if(event.target===this)closeNewsAlertsModal()">
+    <div class="news-alerts-modal">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <h3>🔔 News Alerts</h3>
+        <button onclick="closeNewsAlertsModal()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--faint);padding:2px 6px">✕</button>
+      </div>
+      <p class="sub">Get in-app badges when articles match your tickers or keywords.</p>
+      <div id="news-alerts-list"></div>
+      <div class="alert-add-row">
+        <input id="news-alert-input" class="alert-add-input" type="text" placeholder="Ticker (e.g. AAPL) or keyword…" maxlength="40"
+          onkeydown="if(event.key==='Enter')addNewsAlert()">
+        <button class="alert-add-btn" onclick="addNewsAlert()">+ Add</button>
+      </div>
+      <p style="font-size:11px;color:var(--faint);margin-top:10px;line-height:1.5">
+        Tip: enter a ticker like <strong>NVDA</strong> or a phrase like <strong>interest rate</strong>. Alerts appear as a badge on the News tab.
+      </p>
     </div>
   </div>
 
@@ -1061,9 +1136,10 @@ button{cursor:pointer}
     <div class="nav-brand">
       <img src="logo.png" alt="FinScope" style="height:36px;width:auto" onerror="this.src='logo.svg'">
     </div>
-    <button class="active" data-tab="news">
+    <button class="active" data-tab="news" style="position:relative">
       <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M18 18h-8M18 10h-8"/></svg>
       <span>News</span><div class="nav-dot"></div>
+      <div class="news-alert-nav-badge" id="news-alert-badge"></div>
     </button>
     <button data-tab="markets">
       <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -1328,6 +1404,16 @@ let newsLastFetched = 0;
 let newsFetchedAt = null;
 let newsFilter = 'All';
 let newsSearch = '';
+let newsTimeRange = '72h';          // '1h' | 'today' | 'week' | '72h'
+let newsShowBookmarks = false;      // show only bookmarked articles
+// Read/Unread tracking — persisted in localStorage
+let readArticles = new Set(JSON.parse(localStorage.getItem('ie_read_articles') || '[]'));
+// Bookmarked articles — {uuid: articleObject}
+let bookmarkedArticles = JSON.parse(localStorage.getItem('ie_bookmarks') || '{}');
+// News alerts — [{id, keyword, createdAt}]
+let newsAlerts = JSON.parse(localStorage.getItem('ie_news_alerts') || '[]');
+// UUIDs of articles that matched an alert (unacknowledged)
+let newsAlertMatches = new Set(JSON.parse(localStorage.getItem('ie_alert_matches') || '[]'));
 
 const HOLDINGS = [
   { ticker:'AAPL', name:'Apple Inc.', shares:12, cost:178.40, cur:189.30, alloc:28 },
@@ -1339,7 +1425,10 @@ const HOLDINGS = [
 
 const PORT_HIST = [{t:'Jan',v:8200},{t:'Feb',v:8800},{t:'Mar',v:8400},{t:'Apr',v:9100},{t:'May',v:9600},{t:'Jun',v:9200},{t:'Jul',v:9900},{t:'Aug',v:10200},{t:'Sep',v:9800},{t:'Oct',v:10500},{t:'Nov',v:10900},{t:'Dec',v:11240}];
 const ALLOC_COLORS = ['#10b981','#3b82f6','#8b5cf6','#f59e0b','#ef4444'];
-const CAT_COLORS = { Markets:'#10b981', Economy:'#3b82f6', Tech:'#8b5cf6', Crypto:'#f59e0b' };
+const CAT_COLORS = {
+  Markets:'#10b981', Economy:'#3b82f6', Tech:'#8b5cf6', Crypto:'#f59e0b',
+  Earnings:'#ec4899', Commodities:'#d97706', Forex:'#06b6d4', 'Real Estate':'#84cc16'
+};
 
 const FINBOT_MODES = [
   { id:'screener', icon:'📊', title:'Stock Screener', sub:'Jake', col:'#10b981',
@@ -1553,6 +1642,10 @@ function _newsCateg(title) {
   if (/bitcoin|ethereum|crypto|blockchain|defi|solana|nft|dogecoin|ripple|altcoin/.test(t)) return 'Crypto';
   if (/\bfed\b|federal reserve|inflation|cpi|ppi|gdp|interest rate|recession|unemployment|tariff|trade war|central bank/.test(t)) return 'Economy';
   if (/apple|microsoft|google|alphabet|amazon|meta|nvidia|tesla|openai|\bai\b|artificial intelligence|chip|semiconductor|software|cloud|cyber/.test(t)) return 'Tech';
+  if (/\bearnings\b|quarterly results|revenue|eps|\bebit\b|net income|beat estimates|miss estimates|q[1-4] results|profit warning|guidance/.test(t)) return 'Earnings';
+  if (/\boil\b|crude|brent|gold|silver|copper|wheat|corn|soybean|\bnatural gas\b|commodity|commodities|wti|opec/.test(t)) return 'Commodities';
+  if (/\bforex\b|exchange rate|dollar index|\bdxy\b|currency|yen|euro|pound sterling|gbp|eur\/usd|usd\/jpy|fx market|devaluation/.test(t)) return 'Forex';
+  if (/real estate|housing market|reit|mortgage rate|home price|property market|construction|homebuilder|rental market/.test(t)) return 'Real Estate';
   return 'Markets';
 }
 function _newsHot(title) {
@@ -1674,6 +1767,7 @@ async function fetchLiveNews(force = false) {
       liveNews = d.articles.filter(a => (a.pubTime || 0) >= cutoff72h).slice(0, 30);
       newsLastFetched = now;
       newsFetchedAt = new Date();
+      checkNewsAlertsForArticles(liveNews);
       renderNewsContent();
       return;
     }
@@ -1686,6 +1780,7 @@ async function fetchLiveNews(force = false) {
       liveNews = articles;
       newsLastFetched = now;
       newsFetchedAt = new Date();
+      checkNewsAlertsForArticles(liveNews);
     }
   } catch(e) {}
 
@@ -1695,8 +1790,14 @@ async function fetchLiveNews(force = false) {
 function renderNews(filter, search) {
   if (filter !== undefined) newsFilter = filter;
   if (search !== undefined) newsSearch = search;
-  const cats = ['All','Markets','Economy','Tech','Crypto'];
+  const cats = ['All','Markets','Economy','Tech','Crypto','Earnings','Commodities','Forex','Real Estate'];
   const el = document.getElementById('tab-news');
+  const timeRanges = [
+    { id:'1h',    label:'Last hour' },
+    { id:'today', label:'Today' },
+    { id:'week',  label:'This week' },
+    { id:'72h',   label:'3 days' },
+  ];
 
   // If only search changed and the structure is already built, just re-filter articles
   if (search !== undefined && filter === undefined && document.getElementById('news-search-input')) {
@@ -1704,16 +1805,34 @@ function renderNews(filter, search) {
     return;
   }
 
+  const myStocksActive = newsFilter === 'My Stocks';
+  const bookmarksActive = newsShowBookmarks;
+  const alertCount = newsAlertMatches.size;
+
   el.innerHTML = `
     <div class="section-title" style="display:flex;justify-content:space-between;align-items:flex-start">
       <div><h2>News Feed</h2><p>Live market insights & analysis</p></div>
-      <button class="news-refresh-btn" id="refresh-btn" onclick="refreshNews()" title="Refresh news">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-        Refresh
-      </button>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+        <button onclick="openNewsAlertsModal()" title="Manage alerts"
+          style="position:relative;display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--radius-xs);
+                 background:${alertCount>0?'#ef444418':'var(--border)'};color:${alertCount>0?'var(--red)':'var(--muted)'};
+                 font-size:11px;font-weight:600;border:none;cursor:pointer;transition:all .2s">
+          🔔 Alerts${alertCount > 0 ? ` <span style="background:#ef4444;color:#fff;border-radius:8px;padding:1px 5px;font-size:9px;font-weight:800">${alertCount}</span>` : ''}
+        </button>
+        <button class="news-refresh-btn" id="refresh-btn" onclick="refreshNews()" title="Refresh news">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          Refresh
+        </button>
+      </div>
     </div>
     <div class="filter-row">
-      ${cats.map(c => `<button class="news-filter-btn ${newsFilter===c?'active':''}" onclick="renderNews('${c}')">${c}</button>`).join('')}
+      ${cats.map(c => `<button class="news-filter-btn ${newsFilter===c&&!myStocksActive&&!bookmarksActive?'active':''}" onclick="setNewsFilter('${c}')">${c}</button>`).join('')}
+      <button class="news-filter-btn ${myStocksActive?'mystocks-active':''}" onclick="setNewsFilter('My Stocks')" title="Articles mentioning your portfolio & watchlist tickers">⭐ My Stocks</button>
+      <button class="news-filter-btn ${bookmarksActive?'bookmarks-active':''}" onclick="toggleNewsBookmarksView()">🔖 Bookmarks${Object.keys(bookmarkedArticles).length > 0 ? ' ('+Object.keys(bookmarkedArticles).length+')' : ''}</button>
+    </div>
+    <div class="time-range-row">
+      <span style="font-size:11px;font-weight:700;color:var(--faint);flex-shrink:0">Time:</span>
+      ${timeRanges.map(r => `<button class="time-filter-btn ${newsTimeRange===r.id?'active':''}" onclick="setNewsTimeRange('${r.id}')">${r.label}</button>`).join('')}
     </div>
     <input class="news-search" id="news-search-input" type="text" placeholder="Search news…" value="${escHtml(newsSearch)}"
       oninput="renderNews(undefined,this.value)">
@@ -1744,48 +1863,89 @@ function showNewsSkeletons() {
 function renderNewsContent() {
   const c = document.getElementById('news-articles-container');
   if (!c) return;
-  if (!liveNews.length) {
+  if (!liveNews.length && !newsShowBookmarks) {
     c.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--faint);font-size:13px">Loading latest news…</div>';
     return;
   }
-  const cutoff72h = Math.floor(Date.now() / 1000) - 72 * 60 * 60;
-  const source = liveNews.filter(n => (n.pubTime || 0) >= cutoff72h).slice(0, 30);
-  let list = newsFilter === 'All' ? source : source.filter(n => n.cat === newsFilter);
+
+  // Time range cutoff
+  const cutoff = getNewsTimeRangeCutoff();
+  let source = liveNews.filter(n => (n.pubTime || 0) >= cutoff).slice(0, 60);
+
+  // Bookmarks view — show saved articles regardless of time range
+  if (newsShowBookmarks) {
+    source = Object.values(bookmarkedArticles).sort((a, b) => (b.pubTime||0) - (a.pubTime||0));
+  } else if (newsFilter === 'My Stocks') {
+    // My Stocks: articles mentioning any portfolio or watchlist ticker
+    const myTickers = new Set([
+      ...(dbPortfolio.map(h => h.ticker.toUpperCase())),
+      ...[...watchlistSet].map(t => t.toUpperCase()),
+    ]);
+    if (myTickers.size === 0) {
+      c.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--faint);font-size:13px">Add stocks to your portfolio or watchlist to use this filter.</div>';
+      return;
+    }
+    source = source.filter(n => {
+      const text = (n.title + ' ' + (n.description||'')).toUpperCase();
+      return [...myTickers].some(t => text.includes(t));
+    });
+  } else if (newsFilter !== 'All') {
+    source = source.filter(n => n.cat === newsFilter);
+  }
+
   if (newsSearch.trim()) {
     const q = newsSearch.toLowerCase();
-    list = list.filter(n => n.title.toLowerCase().includes(q) || (n.publisher||'').toLowerCase().includes(q));
+    source = source.filter(n => n.title.toLowerCase().includes(q) || (n.publisher||'').toLowerCase().includes(q));
   }
 
   const lastUpdatedStr = newsFetchedAt
     ? `Updated ${newsFetchedAt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`
     : 'Fetching…';
 
+  const list = source;
+
   c.innerHTML = `
     <div class="live-banner" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px">
-        <span class="badge">LIVE</span>
+        <span class="badge">${newsShowBookmarks ? '🔖' : 'LIVE'}</span>
         <span style="font-weight:500;font-size:13px">${liveNews.length ? list.length + ' articles' : 'Loading…'}</span>
       </div>
       <span style="font-size:11px;color:rgba(255,255,255,0.7)">${lastUpdatedStr}</span>
     </div>
-    ${list.length === 0 ? '<div style="text-align:center;padding:40px;color:var(--faint);font-size:13px">No articles found</div>' : ''}
+    ${list.length === 0 ? `<div style="text-align:center;padding:40px;color:var(--faint);font-size:13px">${newsShowBookmarks ? 'No bookmarked articles yet — click 🔖 on any card to save it.' : 'No articles found'}</div>` : ''}
     <div class="news-cols">
-    ${list.map((n, i) => {
-      const actualIdx = source.indexOf(n);
+    ${list.map(n => {
+      // Ensure article is accessible by index — add to liveNews if from bookmarks only
+      let actualIdx = liveNews.indexOf(n);
+      if (actualIdx === -1 && n.uuid) {
+        // Try to find by UUID in liveNews
+        actualIdx = liveNews.findIndex(a => a.uuid === n.uuid);
+        if (actualIdx === -1) {
+          liveNews.push(n);
+          actualIdx = liveNews.length - 1;
+        }
+      }
+      const isRead = readArticles.has(n.uuid);
+      const isBookmarked = !!bookmarkedArticles[n.uuid];
+      const isAlert = newsAlertMatches.has(n.uuid);
+      const catColor = CAT_COLORS[n.cat] || '#10b981';
       return `
-      <div class="card news-card" style="break-inside:avoid;margin-bottom:12px" onclick="openNewsArticle(${actualIdx},${liveNews.length > 0})">
+      <div class="card news-card${isRead?' read':''}" style="break-inside:avoid;margin-bottom:12px;${isAlert?'border:1.5px solid #ef444440;':''}" onclick="openNewsArticle(${actualIdx},true)">
+        ${isAlert ? '<div style="font-size:10px;font-weight:800;color:#ef4444;margin-bottom:6px;letter-spacing:.04em">🔔 ALERT MATCH</div>' : ''}
         ${n.thumbnail ? `<img class="news-thumb" src="${escHtml(n.thumbnail)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
         <div class="meta">
-          <span class="cat" style="background:${CAT_COLORS[n.cat]}18;color:${CAT_COLORS[n.cat]}">${n.cat}</span>
+          <span class="cat" style="background:${catColor}18;color:${catColor}">${n.cat}</span>
           <div style="display:flex;align-items:center;gap:5px">
             ${n.hot ? '<span>🔥</span>' : ''}
             <span style="font-size:11px;color:var(--faint)">${n.time}</span>
+            <button class="news-bookmark-btn${isBookmarked?' saved':''}" title="${isBookmarked?'Remove bookmark':'Bookmark'}"
+              onclick="event.stopPropagation();toggleNewsBookmark('${escHtml(n.uuid)}',${actualIdx})">${isBookmarked?'🔖':'🏷️'}</button>
           </div>
         </div>
-        <h3>${escHtml(n.title)}</h3>
+        <h3 style="${isRead?'color:var(--muted)':''}">${escHtml(n.title)}</h3>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
           <span class="news-source">${escHtml(n.publisher||'')}</span>
-          <span style="font-size:11px;color:var(--green);font-weight:600">Read more →</span>
+          <span style="font-size:11px;color:${isRead?'var(--faint)':'var(--green)'};font-weight:600">${isRead?'Read ✓':'Read more →'}</span>
         </div>
         <button onclick="event.stopPropagation();confirmAndAnalyzeNews(${actualIdx})"
           style="margin-top:8px;width:100%;padding:7px;border-radius:10px;background:#7c3aed14;color:#a78bfa;
@@ -1813,10 +1973,186 @@ function refreshNews() {
 
 const articleCache = {};  // url → paragraphs[]
 
+// ── News Feature Helpers ────────────────────────────────────────────────────
+
+// Returns Unix timestamp cutoff based on selected time range
+function getNewsTimeRangeCutoff() {
+  const now = Math.floor(Date.now() / 1000);
+  switch (newsTimeRange) {
+    case '1h':    return now - 60 * 60;
+    case 'today': {
+      const d = new Date(); d.setHours(0, 0, 0, 0);
+      return Math.floor(d.getTime() / 1000);
+    }
+    case 'week':  return now - 7 * 24 * 60 * 60;
+    default:      return now - 72 * 60 * 60;
+  }
+}
+
+function setNewsTimeRange(range) {
+  newsTimeRange = range;
+  renderNews();
+}
+
+function setNewsFilter(filter) {
+  newsFilter = filter;
+  newsShowBookmarks = false;
+  renderNews();
+}
+
+function toggleNewsBookmarksView() {
+  newsShowBookmarks = !newsShowBookmarks;
+  if (newsShowBookmarks) newsFilter = 'All';
+  renderNews(); // Rebuilds full UI with correct active state on the Bookmarks button
+}
+
+// Toggle bookmark for an article by UUID
+function toggleNewsBookmark(uuid, idx) {
+  if (!uuid) return;
+  const n = liveNews[idx] || Object.values(bookmarkedArticles).find(a => a.uuid === uuid);
+  if (!n) return;
+  if (bookmarkedArticles[uuid]) {
+    delete bookmarkedArticles[uuid];
+    showToast('Bookmark removed.');
+  } else {
+    bookmarkedArticles[uuid] = n;
+    showToast('Article bookmarked! View in Bookmarks.');
+  }
+  try { localStorage.setItem('ie_bookmarks', JSON.stringify(bookmarkedArticles)); } catch(e) {}
+  // Re-render: if in bookmark view, full rebuild; otherwise just re-filter articles
+  if (newsShowBookmarks) renderNews();
+  else renderNewsContent();
+}
+
+// ── News Alerts ─────────────────────────────────────────────────────────────
+
+function openNewsAlertsModal() {
+  renderNewsAlertsList();
+  document.getElementById('news-alerts-modal-bg').classList.remove('hidden');
+  const inp = document.getElementById('news-alert-input');
+  if (inp) inp.focus();
+  // Clear the alert match badge since user is reviewing them
+  if (newsAlertMatches.size > 0) clearNewsAlertMatches();
+}
+
+function closeNewsAlertsModal() {
+  document.getElementById('news-alerts-modal-bg').classList.add('hidden');
+}
+
+function renderNewsAlertsList() {
+  const el = document.getElementById('news-alerts-list');
+  if (!el) return;
+  if (!newsAlerts.length) {
+    el.innerHTML = '<p style="font-size:12px;color:var(--faint);padding:8px 0">No alerts yet. Add a ticker or keyword below.</p>';
+    return;
+  }
+  el.innerHTML = newsAlerts.map(a => {
+    const isTicker = /^[A-Z]{1,5}$/.test(a.keyword.trim().toUpperCase());
+    return `
+    <div class="alert-item">
+      <span class="kw">${escHtml(a.keyword)}</span>
+      <span class="type-badge ${isTicker?'ticker':'keyword'}">${isTicker?'Ticker':'Keyword'}</span>
+      <button class="alert-remove-btn" onclick="removeNewsAlert('${escHtml(a.id)}')" title="Remove alert">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function addNewsAlert() {
+  const inp = document.getElementById('news-alert-input');
+  if (!inp) return;
+  const kw = inp.value.trim();
+  if (!kw) return;
+  if (newsAlerts.some(a => a.keyword.toLowerCase() === kw.toLowerCase())) {
+    showToast('Alert already exists for "' + kw + '"');
+    return;
+  }
+  const alert = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,5), keyword: kw, createdAt: Date.now() };
+  newsAlerts.push(alert);
+  try { localStorage.setItem('ie_news_alerts', JSON.stringify(newsAlerts)); } catch(e) {}
+  inp.value = '';
+  renderNewsAlertsList();
+  // Check existing articles against the new alert
+  checkNewsAlertsForArticles(liveNews);
+  showToast('Alert added for "' + kw + '"');
+}
+
+function removeNewsAlert(id) {
+  newsAlerts = newsAlerts.filter(a => a.id !== id);
+  try { localStorage.setItem('ie_news_alerts', JSON.stringify(newsAlerts)); } catch(e) {}
+  renderNewsAlertsList();
+  updateNewsAlertBadge();
+}
+
+// Check a batch of articles against all alerts; updates newsAlertMatches
+function checkNewsAlertsForArticles(articles) {
+  if (!newsAlerts.length || !articles.length) return;
+  let changed = false;
+  for (const article of articles) {
+    if (!article.uuid) continue;
+    const text = (article.title + ' ' + (article.description || '')).toLowerCase();
+    for (const alert of newsAlerts) {
+      if (text.includes(alert.keyword.toLowerCase())) {
+        if (!newsAlertMatches.has(article.uuid)) {
+          newsAlertMatches.add(article.uuid);
+          changed = true;
+        }
+      }
+    }
+  }
+  if (changed) {
+    try { localStorage.setItem('ie_alert_matches', JSON.stringify([...newsAlertMatches])); } catch(e) {}
+    updateNewsAlertBadge();
+  }
+}
+
+function updateNewsAlertBadge() {
+  const badge = document.getElementById('news-alert-badge');
+  if (!badge) return;
+  const count = newsAlertMatches.size;
+  if (count > 0) {
+    badge.textContent = count > 9 ? '9+' : count;
+    badge.classList.add('visible');
+  } else {
+    badge.classList.remove('visible');
+  }
+  // Update the alert count button in the news header if currently visible
+  const alertBtn = document.querySelector('#tab-news button[onclick*="openNewsAlertsModal"]');
+  if (alertBtn) {
+    alertBtn.style.background = count > 0 ? '#ef444418' : 'var(--border)';
+    alertBtn.style.color = count > 0 ? 'var(--red)' : 'var(--muted)';
+    alertBtn.innerHTML = `🔔 Alerts${count > 0 ? ` <span style="background:#ef4444;color:#fff;border-radius:8px;padding:1px 5px;font-size:9px;font-weight:800">${count}</span>` : ''}`;
+  }
+}
+
+// Clear alert matches when user clicks Alerts button (they've seen them)
+function clearNewsAlertMatches() {
+  newsAlertMatches.clear();
+  try { localStorage.removeItem('ie_alert_matches'); } catch(e) {}
+  updateNewsAlertBadge();
+}
+
 function openNewsArticle(idx, fromLive) {
   const source = liveNews;
   const n = source[idx];
   if (!n) return;
+
+  // Mark as read
+  if (n.uuid && !readArticles.has(n.uuid)) {
+    readArticles.add(n.uuid);
+    try {
+      const arr = JSON.parse(localStorage.getItem('ie_read_articles') || '[]');
+      arr.push(n.uuid);
+      // Keep last 500 read articles
+      localStorage.setItem('ie_read_articles', JSON.stringify(arr.slice(-500)));
+    } catch(e) {}
+    // Update the card in place to dim it without full re-render
+    const cards = document.querySelectorAll('.news-card');
+    cards.forEach(card => {
+      if (card.querySelector('h3') && card.querySelector('h3').textContent === n.title) {
+        card.classList.add('read');
+      }
+    });
+  }
 
   const overlay = document.getElementById('news-overlay');
   const inner   = document.getElementById('news-sheet-inner');
@@ -1824,10 +2160,17 @@ function openNewsArticle(idx, fromLive) {
   const articleLink = n.link || `https://www.google.com/search?q=${encodeURIComponent(n.title)}&tbm=nws`;
 
   function renderSheet(bodyHtml) {
+    const isBookmarked = n.uuid && !!bookmarkedArticles[n.uuid];
     inner.innerHTML = `
       <div class="news-sheet-meta">
         <span class="news-sheet-pub">${escHtml(n.publisher || '')}</span>
-        <span class="news-sheet-time">${escHtml(n.time)}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="news-sheet-time">${escHtml(n.time)}</span>
+          <button id="sheet-bookmark-btn" class="news-bookmark-btn${isBookmarked?' saved':''}"
+            title="${isBookmarked?'Remove bookmark':'Bookmark this article'}"
+            onclick="toggleNewsBookmark('${n.uuid ? escHtml(n.uuid) : ''}',${idx});document.getElementById('sheet-bookmark-btn').textContent=bookmarkedArticles['${n.uuid ? escHtml(n.uuid) : ''}']?'🔖':'🏷️';document.getElementById('sheet-bookmark-btn').classList.toggle('saved',!!bookmarkedArticles['${n.uuid ? escHtml(n.uuid) : ''}'])"
+            style="font-size:18px">${isBookmarked?'🔖':'🏷️'}</button>
+        </div>
       </div>
       ${n.thumbnail ? `<img class="news-sheet-img" src="${escHtml(n.thumbnail)}" alt="" onerror="this.style.display='none'">` : ''}
       <div class="news-sheet-title">${escHtml(n.title)}</div>
@@ -7901,6 +8244,8 @@ renderNavPulse();
 fetchLivePrices();
 // Retry news after 30s if the initial fetch didn't return live articles
 setTimeout(() => { if (!liveNews.length) fetchLiveNews(true); }, 30 * 1000);
+// Restore alert badge on page load (in case there are persisted matches)
+updateNewsAlertBadge();
 </script>
 
 <!-- Credit Confirmation Modal -->
