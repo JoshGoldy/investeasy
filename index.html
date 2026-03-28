@@ -3423,7 +3423,7 @@ let finbotForm = {
   company: '', earnDate: '', ePos: 'none',
   age: '', income: '', savings: '', goal: 'wealth', bRisk: 'moderate', acct: 'taxable',
   techTicker: '', techPos: 'none', builderHoldings: '',
-  currency: 'USD',
+  currency: loadSettings().currency,
 };
 
 const CURRENCIES = [
@@ -3996,8 +3996,10 @@ Include:
 - Goal: ${f.goal || 'build wealth'}
 - Risk tolerance: ${f.bRisk || 'moderate'}
 - Account type: ${f.acct || 'taxable'}
+- Currency: ${f.currency}
 ${f.builderHoldings ? `- Existing holdings: ${f.builderHoldings}` : ''}
 
+Express all monetary values, contribution amounts, and projections in ${f.currency}.
 Provide a full allocation table with specific ETFs/stocks, expected return range, expense ratios, a DCA schedule, and rebalancing triggers.`;
 
     case 'technical':
