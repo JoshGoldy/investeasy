@@ -3422,7 +3422,7 @@ let finbotForm = {
   ticker: '', portfolio: 'AAPL 28%, MSFT 26%, NVDA 22%, TSLA 13%, AMZN 11%', portVal: '',
   company: '', earnDate: '', ePos: 'none',
   age: '', income: '', savings: '', goal: 'wealth', bRisk: 'moderate', acct: 'taxable',
-  techTicker: '', techPos: 'none', builderHoldings: '',
+  techTicker: '', techPos: 'none', techLivePrice: null, techLiveChg: null, techHi52: null, techLo52: null, builderHoldings: '',
   currency: 'USD',
 };
 
@@ -4010,9 +4010,12 @@ Express all monetary values, contribution amounts, and projections in ${f.curren
 Provide a full allocation table with specific ETFs/stocks, expected return range, expense ratios, a DCA schedule, and rebalancing triggers.`;
       break;
 
-    case 'technical':
+    case 'technical': {
+      const liveCtx = f.techLivePrice
+        ? `\nLive market data: Current price: $${Number(f.techLivePrice).toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2})}${f.techLiveChg != null ? `, Day change: ${f.techLiveChg > 0 ? '+' : ''}${f.techLiveChg}%` : ''}${f.techHi52 != null ? `, 52-week high: $${Number(f.techHi52).toLocaleString()}` : ''}${f.techLo52 != null ? `, 52-week low: $${Number(f.techLo52).toLocaleString()}` : ''}`
+        : '';
       user = `Provide a detailed technical analysis for **${f.techTicker || 'NVDA'}**.
-Current position: ${f.techPos || 'none (observing)'}
+Current position: ${f.techPos || 'none (observing)'}${liveCtx}
 
 Include:
 1. Trend analysis across daily, weekly, and monthly timeframes
@@ -4024,6 +4027,7 @@ Include:
 7. Price targets (bull and bear)
 8. Overall signal: Strong Buy / Buy / Neutral / Sell / Strong Sell`;
       break;
+    }
 
     default:
       user = `Provide a professional financial analysis for the "${modeId}" mode.`;
@@ -4036,6 +4040,21 @@ async function runFinBot(modeId) {
   finbotState.result = null;
   finbotState.error = null;
   renderFinBot();
+
+  // Fetch live price for technical analysis before building the prompt
+  if (modeId === 'technical' && finbotForm.techTicker) {
+    try {
+      const priceResp = await fetch(`prices.php?action=quotes&tickers=${encodeURIComponent(finbotForm.techTicker)}`);
+      const priceData = await priceResp.json();
+      const q = priceData?.quotes?.[finbotForm.techTicker];
+      finbotForm.techLivePrice = q?.price ?? null;
+      finbotForm.techLiveChg   = q?.chg   ?? null;
+      finbotForm.techHi52      = q?.hi52  ?? null;
+      finbotForm.techLo52      = q?.lo52  ?? null;
+    } catch (_) {
+      finbotForm.techLivePrice = null;
+    }
+  }
 
   try {
     const resp = await fetch('api.php', {
