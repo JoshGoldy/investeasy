@@ -7343,6 +7343,206 @@ const LEARN_TOPICS = [
       { q: 'REITs are required by law to distribute at least what percentage of taxable income?', opts: ['50%', '75%', '90%', '100%'], ans: 2, explain: 'REITs must distribute at least 90% of their taxable income as dividends to qualify for their special tax status. This is what makes them high-yield income investments.' },
       { q: 'A payout ratio above 100% means:', opts: ['Excellent dividend safety', 'The company is paying out more in dividends than it earns', 'The stock has great growth potential', 'The dividend was recently doubled'], ans: 1, explain: 'A payout ratio above 100% means the company is paying out more in dividends than it earns in net income. This is unsustainable and often signals a future dividend cut.' }
     ]
+  },
+  {
+    id: 'retirement',
+    icon: '🏦',
+    iconBg: '#f59e0b18',
+    title: 'Retirement Accounts',
+    desc: '401(k), IRA, Roth IRA, and tax-advantaged investing',
+    difficulty: 'beginner',
+    lessons: [
+      {
+        title: '401(k) Plans',
+        content: `
+          <p>A <span class="term">401(k)</span> is an employer-sponsored retirement savings plan that lets you invest pre-tax dollars — reducing your taxable income today while your money grows tax-deferred until withdrawal.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">How a 401(k) Works</h4>
+          <ul>
+            <li>Contributions come directly out of your paycheck before taxes</li>
+            <li>2024 contribution limit: <span class="term">$23,000</span> ($30,500 if age 50+)</li>
+            <li>You pay taxes when you <strong>withdraw</strong> in retirement (ideally at a lower tax rate)</li>
+            <li>Early withdrawals before age 59½ incur a <span class="term">10% penalty</span> plus taxes</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Employer Match — Free Money</h4>
+          <ul>
+            <li>Many employers match a percentage of your contributions (e.g., 50% of the first 6%)</li>
+            <li>Always contribute at least enough to get the <span class="term">full employer match</span> — it's an instant 50–100% return</li>
+          </ul>
+          <div class="highlight">If your employer matches 50% of your first 6% and you earn $60,000, contributing 6% ($3,600) gets you a free $1,800 match. That's a 50% instant return before any market gains.</div>
+        `
+      },
+      {
+        title: 'Traditional vs. Roth IRA',
+        content: `
+          <p>An <span class="term">IRA (Individual Retirement Account)</span> is a tax-advantaged account you open yourself. The two main types differ in <em>when</em> you get the tax break.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Traditional IRA</h4>
+          <ul>
+            <li><span class="term">Tax break now</span> — Contributions may be tax-deductible</li>
+            <li>Money grows tax-deferred; you pay taxes on withdrawals in retirement</li>
+            <li>Required Minimum Distributions (RMDs) starting at age 73</li>
+            <li>Best if you expect to be in a <strong>lower tax bracket</strong> in retirement</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Roth IRA</h4>
+          <ul>
+            <li><span class="term">Tax break later</span> — Contributions are after-tax, but withdrawals are 100% tax-free</li>
+            <li>No RMDs — your money can grow indefinitely</li>
+            <li>Income limits apply: phases out above ~$146,000 (single) / $230,000 (married) in 2024</li>
+            <li>Best if you expect to be in a <strong>higher tax bracket</strong> in retirement</li>
+          </ul>
+          <p>2024 IRA limit: <span class="term">$7,000</span> combined across Traditional + Roth ($8,000 if 50+)</p>
+          <div class="highlight">Young investors typically benefit most from a Roth IRA — you're likely in a lower tax bracket now, and decades of tax-free compound growth is extraordinarily powerful.</div>
+        `
+      },
+      {
+        title: 'Tax Strategy & Account Types',
+        content: `
+          <p>Using the right account for the right investments is a powerful but often overlooked strategy. Different accounts have different tax treatment — placing assets strategically can significantly boost after-tax returns.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Tax-Advantaged Accounts</h4>
+          <ul>
+            <li><span class="term">401(k) / Traditional IRA</span> — Best for bonds, REITs, and high-dividend stocks (tax-deferred growth on high-income assets)</li>
+            <li><span class="term">Roth IRA</span> — Best for growth stocks and ETFs (tax-free compounding on your highest-growth assets)</li>
+            <li><span class="term">HSA (Health Savings Account)</span> — Triple tax advantage: deductible contributions, tax-free growth, tax-free withdrawals for medical expenses. After 65, works like a Traditional IRA for non-medical expenses.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Taxable Brokerage Accounts</h4>
+          <ul>
+            <li>No contribution limits; no restrictions on withdrawals</li>
+            <li>Pay capital gains tax when you sell — <span class="term">long-term gains</span> (held 1+ year) taxed at 0%, 15%, or 20%</li>
+            <li>Tax-loss harvesting: selling losing positions to offset capital gains</li>
+          </ul>
+          <div class="highlight">The order to fill accounts: (1) 401(k) to get full employer match → (2) Max HSA → (3) Max Roth IRA → (4) Max 401(k) → (5) Taxable brokerage.</div>
+        `
+      },
+      {
+        title: 'Retirement Planning Basics',
+        content: `
+          <p>Building a retirement plan doesn't require complex spreadsheets — a few key rules of thumb can guide smart decisions.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">The 4% Rule</h4>
+          <p>You can withdraw <span class="term">4% of your portfolio per year</span> in retirement without running out of money over 30 years. To find your target:</p>
+          <ul>
+            <li>Estimate annual spending in retirement (e.g., $50,000/year)</li>
+            <li>Multiply by 25: $50,000 × 25 = <strong>$1,250,000</strong> needed</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">The Power of Starting Early</h4>
+          <ul>
+            <li>$5,000/year from age 25–35 (10 years, then stop) → ~$602,000 by age 65 at 8%</li>
+            <li>$5,000/year from age 35–65 (30 years, keep going) → ~$566,000 by age 65 at 8%</li>
+            <li>10 early years <strong>beats</strong> 30 later years — compound interest rewards patience</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Target Savings Rate</h4>
+          <ul>
+            <li>Save 15% of gross income for retirement as a starting guideline</li>
+            <li>Starting late? Increase to 20–25% and consider delaying retirement by a few years</li>
+          </ul>
+          <div class="warn">Social Security is a supplement, not a retirement plan. The average monthly benefit in 2024 is ~$1,907 — plan to fund most of your own retirement.</div>
+        `
+      }
+    ],
+    quiz: [
+      { q: 'What is the key tax benefit of a traditional 401(k)?', opts: ['Withdrawals are always tax-free', 'Contributions reduce your taxable income today', 'There is no contribution limit', 'Dividends are not taxed'], ans: 1, explain: 'Traditional 401(k) contributions are pre-tax, meaning they reduce your taxable income in the year you contribute. You pay taxes when you withdraw in retirement.' },
+      { q: 'What makes a Roth IRA different from a Traditional IRA?', opts: ['Roth has higher contribution limits', 'Roth contributions are after-tax but withdrawals are tax-free', 'Roth is only for high earners', 'Roth has Required Minimum Distributions'], ans: 1, explain: 'Roth IRA contributions are made with after-tax dollars, but all qualified withdrawals in retirement are completely tax-free — including decades of growth.' },
+      { q: 'What does the "4% rule" help determine?', opts: ['The ideal portfolio equity allocation', 'How much you can safely withdraw from retirement savings each year', 'The best savings rate for young investors', 'The tax rate on retirement withdrawals'], ans: 1, explain: 'The 4% rule states that withdrawing 4% of your portfolio annually gives you ~30 years of income. Multiply your desired annual income by 25 to find your retirement target.' },
+      { q: 'Which account offers a "triple tax advantage"?', opts: ['Roth IRA', '401(k)', 'HSA (Health Savings Account)', 'Taxable brokerage'], ans: 2, explain: 'An HSA offers three tax benefits: tax-deductible contributions, tax-free growth, and tax-free withdrawals for qualified medical expenses — making it the most tax-efficient account available.' },
+      { q: 'When should you start contributing to a Roth IRA?', opts: ['Only after maxing your 401(k)', 'After age 50 for catch-up benefits', 'As early as possible — young investors benefit most from tax-free compounding', 'Only when income is above $100,000'], ans: 2, explain: 'Young investors benefit most from a Roth IRA. Starting early means decades of tax-free compounding, and you\'re likely in a lower tax bracket now, making after-tax contributions less costly.' }
+    ]
+  },
+  {
+    id: 'macro',
+    icon: '🌍',
+    iconBg: '#6366f118',
+    title: 'Macro & Market Cycles',
+    desc: 'Economic indicators, business cycles, and market timing',
+    difficulty: 'intermediate',
+    lessons: [
+      {
+        title: 'Key Economic Indicators',
+        content: `
+          <p>Economic indicators are statistics that signal the health of the economy. Savvy investors track them to anticipate market moves before they happen.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Leading Indicators (Predict the Future)</h4>
+          <ul>
+            <li><span class="term">PMI (Purchasing Managers' Index)</span> — Above 50 = expansion; below 50 = contraction. Surveyed from manufacturers and services firms.</li>
+            <li><span class="term">Yield curve</span> — When short-term rates exceed long-term rates (inversion), a recession often follows within 12–18 months.</li>
+            <li><span class="term">Building permits</span> — A rise signals construction confidence and economic strength.</li>
+            <li><span class="term">Consumer confidence</span> — How optimistic households feel about the economy.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Lagging Indicators (Confirm Trends)</h4>
+          <ul>
+            <li><span class="term">GDP (Gross Domestic Product)</span> — Total value of goods and services produced. Two consecutive quarterly declines = recession.</li>
+            <li><span class="term">Unemployment rate</span> — Rises after recessions begin; falls after recovery is underway.</li>
+            <li><span class="term">CPI (Consumer Price Index)</span> — Measures inflation. Fed targets ~2% annually.</li>
+          </ul>
+          <div class="highlight">Markets are forward-looking. Stock prices often fall before official recession data arrives and recover before the recession officially ends. Watch leading indicators, not just headlines.</div>
+        `
+      },
+      {
+        title: 'The Business Cycle',
+        content: `
+          <p>The <span class="term">business cycle</span> describes the recurring pattern of economic expansion and contraction. Every sector of the stock market tends to perform differently across the cycle's four phases.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">The Four Phases</h4>
+          <ul>
+            <li><span class="term">Expansion</span> — GDP growing, unemployment falling, consumer spending rising. Cyclicals (tech, consumer discretionary) typically outperform.</li>
+            <li><span class="term">Peak</span> — Growth at maximum, inflation rising, central banks raising rates. Defensive sectors (healthcare, utilities) start to look attractive.</li>
+            <li><span class="term">Contraction (Recession)</span> — GDP declining, unemployment rising. Defensive stocks, bonds, and cash hold value better.</li>
+            <li><span class="term">Trough</span> — Worst point; forward-looking markets begin pricing in recovery. Early cyclicals (financials, industrials) often lead the rebound.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Sector Rotation</h4>
+          <p>Investors rotate capital into sectors expected to outperform in the next phase. A common pattern:</p>
+          <ul>
+            <li>Early recovery → <span class="term">Financials, Industrials</span></li>
+            <li>Mid expansion → <span class="term">Technology, Consumer Discretionary</span></li>
+            <li>Late cycle → <span class="term">Energy, Materials, Healthcare</span></li>
+            <li>Recession → <span class="term">Utilities, Consumer Staples, Bonds</span></li>
+          </ul>
+          <div class="warn">Sector rotation sounds simple but timing it is notoriously difficult. Most retail investors are better served by broad diversification than trying to rotate with the cycle.</div>
+        `
+      },
+      {
+        title: 'The Federal Reserve & Interest Rates',
+        content: `
+          <p>The <span class="term">Federal Reserve (the Fed)</span> is the U.S. central bank. Its decisions on interest rates are arguably the single most important force affecting financial markets in the short term.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">The Fed's Dual Mandate</h4>
+          <ul>
+            <li><span class="term">Maximum employment</span> — Keep unemployment low</li>
+            <li><span class="term">Price stability</span> — Keep inflation near 2%</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">How Rate Changes Ripple Through Markets</h4>
+          <ul>
+            <li><span class="term">Rate hikes</span> — Fight inflation. Borrowing gets expensive → companies invest less → growth slows → often bearish for stocks, especially high-growth names. Good for savings rates and bonds (eventually).</li>
+            <li><span class="term">Rate cuts</span> — Stimulate growth. Cheaper borrowing → more investment → economic expansion → often bullish for stocks, especially rate-sensitive sectors like real estate and utilities.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">The Fed Funds Rate</h4>
+          <p>The target interest rate at which banks lend to each other overnight. It anchors all other interest rates — mortgages, car loans, credit cards, and bond yields.</p>
+          <div class="highlight">"Don't fight the Fed" — when the Fed is raising rates aggressively, it's historically risky to be heavily long growth stocks. When the Fed pivots to cutting, it's often a tailwind for equities.</div>
+        `
+      },
+      {
+        title: 'Inflation & Your Portfolio',
+        content: `
+          <p><span class="term">Inflation</span> is the silent enemy of wealth. At 3% annual inflation, the purchasing power of $100,000 falls to just $74,000 in 10 years — even if the dollar amount stays the same.</p>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">How Inflation Affects Asset Classes</h4>
+          <ul>
+            <li><span class="term">Cash</span> — Loses value in real terms. Worst inflation hedge.</li>
+            <li><span class="term">Bonds (fixed)</span> — Fixed payments worth less in real terms as inflation rises. Rising inflation crushes bond prices.</li>
+            <li><span class="term">Stocks</span> — Mixed. Companies can raise prices (pricing power), but high inflation → high rates → multiple compression.</li>
+            <li><span class="term">Real assets</span> — Commodities, real estate, and TIPS tend to perform well in inflationary environments.</li>
+          </ul>
+          <h4 style="margin-top:16px;font-weight:700;color:var(--text)">Inflation Hedges</h4>
+          <ul>
+            <li><span class="term">TIPS (Treasury Inflation-Protected Securities)</span> — Principal adjusts with CPI. Direct inflation hedge.</li>
+            <li><span class="term">Commodities</span> — Oil, gold, and agricultural goods often rise with inflation.</li>
+            <li><span class="term">Real Estate / REITs</span> — Property values and rents typically rise with inflation.</li>
+            <li><span class="term">I Bonds</span> — Government savings bonds with yield tied to CPI. No principal risk.</li>
+          </ul>
+          <div class="highlight">The best long-term inflation hedge is simply owning a diversified stock portfolio. Equities have historically delivered 7% real (after-inflation) returns over long periods.</div>
+        `
+      }
+    ],
+    quiz: [
+      { q: 'What does an inverted yield curve typically signal?', opts: ['Strong economic growth ahead', 'A potential recession in the next 12–18 months', 'The Fed is cutting interest rates', 'Inflation is under control'], ans: 1, explain: 'An inverted yield curve (short-term rates higher than long-term rates) has preceded nearly every U.S. recession. It signals that markets expect the economy to slow and rates to fall in the future.' },
+      { q: 'In which phase of the business cycle do defensive stocks typically outperform?', opts: ['Expansion', 'Peak and Contraction', 'Early recovery', 'Any phase equally'], ans: 1, explain: 'Defensive sectors like utilities, healthcare, and consumer staples tend to outperform during the Peak and Contraction (recession) phases, as demand for their products remains stable regardless of economic conditions.' },
+      { q: 'What is the Fed\'s "dual mandate"?', opts: ['Low inflation and low taxes', 'Maximum employment and price stability', 'Strong dollar and trade surplus', 'Low interest rates and high growth'], ans: 1, explain: 'The Federal Reserve is mandated by Congress to pursue two goals: maximum employment (low unemployment) and price stability (inflation near 2%). All Fed policy is aimed at balancing these two objectives.' },
+      { q: 'Which asset class is considered the worst inflation hedge?', opts: ['Real Estate', 'Commodities', 'Cash', 'TIPS'], ans: 2, explain: 'Cash is the worst inflation hedge because its purchasing power erodes directly with inflation. At 5% inflation, $100,000 in cash loses $5,000 in real purchasing power every year.' },
+      { q: 'What does GDP measure?', opts: ['The total value of a country\'s stock market', 'The total value of goods and services produced in a country', 'Government spending as a percentage of income', 'The average income per household'], ans: 1, explain: 'GDP (Gross Domestic Product) measures the total monetary value of all goods and services produced within a country in a specific time period. Two consecutive quarters of negative GDP growth define a recession.' }
+    ]
   }
 ];
 
@@ -7419,7 +7619,7 @@ const BADGES = [
   { id:'streak_7',      icon:'⚡', name:'Unstoppable',       desc:'7-day learning streak' },
   { id:'crypto_done',   icon:'₿',  name:'Crypto Curious',   desc:'Complete the Crypto module' },
   { id:'options_done',  icon:'📊', name:'Options Aware',     desc:'Complete the Options module' },
-  { id:'full_course',   icon:'🌟', name:'Master Investor',   desc:'Complete all 9 topics' },
+  { id:'full_course',   icon:'🌟', name:'Master Investor',   desc:'Complete all 11 topics' },
 ];
 
 function getEarnedBadgeIds() {
