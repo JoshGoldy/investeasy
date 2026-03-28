@@ -418,12 +418,14 @@ function generateEconomicEvents(string $from, string $to): array {
         if ($ts >= $fromTs && $ts <= $toTs) {
             $hasSep = in_array($d, $sepMeetings);
             $events[] = [
-                'date'  => $d,
-                'ts'    => $ts,
-                'type'  => 'fed',
-                'title' => 'FOMC Rate Decision',
-                'desc'  => 'Federal Reserve interest rate decision and policy statement.'
-                         . ($hasSep ? ' Updated dot-plot and economic projections (SEP) released.' : ''),
+                'date'   => $d,
+                'ts'     => $ts,
+                'type'   => 'fed',
+                'impact' => 'high',
+                'title'  => 'FOMC Rate Decision',
+                'desc'   => 'Federal Reserve interest rate decision and policy statement.'
+                          . ($hasSep ? ' Updated dot-plot and economic projections (SEP) released.' : ''),
+                'assets' => ['TLT','GLD','UUP','SPY'],
             ];
         }
         // Press conference (following day)
@@ -431,11 +433,13 @@ function generateEconomicEvents(string $from, string $to): array {
         $pcDate = date('Y-m-d', $pcTs);
         if ($pcTs >= $fromTs && $pcTs <= $toTs) {
             $events[] = [
-                'date'  => $pcDate,
-                'ts'    => $pcTs,
-                'type'  => 'fed',
-                'title' => 'Fed Chair Press Conference',
-                'desc'  => 'Post-FOMC press conference with Fed Chair Jerome Powell.',
+                'date'   => $pcDate,
+                'ts'     => $pcTs,
+                'type'   => 'fed',
+                'impact' => 'high',
+                'title'  => 'Fed Chair Press Conference',
+                'desc'   => 'Post-FOMC press conference with Fed Chair Jerome Powell.',
+                'assets' => ['TLT','GLD','UUP','SPY'],
             ];
         }
     }
@@ -458,11 +462,13 @@ function generateEconomicEvents(string $from, string $to): array {
         $nfpTs = $nfp->getTimestamp();
         if ($nfpTs >= $fromTs && $nfpTs <= $toTs) {
             $events[] = [
-                'date'  => $nfp->format('Y-m-d'),
-                'ts'    => $nfpTs,
-                'type'  => 'macro',
-                'title' => "Non-Farm Payrolls — $prevName",
-                'desc'  => "US monthly jobs report covering employment changes and unemployment rate for $prevName.",
+                'date'   => $nfp->format('Y-m-d'),
+                'ts'     => $nfpTs,
+                'type'   => 'macro',
+                'impact' => 'high',
+                'title'  => "Non-Farm Payrolls — $prevName",
+                'desc'   => "US monthly jobs report covering employment changes and unemployment rate for $prevName.",
+                'assets' => ['SPY','UUP','TLT','GLD'],
             ];
         }
 
@@ -476,11 +482,146 @@ function generateEconomicEvents(string $from, string $to): array {
         $cpiTs = $cpi->getTimestamp();
         if ($cpiTs >= $fromTs && $cpiTs <= $toTs) {
             $events[] = [
-                'date'  => $cpi->format('Y-m-d'),
-                'ts'    => $cpiTs,
-                'type'  => 'macro',
-                'title' => "CPI — $prevName",
-                'desc'  => "Consumer Price Index for $prevName. Primary inflation gauge watched by the Federal Reserve.",
+                'date'   => $cpi->format('Y-m-d'),
+                'ts'     => $cpiTs,
+                'type'   => 'macro',
+                'impact' => 'high',
+                'title'  => "CPI — $prevName",
+                'desc'   => "Consumer Price Index for $prevName. Primary inflation gauge watched by the Federal Reserve.",
+                'assets' => ['TIP','GLD','TLT','SPY'],
+            ];
+        }
+
+        // PPI: second Tuesday of the month
+        $ppi = new DateTime($cur->format('Y-m-01'));
+        $wCount = 0;
+        while (true) {
+            if ($ppi->format('N') === '2') { $wCount++; if ($wCount === 2) break; }
+            $ppi->modify('+1 day');
+        }
+        $ppiTs = $ppi->getTimestamp();
+        if ($ppiTs >= $fromTs && $ppiTs <= $toTs) {
+            $events[] = [
+                'date'   => $ppi->format('Y-m-d'),
+                'ts'     => $ppiTs,
+                'type'   => 'macro',
+                'impact' => 'medium',
+                'title'  => "PPI — $prevName",
+                'desc'   => "Producer Price Index for $prevName. Measures wholesale inflation; a leading indicator for CPI.",
+                'assets' => ['TIP','GLD','XLB'],
+            ];
+        }
+
+        // Retail Sales: third Wednesday of the month
+        $retail = new DateTime($cur->format('Y-m-01'));
+        $wCount = 0;
+        while (true) {
+            if ($retail->format('N') === '3') { $wCount++; if ($wCount === 3) break; }
+            $retail->modify('+1 day');
+        }
+        $retailTs = $retail->getTimestamp();
+        if ($retailTs >= $fromTs && $retailTs <= $toTs) {
+            $events[] = [
+                'date'   => $retail->format('Y-m-d'),
+                'ts'     => $retailTs,
+                'type'   => 'macro',
+                'impact' => 'medium',
+                'title'  => "Retail Sales — $prevName",
+                'desc'   => "US retail and food service sales for $prevName. Key gauge of consumer spending strength.",
+                'assets' => ['XLY','SPY','UUP'],
+            ];
+        }
+
+        // ISM Manufacturing PMI: first business day of the month
+        $ism = new DateTime($cur->format('Y-m-01'));
+        while ($ism->format('N') > '5') $ism->modify('+1 day');
+        $ismTs = $ism->getTimestamp();
+        if ($ismTs >= $fromTs && $ismTs <= $toTs) {
+            $events[] = [
+                'date'   => $ism->format('Y-m-d'),
+                'ts'     => $ismTs,
+                'type'   => 'macro',
+                'impact' => 'medium',
+                'title'  => "ISM Manufacturing PMI — $prevName",
+                'desc'   => "Institute for Supply Management Manufacturing index for $prevName. Reading above 50 indicates expansion.",
+                'assets' => ['XLI','XLB','SPY'],
+            ];
+        }
+
+        // ISM Services PMI: third business day of the month
+        $ismSvc = new DateTime($cur->format('Y-m-01'));
+        $bdays = 0;
+        while ($bdays < 3) {
+            if ($ismSvc->format('N') <= '5') $bdays++;
+            if ($bdays < 3) $ismSvc->modify('+1 day');
+        }
+        $ismSvcTs = $ismSvc->getTimestamp();
+        if ($ismSvcTs >= $fromTs && $ismSvcTs <= $toTs) {
+            $events[] = [
+                'date'   => $ismSvc->format('Y-m-d'),
+                'ts'     => $ismSvcTs,
+                'type'   => 'macro',
+                'impact' => 'medium',
+                'title'  => "ISM Services PMI — $prevName",
+                'desc'   => "ISM non-manufacturing index for $prevName. Covers ~80% of the US economy.",
+                'assets' => ['XLF','XLK','SPY'],
+            ];
+        }
+
+        // Housing Starts: third Wednesday of the month (approx. 16th–20th)
+        $housing = new DateTime($cur->format('Y-m-01'));
+        $wCount = 0;
+        while (true) {
+            if ($housing->format('N') === '3') { $wCount++; if ($wCount === 3) break; }
+            $housing->modify('+1 day');
+        }
+        // Housing Starts comes out a day before Retail Sales — offset by 7 days
+        $housing->modify('+7 days');
+        $housingTs = $housing->getTimestamp();
+        if ($housingTs >= $fromTs && $housingTs <= $toTs) {
+            $events[] = [
+                'date'   => $housing->format('Y-m-d'),
+                'ts'     => $housingTs,
+                'type'   => 'macro',
+                'impact' => 'low',
+                'title'  => "Housing Starts — $prevName",
+                'desc'   => "New residential construction data for $prevName. Indicator of construction sector and housing demand.",
+                'assets' => ['XHB','ITB','XLRE'],
+            ];
+        }
+
+        // Jobless Claims: every Thursday
+        $thursday = new DateTime($cur->format('Y-m-01'));
+        while ($thursday->format('N') !== '4') $thursday->modify('+1 day');
+        while ($thursday->getTimestamp() <= $toTs) {
+            $jcTs = $thursday->getTimestamp();
+            if ($jcTs >= $fromTs) {
+                $events[] = [
+                    'date'   => $thursday->format('Y-m-d'),
+                    'ts'     => $jcTs,
+                    'type'   => 'macro',
+                    'impact' => 'medium',
+                    'title'  => 'Initial Jobless Claims',
+                    'desc'   => 'Weekly count of first-time unemployment insurance filings. Early signal of labor market health.',
+                    'assets' => ['SPY','UUP','TLT'],
+                ];
+            }
+            $thursday->modify('+7 days');
+        }
+
+        // Consumer Confidence (Conference Board): last Tuesday of the month
+        $conf = new DateTime($cur->format('Y-m-t'));
+        while ($conf->format('N') !== '2') $conf->modify('-1 day');
+        $confTs = $conf->getTimestamp();
+        if ($confTs >= $fromTs && $confTs <= $toTs) {
+            $events[] = [
+                'date'   => $conf->format('Y-m-d'),
+                'ts'     => $confTs,
+                'type'   => 'macro',
+                'impact' => 'medium',
+                'title'  => "Consumer Confidence — $curName",
+                'desc'   => "Conference Board Consumer Confidence Index for $curName. Gauges household sentiment on economy and jobs.",
+                'assets' => ['XLY','SPY','XRT'],
             ];
         }
 
@@ -490,11 +631,13 @@ function generateEconomicEvents(string $from, string $to): array {
         $pceTs = $pce->getTimestamp();
         if ($pceTs >= $fromTs && $pceTs <= $toTs) {
             $events[] = [
-                'date'  => $pce->format('Y-m-d'),
-                'ts'    => $pceTs,
-                'type'  => 'macro',
-                'title' => "Core PCE Price Index — $curName",
-                'desc'  => "Fed's preferred inflation measure for $curName. Excludes food and energy prices.",
+                'date'   => $pce->format('Y-m-d'),
+                'ts'     => $pceTs,
+                'type'   => 'macro',
+                'impact' => 'high',
+                'title'  => "Core PCE Price Index — $curName",
+                'desc'   => "Fed's preferred inflation measure for $curName. Excludes food and energy prices.",
+                'assets' => ['TIP','GLD','TLT','SPY'],
             ];
         }
 
@@ -507,11 +650,13 @@ function generateEconomicEvents(string $from, string $to): array {
             $gdpTs = $gdp->getTimestamp();
             if ($gdpTs >= $fromTs && $gdpTs <= $toTs) {
                 $events[] = [
-                    'date'  => $gdp->format('Y-m-d'),
-                    'ts'    => $gdpTs,
-                    'type'  => 'macro',
-                    'title' => 'GDP Advance Estimate — ' . $qLabels[$month],
-                    'desc'  => 'Bureau of Economic Analysis first estimate of GDP growth for ' . $qLabels[$month] . '.',
+                    'date'   => $gdp->format('Y-m-d'),
+                    'ts'     => $gdpTs,
+                    'type'   => 'macro',
+                    'impact' => 'high',
+                    'title'  => 'GDP Advance Estimate — ' . $qLabels[$month],
+                    'desc'   => 'Bureau of Economic Analysis first estimate of GDP growth for ' . $qLabels[$month] . '.',
+                    'assets' => ['SPY','TLT','UUP','GLD'],
                 ];
             }
         }
