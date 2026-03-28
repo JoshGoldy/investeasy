@@ -3423,15 +3423,64 @@ let finbotForm = {
   company: '', earnDate: '', ePos: 'none',
   age: '', income: '', savings: '', goal: 'wealth', bRisk: 'moderate', acct: 'taxable',
   techTicker: '', techPos: 'none', builderHoldings: '',
+  currency: 'USD',
 };
+
+const CURRENCIES = [
+  { code: 'USD', label: 'USD – US Dollar ($)' },
+  { code: 'EUR', label: 'EUR – Euro (€)' },
+  { code: 'GBP', label: 'GBP – British Pound (£)' },
+  { code: 'JPY', label: 'JPY – Japanese Yen (¥)' },
+  { code: 'CNY', label: 'CNY – Chinese Yuan (¥)' },
+  { code: 'INR', label: 'INR – Indian Rupee (₹)' },
+  { code: 'CAD', label: 'CAD – Canadian Dollar (C$)' },
+  { code: 'AUD', label: 'AUD – Australian Dollar (A$)' },
+  { code: 'CHF', label: 'CHF – Swiss Franc (Fr)' },
+  { code: 'HKD', label: 'HKD – Hong Kong Dollar (HK$)' },
+  { code: 'SGD', label: 'SGD – Singapore Dollar (S$)' },
+  { code: 'KRW', label: 'KRW – South Korean Won (₩)' },
+  { code: 'BRL', label: 'BRL – Brazilian Real (R$)' },
+  { code: 'MXN', label: 'MXN – Mexican Peso ($)' },
+  { code: 'ZAR', label: 'ZAR – South African Rand (R)' },
+  { code: 'SEK', label: 'SEK – Swedish Krona (kr)' },
+  { code: 'NOK', label: 'NOK – Norwegian Krone (kr)' },
+  { code: 'DKK', label: 'DKK – Danish Krone (kr)' },
+  { code: 'NZD', label: 'NZD – New Zealand Dollar (NZ$)' },
+  { code: 'AED', label: 'AED – UAE Dirham (د.إ)' },
+  { code: 'SAR', label: 'SAR – Saudi Riyal (﷼)' },
+  { code: 'TRY', label: 'TRY – Turkish Lira (₺)' },
+  { code: 'ILS', label: 'ILS – Israeli Shekel (₪)' },
+  { code: 'PLN', label: 'PLN – Polish Złoty (zł)' },
+  { code: 'TWD', label: 'TWD – New Taiwan Dollar (NT$)' },
+  { code: 'THB', label: 'THB – Thai Baht (฿)' },
+  { code: 'MYR', label: 'MYR – Malaysian Ringgit (RM)' },
+  { code: 'IDR', label: 'IDR – Indonesian Rupiah (Rp)' },
+  { code: 'PHP', label: 'PHP – Philippine Peso (₱)' },
+  { code: 'VND', label: 'VND – Vietnamese Dong (₫)' },
+  { code: 'PKR', label: 'PKR – Pakistani Rupee (₨)' },
+  { code: 'BDT', label: 'BDT – Bangladeshi Taka (৳)' },
+  { code: 'EGP', label: 'EGP – Egyptian Pound (£)' },
+  { code: 'NGN', label: 'NGN – Nigerian Naira (₦)' },
+  { code: 'KES', label: 'KES – Kenyan Shilling (KSh)' },
+  { code: 'GHS', label: 'GHS – Ghanaian Cedi (₵)' },
+];
+
+function currencySelectHtml() {
+  return `<div>
+    <label class="form-label">Currency</label>
+    <select class="form-input" onchange="finbotForm.currency=this.value">
+      ${CURRENCIES.map(c => `<option value="${c.code}"${finbotForm.currency === c.code ? ' selected' : ''}>${c.label}</option>`).join('')}
+    </select>
+  </div>`;
+}
 
 // Prompt builders
 const prompts = {
-  screener: () => `You are Jake, a veteran stock analyst with 15 years of experience hunting high-conviction opportunities.\nProvide a complete stock screening framework:\n- Top 10 stocks with ticker symbols\n- P/E ratio vs sector averages\n- Revenue growth trends over 5 years\n- Debt-to-equity health check\n- Competitive moat rating (weak/moderate/strong)\n- Bull and bear price targets for 12 months\n- Risk rating 1-10 with reasoning\n- Entry price zones and stop-loss suggestions\nFormat as a professional equity research report with a summary table.\nInvestment profile: Risk: ${finbotForm.risk}. Amount: ${finbotForm.amount||'flexible'}. Horizon: ${finbotForm.horizon}. Sectors: ${finbotForm.sectors||'any'}.\nUse markdown with headers and tables. Close with a legal disclaimer.`,
+  screener: () => `You are Jake, a veteran stock analyst with 15 years of experience hunting high-conviction opportunities.\nProvide a complete stock screening framework:\n- Top 10 stocks with ticker symbols\n- P/E ratio vs sector averages\n- Revenue growth trends over 5 years\n- Debt-to-equity health check\n- Competitive moat rating (weak/moderate/strong)\n- Bull and bear price targets for 12 months\n- Risk rating 1-10 with reasoning\n- Entry price zones and stop-loss suggestions\nFormat as a professional equity research report with a summary table.\nInvestment profile: Risk: ${finbotForm.risk}. Amount: ${finbotForm.amount ? finbotForm.amount + ' ' + finbotForm.currency : 'flexible'}. Currency: ${finbotForm.currency}. Horizon: ${finbotForm.horizon}. Sectors: ${finbotForm.sectors||'any'}.\nExpress all monetary values (price targets, entry zones, stop-losses) in ${finbotForm.currency}.\nUse markdown with headers and tables. Close with a legal disclaimer.`,
   dcf: () => `You are Emily, a financial analyst who specialises in company valuations and discounted cash flow modelling.\nBuild a full DCF analysis for: ${finbotForm.ticker}\nInclude:\n- 5-year revenue projection\n- Free cash flow year by year\n- WACC estimate\n- Terminal value\n- Sensitivity table\n- DCF value vs current price\n- Verdict: undervalued / fairly valued / overvalued\nFormat as a valuation memo with tables.\nUse markdown. Close with a legal disclaimer.`,
-  risk: () => `You are Marcus, a risk analyst who has spent his career stress-testing portfolios against every kind of market shock.\nComplete risk assessment:\n- Correlation analysis\n- Sector concentration risk\n- Recession stress test\n- Tail risk scenarios\n- Hedging strategies\n- Rebalancing suggestions\nPortfolio (total value: ${finbotForm.portVal||'not specified'}): ${finbotForm.portfolio}\nUse markdown with headers and tables. Close with a legal disclaimer.`,
+  risk: () => `You are Marcus, a risk analyst who has spent his career stress-testing portfolios against every kind of market shock.\nComplete risk assessment:\n- Correlation analysis\n- Sector concentration risk\n- Recession stress test\n- Tail risk scenarios\n- Hedging strategies\n- Rebalancing suggestions\nPortfolio (total value: ${finbotForm.portVal ? finbotForm.portVal + ' ' + finbotForm.currency : 'not specified'}, currency: ${finbotForm.currency}): ${finbotForm.portfolio}\nExpress all monetary values in ${finbotForm.currency}.\nUse markdown with headers and tables. Close with a legal disclaimer.`,
   earnings: () => `You are Priya, an equity research analyst who lives for earnings season and knows how to read the market reaction before it happens.\nEarnings analysis for: ${finbotForm.company}${finbotForm.earnDate?' (Earnings date: '+finbotForm.earnDate+')':''}${finbotForm.ePos!=='none'?'. My position: '+finbotForm.ePos:''}\nDeliver:\n- Last 4 quarters beat/miss history\n- Revenue and EPS consensus estimates\n- Key metrics\n- Options implied move\n- Recommended play\nUse markdown. Close with a legal disclaimer.`,
-  builder: () => `You are Leo, a portfolio strategist who builds long-term investment plans that people actually stick to.\nBuild a custom investment portfolio:\n- Asset allocation percentages\n- Specific ETF recommendations\n- Expected return range\n- Max drawdown estimate\n- Rebalancing schedule\n- Dollar cost averaging plan\nDetails: Age: ${finbotForm.age||'unspecified'}. Income: ${finbotForm.income||'unspecified'}. Savings: ${finbotForm.savings||'unspecified'}. Goal: ${finbotForm.goal}. Risk: ${finbotForm.bRisk}. Account: ${finbotForm.acct}.\nUse markdown. Close with a legal disclaimer.`,
+  builder: () => `You are Leo, a portfolio strategist who builds long-term investment plans that people actually stick to.\nBuild a custom investment portfolio:\n- Asset allocation percentages\n- Specific ETF recommendations\n- Expected return range\n- Max drawdown estimate\n- Rebalancing schedule\n- Regular investment plan with contribution amounts\nDetails: Age: ${finbotForm.age||'unspecified'}. Income: ${finbotForm.income ? finbotForm.income + ' ' + finbotForm.currency + '/mo' : 'unspecified'}. Amount to invest: ${finbotForm.savings ? finbotForm.savings + ' (' + finbotForm.currency + ')' : 'unspecified'}. Goal: ${finbotForm.goal}. Risk: ${finbotForm.bRisk}. Account: ${finbotForm.acct}. Currency: ${finbotForm.currency}.\nExpress all monetary values, contribution amounts, and projections in ${finbotForm.currency}.\nUse markdown. Close with a legal disclaimer.`,
   technical: () => `You are Zoe, a technical analyst who reads charts the way others read books — spotting patterns and levels before most traders even notice them.\nFull technical analysis for: ${finbotForm.techTicker}${finbotForm.techPos!=='none'?'. My position: '+finbotForm.techPos:''}\nAnalyze:\n- Trend on daily, weekly, monthly\n- Support/resistance levels\n- RSI, MACD, Bollinger Bands\n- Chart patterns\n- Entry, stop-loss, profit target\n- Confidence rating\nUse markdown. Close with a legal disclaimer.`,
 };
 
@@ -4284,8 +4333,9 @@ function renderFinBot() {
       <div style="display:flex;flex-direction:column;gap:18px">
         <div><label class="form-label">Risk Tolerance</label>
           ${pillsHtml('risk', [{k:'conservative',e:'🛡',l:'Conservative'},{k:'moderate',e:'⚖️',l:'Moderate'},{k:'aggressive',e:'🚀',l:'Aggressive'}])}</div>
+        ${currencySelectHtml()}
         <div><label class="form-label">Investment Amount (optional)</label>
-          <input class="form-input mono" placeholder="e.g. 10,000 (any currency)" value="${finbotForm.amount}" oninput="finbotForm.amount=this.value"></div>
+          <input class="form-input mono" placeholder="e.g. 10,000" value="${finbotForm.amount}" oninput="finbotForm.amount=this.value"></div>
         <div><label class="form-label">Time Horizon</label>
           ${pillsHtml('horizon', [{k:'short',l:'Short',s:'< 1 year'},{k:'medium',l:'Medium',s:'1–5 years'},{k:'long',l:'Long',s:'5+ years'}])}</div>
         <div><label class="form-label">Preferred Sectors (optional)</label>
@@ -4322,8 +4372,9 @@ function renderFinBot() {
             oninput="finbotForm.portfolio=this.value">${finbotForm.portfolio}</textarea>
           <p class="form-hint">Stocks, ETFs, crypto, commodities — any mix works</p>
         </div>
+        ${currencySelectHtml()}
         <div><label class="form-label">Total Portfolio Value (optional)</label>
-          <input class="form-input mono" placeholder="e.g. 50,000 (any currency)" value="${finbotForm.portVal}" oninput="finbotForm.portVal=this.value"></div>
+          <input class="form-input mono" placeholder="e.g. 50,000" value="${finbotForm.portVal}" oninput="finbotForm.portVal=this.value"></div>
         <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
         <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" onclick="confirmAndRunFinBot('risk')">Run Risk Assessment →</button>
       </div>`;
@@ -4343,12 +4394,13 @@ function renderFinBot() {
     const bldrCanImport = currentUser && dbPortfolio.length > 0;
     el.innerHTML = `${backBtn}
       <div style="display:flex;flex-direction:column;gap:16px">
+        ${currencySelectHtml()}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div><label class="form-label">Age</label><input class="form-input" placeholder="e.g. 23" value="${finbotForm.age}" oninput="finbotForm.age=this.value"></div>
-          <div><label class="form-label">Monthly Income</label><input class="form-input" placeholder="e.g. 5,000 (your currency)" value="${finbotForm.income}" oninput="finbotForm.income=this.value"></div>
+          <div><label class="form-label">Monthly Income</label><input class="form-input" placeholder="e.g. 5,000" value="${finbotForm.income}" oninput="finbotForm.income=this.value"></div>
         </div>
         <div><label class="form-label">Amount to Invest</label>
-          <input class="form-input" placeholder="e.g. 20,000 lump + 500/mo (your currency)" value="${finbotForm.savings}" oninput="finbotForm.savings=this.value"></div>
+          <input class="form-input" placeholder="e.g. 20,000 lump + 500/mo" value="${finbotForm.savings}" oninput="finbotForm.savings=this.value"></div>
         <div><label class="form-label">Investment Goal</label>
           ${pillsHtml('goal', [{k:'wealth',l:'Build Wealth'},{k:'retirement',l:'Retirement'},{k:'income',l:'Passive Income'}])}</div>
         <div><label class="form-label">Risk Tolerance</label>
