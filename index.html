@@ -586,7 +586,7 @@ button{cursor:pointer}
 /* ── CALENDAR ─────────────────────────────────────────────────── */
 .cal-group-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;padding:20px 0 8px;border-bottom:1px solid var(--border);margin-bottom:2px}
 .cal-group-label:first-child{padding-top:0}
-.cal-event{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.cal-event{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);position:relative}
 .cal-event:last-child{border-bottom:none}
 .cal-date-col{min-width:40px;text-align:center;flex-shrink:0}
 .cal-day-num{font-size:18px;font-weight:800;color:var(--text);font-family:var(--mono);line-height:1}
@@ -601,6 +601,68 @@ button{cursor:pointer}
 .cal-badge-holiday{background:#64748b15;color:#94a3b8}
 .cal-ticker-chip{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;background:var(--border);color:var(--muted);padding:2px 7px;border-radius:20px;cursor:pointer;transition:background .15s}
 .cal-ticker-chip:hover{background:var(--green-bg);color:var(--green)}
+/* Impact indicators */
+.cal-impact{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em}
+.cal-impact-high{background:#ef444415;color:#ef4444}
+.cal-impact-medium{background:#f59e0b15;color:#f59e0b}
+.cal-impact-low{background:#22c55e15;color:#22c55e}
+.cal-impact-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.cal-impact-dot-high{background:#ef4444}
+.cal-impact-dot-medium{background:#f59e0b}
+.cal-impact-dot-low{background:#22c55e}
+/* Countdown */
+.cal-countdown{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.cal-countdown-soon{color:#f59e0b;font-weight:700}
+.cal-countdown-today{color:#ef4444;font-weight:700}
+/* Alert bell button */
+.cal-alert-btn{background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:var(--muted);transition:all .15s;font-size:14px;line-height:1}
+.cal-alert-btn:hover{background:var(--border);color:var(--text)}
+.cal-alert-btn.active{color:#f59e0b}
+/* Google Calendar export */
+.cal-gcal-btn{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:var(--muted);background:var(--border);padding:2px 8px;border-radius:20px;cursor:pointer;text-decoration:none;transition:all .15s;border:none}
+.cal-gcal-btn:hover{background:#3b82f620;color:#60a5fa}
+/* Market reaction */
+.cal-reaction{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+.cal-reaction-up{background:#10b98115;color:#10b981}
+.cal-reaction-down{background:#ef444415;color:#ef4444}
+.cal-reaction-flat{background:var(--border);color:var(--muted)}
+/* Related assets tooltip */
+.cal-assets-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px}
+.cal-asset-chip{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;background:#3b82f610;color:#60a5fa;padding:2px 7px;border-radius:20px;cursor:pointer;transition:background .15s}
+.cal-asset-chip:hover{background:#3b82f625}
+/* View toggles */
+.cal-view-toggle{display:flex;gap:4px}
+.cal-view-btn{background:var(--border);border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.cal-view-btn.active{background:var(--green);color:#fff}
+.cal-view-btn:hover:not(.active){background:#10b98120;color:var(--green)}
+/* Date range picker */
+.cal-date-input{background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text);font-family:var(--mono);cursor:pointer;transition:border .15s}
+.cal-date-input:focus{outline:none;border-color:var(--green)}
+/* Week grid view */
+.cal-week-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px}
+.cal-week-col{background:var(--surface);border-radius:10px;padding:10px 8px;min-height:120px}
+.cal-week-day-header{font-size:11px;font-weight:700;color:var(--muted);text-align:center;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.cal-week-day-header.today{color:var(--green)}
+.cal-week-event{background:var(--border);border-radius:6px;padding:5px 7px;margin-bottom:5px;font-size:10px;font-weight:700;color:var(--text);cursor:pointer;transition:background .15s;border-left:3px solid transparent}
+.cal-week-event:hover{background:#10b98115}
+.cal-week-event-earnings{border-left-color:#60a5fa}
+.cal-week-event-fed{border-left-color:#a78bfa}
+.cal-week-event-macro{border-left-color:#fbbf24}
+.cal-week-event.impact-high{border-left-color:#ef4444}
+/* Month grid view */
+.cal-month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px}
+.cal-month-day-header{font-size:10px;font-weight:700;color:var(--muted);text-align:center;padding:4px 0}
+.cal-month-cell{background:var(--surface);border-radius:8px;padding:6px;min-height:80px;position:relative}
+.cal-month-cell.other-month{opacity:.35}
+.cal-month-cell.today{border:1.5px solid var(--green)}
+.cal-month-cell-day{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px}
+.cal-month-event{border-radius:4px;padding:2px 5px;margin-bottom:2px;font-size:9px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.cal-month-event-earnings{background:#3b82f6}
+.cal-month-event-fed{background:#8b5cf6}
+.cal-month-event-macro{background:#f59e0b;color:#000}
+.cal-month-event.impact-high{outline:1.5px solid #ef4444}
+/* Filter row wrap fix */
+.cal-filters-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 /* ── HEADER BRAND (mobile only) ───────────────────────────────── */
 .header-brand{display:none;align-items:center;gap:8px}
 .header-brand-icon{width:28px;height:28px;flex-shrink:0}
@@ -7614,6 +7676,7 @@ function markLessonRead(topicId, lessonIdx) {
 // In-memory cache so switching tabs doesn't re-fetch
 let _calCache = null;
 let _calCacheTs = 0;
+let _calView = 'list'; // 'list' | 'week' | 'month'
 
 function renderCalendar() {
   const el = document.getElementById('tab-calendar');
@@ -7644,45 +7707,58 @@ function renderCalendar() {
     return d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
   }
 
-  // ── Render event list ──────────────────────────────────────────────────────
-  function buildUI(events, isLive, filter) {
-    el._calFilter = filter;
-    const visible = filter === 'all' ? events : events.filter(e => e.type === filter);
-    const grps = {};
-    visible.forEach(ev => {
-      const lbl = groupLabel(ev.date);
-      (grps[lbl] = grps[lbl] || []).push(ev);
-    });
-
-    const groupOrder  = ['Today', 'Tomorrow', 'This Week', 'Next Week'];
-    const extraKeys   = Object.keys(grps).filter(k => !groupOrder.includes(k)).sort();
-    const orderedKeys = [...groupOrder.filter(k => grps[k]), ...extraKeys];
-
+  // ── Shared header (view toggle + filter pills) ────────────────────────────
+  function buildHeader(isLive, filter, view) {
     const statusBadge = isLive
       ? `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#10b981;background:#10b98115;padding:3px 10px;border-radius:20px">
            <span style="width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block"></span>Live data</span>`
       : `<span style="font-size:11px;color:var(--muted);background:var(--border);padding:3px 10px;border-radius:20px">Demo data</span>`;
 
-    el.innerHTML = `
-      <div style="max-width:780px">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px">
-          <div>
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-              <h2 style="font-size:22px;font-weight:800;color:var(--text)">Economic Calendar</h2>
-              ${statusBadge}
-            </div>
-            <p style="font-size:13px;color:var(--muted)">Earnings dates from Yahoo Finance · Fed &amp; macro events</p>
+    const viewBtns = [
+      { id: 'list',  label: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1.5" fill="currentColor"/><circle cx="3" cy="12" r="1.5" fill="currentColor"/><circle cx="3" cy="18" r="1.5" fill="currentColor"/></svg> List` },
+      { id: 'week',  label: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="4" x2="8" y2="21"/><line x1="16" y1="4" x2="16" y2="21"/></svg> Week` },
+      { id: 'month', label: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="4" x2="8" y2="9"/><line x1="16" y1="4" x2="16" y2="9"/></svg> Month` },
+    ].map(v => `<button class="cal-view-btn${v.id === view ? ' active' : ''}" onclick="renderCalendar._build('${filter}','${v.id}')">${v.label}</button>`).join('');
+
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+            <h2 style="font-size:22px;font-weight:800;color:var(--text)">Economic Calendar</h2>
+            ${statusBadge}
           </div>
+          <p style="font-size:13px;color:var(--muted)">Earnings dates from Yahoo Finance · Fed &amp; macro events</p>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+          <div class="cal-view-toggle">${viewBtns}</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             ${filterTypes.map(f => `
-              <button onclick="renderCalendar._build('${f}')"
-                style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;
+              <button onclick="renderCalendar._build('${f}','${view}')"
+                style="padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;
                        background:${f === filter ? (f === 'all' ? '#10b981' : f === 'earnings' ? '#3b82f6' : f === 'fed' ? '#8b5cf6' : '#f59e0b') : 'var(--border)'};
                        color:${f === filter ? '#fff' : 'var(--muted)'};border:none;transition:all .15s">
                 ${f === 'all' ? 'All Events' : LABEL[f]}
               </button>`).join('')}
           </div>
         </div>
+      </div>`;
+  }
+
+  // ── List view ──────────────────────────────────────────────────────────────
+  function buildListView(events, isLive, filter) {
+    const visible = filter === 'all' ? events : events.filter(e => e.type === filter);
+    const grps = {};
+    visible.forEach(ev => {
+      const lbl = groupLabel(ev.date);
+      (grps[lbl] = grps[lbl] || []).push(ev);
+    });
+    const groupOrder  = ['Today', 'Tomorrow', 'This Week', 'Next Week'];
+    const extraKeys   = Object.keys(grps).filter(k => !groupOrder.includes(k)).sort();
+    const orderedKeys = [...groupOrder.filter(k => grps[k]), ...extraKeys];
+
+    return `
+      <div style="max-width:780px">
+        ${buildHeader(isLive, filter, 'list')}
         ${orderedKeys.map(label => `
           <div class="cal-group-label">${label}</div>
           ${grps[label].map(ev => {
@@ -7712,6 +7788,99 @@ function renderCalendar() {
       </div>`;
   }
 
+  // ── Week grid view (Mon–Fri of the current week) ───────────────────────────
+  function buildWeekView(events, isLive, filter) {
+    const visible = filter === 'all' ? events : events.filter(e => e.type === filter);
+    // Compute Mon–Fri of the week containing today
+    const today = new Date(); today.setHours(0,0,0,0);
+    const dow = today.getDay(); // 0=Sun
+    const monday = new Date(today); monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+    const weekDays = Array.from({length: 7}, (_, i) => {
+      const d = new Date(monday); d.setDate(monday.getDate() + i); return d;
+    });
+    const byDate = {};
+    visible.forEach(ev => { (byDate[ev.date] = byDate[ev.date] || []).push(ev); });
+
+    const cols = weekDays.map(d => {
+      const iso = d.toISOString().slice(0,10);
+      const isToday = +d === +today;
+      const dayEvts = byDate[iso] || [];
+      const evHtml = dayEvts.map(ev => `
+        <div class="cal-week-event cal-week-event-${ev.type}" title="${ev.title}">
+          <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.title}</div>
+        </div>`).join('') || `<div style="font-size:10px;color:var(--muted);text-align:center;padding-top:8px">—</div>`;
+      return `<div class="cal-week-col">
+        <div class="cal-week-day-header${isToday ? ' today' : ''}">
+          <div>${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]}</div>
+          <div style="font-size:16px;font-weight:800;color:${isToday ? 'var(--green)' : 'var(--text)'}">${d.getDate()}</div>
+        </div>
+        ${evHtml}
+      </div>`;
+    }).join('');
+
+    return `
+      <div style="max-width:1000px">
+        ${buildHeader(isLive, filter, 'week')}
+        <div class="cal-week-grid" style="grid-template-columns:repeat(7,1fr)">${cols}</div>
+      </div>`;
+  }
+
+  // ── Month grid view ────────────────────────────────────────────────────────
+  function buildMonthView(events, isLive, filter) {
+    const visible = filter === 'all' ? events : events.filter(e => e.type === filter);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const year  = today.getFullYear();
+    const month = today.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay  = new Date(year, month + 1, 0);
+    // Start grid on Monday
+    const startDow = firstDay.getDay();
+    const startOffset = startDow === 0 ? 6 : startDow - 1;
+    const gridStart = new Date(firstDay); gridStart.setDate(firstDay.getDate() - startOffset);
+    const totalCells = Math.ceil((startOffset + lastDay.getDate()) / 7) * 7;
+
+    const byDate = {};
+    visible.forEach(ev => { (byDate[ev.date] = byDate[ev.date] || []).push(ev); });
+
+    const monthName = firstDay.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    const dayHeaders = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+      .map(d => `<div class="cal-month-day-header">${d}</div>`).join('');
+
+    const cells = Array.from({length: totalCells}, (_, i) => {
+      const d = new Date(gridStart); d.setDate(gridStart.getDate() + i);
+      const iso = d.toISOString().slice(0,10);
+      const isCurrentMonth = d.getMonth() === month;
+      const isToday = +d === +today;
+      const dayEvts = byDate[iso] || [];
+      const maxShow = 3;
+      const evHtml = dayEvts.slice(0, maxShow).map(ev =>
+        `<div class="cal-month-event cal-month-event-${ev.type}" title="${ev.title}">${ev.title}</div>`
+      ).join('');
+      const overflow = dayEvts.length > maxShow
+        ? `<div style="font-size:9px;color:var(--muted);font-weight:700">+${dayEvts.length - maxShow} more</div>` : '';
+      return `<div class="cal-month-cell${!isCurrentMonth ? ' other-month' : ''}${isToday ? ' today' : ''}">
+        <div class="cal-month-cell-day" style="${isToday ? 'color:var(--green)' : ''}">${d.getDate()}</div>
+        ${evHtml}${overflow}
+      </div>`;
+    }).join('');
+
+    return `
+      <div style="max-width:900px">
+        ${buildHeader(isLive, filter, 'month')}
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px">${monthName}</div>
+        <div class="cal-month-grid">${dayHeaders}${cells}</div>
+      </div>`;
+  }
+
+  // ── Master render dispatcher ───────────────────────────────────────────────
+  function buildUI(events, isLive, filter, view) {
+    el._calFilter = filter;
+    _calView = view;
+    if (view === 'week')  { el.innerHTML = buildWeekView(events, isLive, filter);  return; }
+    if (view === 'month') { el.innerHTML = buildMonthView(events, isLive, filter); return; }
+    el.innerHTML = buildListView(events, isLive, filter);
+  }
+
   // ── Convert API earnings to event objects ──────────────────────────────────
   function earningsToEvents(earnings) {
     return earnings.map(e => {
@@ -7729,14 +7898,14 @@ function renderCalendar() {
     });
   }
 
-  // ── Active filter (persisted while tab stays open) ─────────────────────────
-  renderCalendar._build = (filter) => {
-    if (_calCache) buildUI(_calCache.events, _calCache.live, filter);
+  // ── Active filter/view (persisted while tab stays open) ───────────────────
+  renderCalendar._build = (filter, view) => {
+    if (_calCache) buildUI(_calCache.events, _calCache.live, filter, view || _calView || 'list');
   };
 
   // Use memory cache if fresh (< 6 h)
   if (_calCache && (Date.now() - _calCacheTs) < 21_600_000) {
-    buildUI(_calCache.events, _calCache.live, el._calFilter || 'all');
+    buildUI(_calCache.events, _calCache.live, el._calFilter || 'all', _calView || 'list');
     return;
   }
 
@@ -7777,13 +7946,13 @@ function renderCalendar() {
       ].sort((a, b) => a.date.localeCompare(b.date));
       _calCache   = { events, live: true };
       _calCacheTs = Date.now();
-      buildUI(events, true, el._calFilter || 'all');
+      buildUI(events, true, el._calFilter || 'all', _calView || 'list');
     })
     .catch(() => {
       // Fallback: show a notice but still render (empty) so the tab isn't broken
       _calCache   = { events: [], live: false };
       _calCacheTs = Date.now();
-      buildUI([], false, 'all');
+      buildUI([], false, 'all', _calView || 'list');
     });
 }
 
