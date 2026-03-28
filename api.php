@@ -34,6 +34,10 @@ define('MODEL', 'claude-sonnet-4-6');
 // Max tokens per response
 define('MAX_TOKENS', 4096);
 
+// Financial Modeling Prep API key for live earnings data (optional)
+// Free tier: 250 req/day — get yours at https://financialmodelingprep.com/developer/docs
+define('FMP_API_KEY', '');
+
 // Allowed origins (add your domain here for production)
 define('ALLOWED_ORIGIN', '*');
 
@@ -121,6 +125,93 @@ function checkRateLimit($ip) {
     return true;
 }
 
+// ── FMP HELPERS ────────────────────────────────────────────────────────────
+
+function fmpGet($path) {
+    $url = 'https://financialmodelingprep.com/api/v3' . $path . '&apikey=' . FMP_API_KEY;
+    $ch  = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 8,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_HTTPHEADER     => ['Accept: application/json'],
+    ]);
+    $body = curl_exec($ch);
+    curl_close($ch);
+    if (!$body) return null;
+    $data = json_decode($body, true);
+    return (is_array($data) && !empty($data)) ? $data : null;
+}
+
+function resolveTicker($input) {
+    $input = trim($input);
+    // Pattern: "Apple Inc. (AAPL)" or "(AAPL)"
+    if (preg_match('/\(([A-Z]{1,6})\)/', $input, $m)) return $m[1];
+    // Pure ticker e.g. "AAPL"
+    if (preg_match('/^[A-Z]{1,6}$/', $input)) return $input;
+    // Fall back to FMP search
+    if (!FMP_API_KEY) return null;
+    $results = fmpGet('/search?query=' . urlencode($input) . '&limit=1');
+    return $results[0]['symbol'] ?? null;
+}
+
+function fetchEarningsContext($ticker) {
+    if (!FMP_API_KEY || !$ticker) return null;
+
+    $lines = ["## Live Market Data for {$ticker} (Financial Modeling Prep)\n"];
+
+    // Analyst consensus estimates (next 2 quarters)
+    $estimates = fmpGet("/analyst-estimates/{$ticker}?limit=2");
+    if ($estimates) {
+        $lines[] = "### Analyst Consensus Estimates\n";
+        $lines[] = "| Period | Revenue Est | EPS Est (avg) | EPS High | EPS Low |";
+        $lines[] = "|--------|------------|---------------|----------|---------|";
+        foreach ($estimates as $e) {
+            $rev = isset($e['estimatedRevenueAvg']) ? '$' . number_format($e['estimatedRevenueAvg'] / 1e9, 2) . 'B' : 'N/A';
+            $eps = $e['estimatedEpsAverage'] ?? 'N/A';
+            $hi  = $e['estimatedEpsHigh']    ?? 'N/A';
+            $lo  = $e['estimatedEpsLow']     ?? 'N/A';
+            $lines[] = "| {$e['date']} | {$rev} | \${$eps} | \${$hi} | \${$lo} |";
+        }
+        $lines[] = '';
+    }
+
+    // Historical earnings surprises (last 6 quarters)
+    $surprises = fmpGet("/historical/earning_surprises/{$ticker}");
+    if ($surprises) {
+        $lines[] = "### Historical Earnings Beat/Miss (Last 6 Quarters)\n";
+        $lines[] = "| Date | EPS Estimate | EPS Actual | Surprise % |";
+        $lines[] = "|------|-------------|------------|------------|";
+        foreach (array_slice($surprises, 0, 6) as $s) {
+            $act  = $s['actualEarningResult'] ?? null;
+            $est  = $s['estimatedEarning']    ?? null;
+            if ($act === null || $est === null) continue;
+            $pct  = ($est != 0) ? round((($act - $est) / abs($est)) * 100, 1) : 0;
+            $icon = ($act >= $est) ? '✅' : '❌';
+            $lines[] = "| {$s['date']} | \${$est} | \${$act} | {$icon} {$pct}% |";
+        }
+        $lines[] = '';
+    }
+
+    // Analyst recommendations
+    $recs = fmpGet("/analyst-stock-recommendations/{$ticker}?limit=1");
+    if ($recs && isset($recs[0])) {
+        $r = $recs[0];
+        $total = ($r['strongBuy'] ?? 0) + ($r['buy'] ?? 0) + ($r['hold'] ?? 0) + ($r['sell'] ?? 0) + ($r['strongSell'] ?? 0);
+        if ($total > 0) {
+            $lines[] = "### Analyst Recommendations ({$r['date']})\n";
+            $lines[] = "- Strong Buy: **{$r['strongBuy']}** | Buy: **{$r['buy']}** | Hold: **{$r['hold']}** | Sell: **{$r['sell']}** | Strong Sell: **{$r['strongSell']}**";
+            $lines[] = "- Total analysts: {$total}";
+            $lines[] = '';
+        }
+    }
+
+    if (count($lines) <= 1) return null; // Only the header, nothing fetched
+    $lines[] = "*Source: Financial Modeling Prep — data as of request time.*\n";
+    return implode("\n", $lines);
+}
+
 $clientIP = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 if (!checkRateLimit($clientIP)) {
     http_response_code(429);
@@ -133,13 +224,15 @@ if (!checkRateLimit($clientIP)) {
 $rawInput = file_get_contents('php://input');
 $input    = json_decode($rawInput, true);
 
-if (!$input || empty($input['prompt'])) {
+if (!$input || (empty($input['prompt']) && empty($input['user']))) {
     http_response_code(400);
     echo json_encode(['error' => 'Missing "prompt" field in request body.']);
     exit;
 }
 
-$prompt      = trim($input['prompt']);
+$prompt      = trim($input['prompt'] ?? $input['user'] ?? '');
+$clientSys   = trim($input['system'] ?? '');
+$mode        = trim($input['mode']   ?? '');
 $requestType = $input['request_type'] ?? 'finbot'; // 'finbot' | 'news'
 $creditCost  = ($requestType === 'news') ? CREDIT_COST_NEWS : CREDIT_COST_FINBOT;
 
@@ -152,6 +245,23 @@ if (strlen($prompt) > 10000) {
     http_response_code(400);
     echo json_encode(['error' => 'Prompt is too long. Maximum 10,000 characters.']);
     exit;
+}
+
+// ── BUILD SYSTEM PROMPT ────────────────────────────────────────────────────
+
+$today      = date('l, j F Y');  // e.g. "Saturday, 28 March 2026"
+$systemPrompt = $clientSys ?: 'You are FinBot, an expert financial analyst AI. Respond in clean Markdown with headers, bullet points, and tables where useful.';
+$systemPrompt .= "\n\nToday's date is {$today}. When citing market data, analyst estimates, or any figures, note if they may be from your training data rather than live sources.";
+
+// Inject live FMP data for earnings requests
+if ($mode === 'earnings' && FMP_API_KEY) {
+    $ticker = resolveTicker($prompt);
+    if ($ticker) {
+        $liveData = fetchEarningsContext($ticker);
+        if ($liveData) {
+            $systemPrompt .= "\n\nThe following live market data has been retrieved for **{$ticker}**. Use it as the primary source — it is more accurate than your training data:\n\n" . $liveData;
+        }
+    }
 }
 
 // ── DEDUCT CREDITS BEFORE CALLING API ─────────────────────────────────────
@@ -176,6 +286,7 @@ $apiUrl  = 'https://api.anthropic.com/v1/messages';
 $payload = json_encode([
     'model'      => MODEL,
     'max_tokens' => MAX_TOKENS,
+    'system'     => $systemPrompt,
     'messages'   => [['role' => 'user', 'content' => $prompt]],
 ]);
 
