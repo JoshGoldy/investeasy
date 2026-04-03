@@ -1,6 +1,11 @@
 # ── Sensitive files (NEVER commit these) ─────────────────────
 api.php
 db.php
+.env
+
+# ── Docker ────────────────────────────────────────────────────
+# Commit: Dockerfile, docker-compose.yml
+# Do NOT commit: .env (has passwords)
 
 # ── OS files ─────────────────────────────────────────────────
 .DS_Store

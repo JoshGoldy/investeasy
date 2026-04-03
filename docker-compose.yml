@@ -1,0 +1,54 @@
+services:
+
+  # ── PHP + Apache (your app) ──────────────────────────────────
+  app:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      # Live-reload: edits on your machine instantly reflected in container
+      - .:/var/www/html
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── MySQL database ───────────────────────────────────────────
+  db:
+    image: mysql:8.0
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE:      ${DB_NAME}
+      MYSQL_USER:          ${DB_USER}
+      MYSQL_PASSWORD:      ${DB_PASS}
+    volumes:
+      # Persist DB data between restarts
+      - db_data:/var/lib/mysql
+      # Auto-import schema on first run
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # ── phpMyAdmin (visual DB manager) ──────────────────────────
+  phpmyadmin:
+    image: phpmyadmin:latest
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: ${DB_USER}
+      PMA_PASSWORD: ${DB_PASS}
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  db_data:
