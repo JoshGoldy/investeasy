@@ -1,6 +1,5 @@
 # ── Sensitive files (NEVER commit these) ─────────────────────
-api.php
-db.php
+# api.php and db.php are now safe to commit — they read secrets from env vars
 .env
 
 # ── Docker ────────────────────────────────────────────────────

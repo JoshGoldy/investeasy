@@ -1,0 +1,75 @@
+# ── InvestEasy: Deploy to Azure App Service (Docker) ───────────────────────
+#
+# Triggers on every push to main.
+# Builds the Docker image, pushes to Azure Container Registry,
+# then deploys to Azure App Service.
+#
+# REQUIRED GITHUB SECRETS (Settings → Secrets → Actions):
+#   AZURE_CREDENTIALS       Service principal JSON (see setup below)
+#   ACR_LOGIN_SERVER        e.g. finscope.azurecr.io
+#   ACR_USERNAME            ACR admin username
+#   ACR_PASSWORD            ACR admin password
+#   AZURE_WEBAPP_NAME       App Service name (e.g. finscope-app)
+#
+# ONE-TIME SETUP:
+#   1. Create a service principal:
+#      az ad sp create-for-rbac --name "finscope-deploy" \
+#        --role contributor \
+#        --scopes /subscriptions/<SUB_ID>/resourceGroups/<RG_NAME> \
+#        --sdk-auth
+#      Paste the JSON output as the AZURE_CREDENTIALS secret.
+#
+#   2. In Azure App Service → Configuration → Application Settings, add:
+#        ANTHROPIC_API_KEY   your Anthropic API key
+#        DB_HOST             your-server.mysql.database.azure.com
+#        DB_NAME             investeasy
+#        DB_USER             adminuser
+#        DB_PASS             your-db-password
+#        DB_SSL_CA           /usr/local/share/ca-certificates/DigiCertGlobalRootCA.crt.pem
+#        FMP_API_KEY         (optional) your FMP key
+# ───────────────────────────────────────────────────────────────────────────
+
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [main]
+
+env:
+  IMAGE_NAME: finscope
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
+            ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          images: ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
