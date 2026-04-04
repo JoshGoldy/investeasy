@@ -1,21 +1,24 @@
 -- InvestEasy — Manual Database Schema
--- Run this in cPanel → phpMyAdmin (select your database first, then run this SQL)
+-- Run this against your MySQL database to set up all required tables.
+-- Safe to re-run: all statements use CREATE TABLE IF NOT EXISTS.
 --
--- NOTE: Replace nothing — just run as-is after selecting your database.
+-- For Azure MySQL Flexible Server:
+--   mysql -h <server>.mysql.database.azure.com -u <admin> -p <dbname> < schema.sql
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- users
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS users (
     id               INT AUTO_INCREMENT PRIMARY KEY,
-    name             VARCHAR(100)  NOT NULL,
-    email            VARCHAR(150)  NOT NULL,
-    username         VARCHAR(50)   NOT NULL,
-    password_hash    VARCHAR(255)  NOT NULL,
+    name             VARCHAR(100)        NOT NULL,
+    email            VARCHAR(150)        NOT NULL,
+    username         VARCHAR(50)         NOT NULL,
+    password_hash    VARCHAR(255)        NOT NULL,
+    age              TINYINT UNSIGNED    NULL DEFAULT NULL,
     tier             ENUM('free','pro','enterprise') NOT NULL DEFAULT 'free',
-    finbot_credits   INT           NOT NULL DEFAULT 0,
-    credits_reset_at TIMESTAMP     NULL DEFAULT NULL,
-    created_at       TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    finbot_credits   INT                 NOT NULL DEFAULT 0,
+    credits_reset_at TIMESTAMP           NULL DEFAULT NULL,
+    created_at       TIMESTAMP           DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_email    (email),
     UNIQUE KEY uq_username (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -107,5 +110,17 @@ CREATE TABLE IF NOT EXISTS user_progress (
     user_id    INT        PRIMARY KEY,
     state      MEDIUMTEXT NOT NULL,
     updated_at TIMESTAMP  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- password_reset_tokens
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    user_id    INT         NOT NULL,
+    token      VARCHAR(64) NOT NULL,
+    expires_at TIMESTAMP   NOT NULL,
+    UNIQUE KEY uq_token (token),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -72,6 +72,7 @@ function initSchema() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
     // Add columns to existing tables that pre-date this schema
+    try { $db->exec("ALTER TABLE users ADD COLUMN age TINYINT UNSIGNED NULL DEFAULT NULL"); } catch (Exception $e) {}
     try { $db->exec("ALTER TABLE users ADD COLUMN tier ENUM('free','pro','enterprise') NOT NULL DEFAULT 'free'"); } catch (Exception $e) {}
     try { $db->exec("ALTER TABLE users ADD COLUMN finbot_credits INT NOT NULL DEFAULT 0"); } catch (Exception $e) {}
     try { $db->exec("ALTER TABLE users ADD COLUMN credits_reset_at TIMESTAMP NULL DEFAULT NULL"); } catch (Exception $e) {}
