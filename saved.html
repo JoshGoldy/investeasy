@@ -199,28 +199,11 @@
         <div id="auth-login-form">
           <div class="auth-field">
             <label class="form-label">Email</label>
-            <input id="login-email" class="form-input" type="email" placeholder="you@example.com" autocomplete="email">
-          </div>
-          <div class="auth-field">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-              <label class="form-label" style="margin:0">Password</label>
-              <span class="auth-link" style="font-size:12px" onclick="showAuthTab('forgot')">Forgot password?</span>
-            </div>
-            <input id="login-password" class="form-input" type="password" placeholder="••••••••" autocomplete="current-password"
+            <input id="login-email" class="form-input" type="email" placeholder="you@example.com" autocomplete="email"
               onkeydown="if(event.key==='Enter')doLogin()">
           </div>
-          <button class="auth-btn" id="login-btn" onclick="doLogin()">Sign In</button>
-        </div>
-
-        <!-- Forgot password form -->
-        <div id="auth-forgot-form" style="display:none">
-          <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.5">Enter your email address and we'll send you a link to reset your password.</p>
-          <div class="auth-field">
-            <label class="form-label">Email</label>
-            <input id="forgot-email" class="form-input" type="email" placeholder="you@example.com" autocomplete="email"
-              onkeydown="if(event.key==='Enter')doForgotPassword()">
-          </div>
-          <button class="auth-btn" id="forgot-btn" onclick="doForgotPassword()">Send Reset Link</button>
+          <p class="auth-note">We'll email you a 6-digit code to sign in securely.</p>
+          <button class="auth-btn" id="login-btn" onclick="doLogin()">Send Sign-In Code</button>
         </div>
 
         <!-- Register form -->
@@ -239,16 +222,26 @@
           </div>
           <div class="auth-field">
             <label class="form-label">Age <span style="color:var(--faint);font-weight:400">(optional)</span></label>
-            <input id="reg-age" class="form-input" type="number" placeholder="e.g. 25" min="13" max="120" autocomplete="off">
-          </div>
-          <div class="auth-field">
-            <label class="form-label">Password</label>
-            <input id="reg-password" class="form-input" type="password" placeholder="Min. 6 characters" autocomplete="new-password"
+            <input id="reg-age" class="form-input" type="number" placeholder="e.g. 25" min="13" max="120" autocomplete="off"
               onkeydown="if(event.key==='Enter')doRegister()">
           </div>
-          <button class="auth-btn" id="register-btn" onclick="doRegister()">Create Account</button>
+          <p class="auth-note">We'll send a 6-digit verification code to finish creating your account.</p>
+          <button class="auth-btn" id="register-btn" onclick="doRegister()">Send Sign-Up Code</button>
         </div>
 
+        <!-- Verify OTP form -->
+        <div id="auth-otp-form" style="display:none">
+          <p class="auth-note" id="otp-note">Enter the 6-digit code we sent to your email.</p>
+          <div class="auth-otp-meta" id="otp-email-display"></div>
+          <div class="auth-field">
+            <label class="form-label">Verification Code</label>
+            <input id="otp-code" class="form-input auth-otp-box" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456"
+              oninput="this.value=this.value.replace(/\D/g,'').slice(0,6)"
+              onkeydown="if(event.key==='Enter')verifyOtpCode()">
+          </div>
+          <button class="auth-btn" id="otp-btn" onclick="verifyOtpCode()">Verify Code</button>
+          <button class="auth-secondary-btn" id="otp-resend-btn" onclick="resendOtpCode()">Resend Code</button>
+        </div>
         <p class="auth-divider" id="auth-footer-text">
           Don't have an account? <span class="auth-link" onclick="showAuthTab('register')">Sign up free</span>
         </p>
@@ -507,6 +500,7 @@
 </div>
 </body>
 </html>
+
 
 
 

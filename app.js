@@ -5343,7 +5343,7 @@ function renderSettings() {
       <p class="settings-section-label">Account</p>
       <div class="settings-group" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
         ${currentUser ? `
-          <button class="modal-save-btn" style="background:#3b82f6" onclick="openChangePasswordModal()">Change Password</button>
+          <button class="modal-save-btn" style="background:#3b82f6" disabled>Email Code Sign-In Enabled</button>
           <button class="modal-save-btn" style="background:#1e293b" onclick="doLogout()">Sign Out</button>
         ` : `<button class="modal-save-btn" onclick="document.getElementById('auth-overlay').classList.remove('hidden')">Sign In / Create Account</button>`}
         <button class="danger-btn" onclick="resetAllSettings()">Reset All Settings</button>
@@ -5420,6 +5420,7 @@ function resetAllSettings() {
 const SUPABASE_CONFIG = window.SUPABASE_CONFIG || {};
 let supabaseClient = null;
 let supabaseAuthListenerBound = false;
+let pendingOtp = null;
 
 function isSupabaseConfigured() {
   return !!(window.supabase && SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey);
@@ -5533,30 +5534,48 @@ async function handleAuthAction(action, method, body) {
       return user ? { success: true, user } : { success: false, error: 'Not logged in' };
     }
     case 'login': {
-      const { error } = await sb.auth.signInWithPassword({ email: body.email, password: body.password });
+      const { error } = await sb.auth.signInWithOtp({
+        email: body.email,
+        options: { shouldCreateUser: false }
+      });
       if (error) return { success: false, error: error.message };
-      const user = await loadCurrentUserFromSupabase();
-      return { success: true, user };
+      return { success: true, otp_sent: true, message: 'We sent a 6-digit sign-in code to your email.' };
     }
     case 'register': {
       const cleanName = (body.name || '').trim();
       const cleanEmail = (body.email || '').trim().toLowerCase();
       const cleanUser = (body.username || '').trim().replace(/^@+/, '').toLowerCase();
       const age = body.age ?? null;
-      const { data, error } = await sb.auth.signUp({
+      const { error } = await sb.auth.signInWithOtp({
         email: cleanEmail,
-        password: body.password,
-        options: { data: { name: cleanName, username: cleanUser, age } }
+        options: {
+          shouldCreateUser: true,
+          data: { name: cleanName, username: cleanUser, age }
+        }
+      });
+      if (error) return { success: false, error: error.message };
+      return { success: true, otp_sent: true, message: 'We sent a 6-digit sign-up code to your email.' };
+    }
+    case 'verify-otp': {
+      const cleanEmail = (body.email || '').trim().toLowerCase();
+      const token = String(body.token || '').trim();
+      const { data, error } = await sb.auth.verifyOtp({
+        email: cleanEmail,
+        token,
+        type: 'email'
       });
       if (error) return { success: false, error: error.message };
       if (data.user) {
         try {
-          await ensureProfileRow(data.user, { name: cleanName, age });
+          await ensureProfileRow(data.user, {
+            name: body.name,
+            username: body.username,
+            age: body.age
+          });
         } catch (e) {}
       }
       const user = await loadCurrentUserFromSupabase();
-      if (user) return { success: true, user };
-      return { success: true, message: 'Check your email to confirm your account, then sign in.' };
+      return user ? { success: true, user } : { success: false, error: 'Verification succeeded, but no session was returned.' };
     }
     case 'forgot-password': {
       const redirectTo = new URL('reset-password.html', window.location.href).href;
@@ -5586,12 +5605,7 @@ async function handleAuthAction(action, method, body) {
       return { success: true, user: mapped };
     }
     case 'change-password': {
-      const email = currentUser?.email;
-      if (!email) return { success: false, error: 'Not logged in' };
-      const reauth = await sb.auth.signInWithPassword({ email, password: body.current_password });
-      if (reauth.error) return { success: false, error: 'Current password is incorrect.' };
-      const { error } = await sb.auth.updateUser({ password: body.new_password });
-      return error ? { success: false, error: error.message } : { success: true };
+      return { success: false, error: 'Password changes are disabled while email code sign-in is enabled.' };
     }
     default:
       return { success: false, error: `Unsupported auth action: ${action}` };
@@ -5777,15 +5791,16 @@ async function apiCall(url, method = 'GET', body = null) {
 function showAuthTab(mode) {
   const isLogin    = mode === 'login';
   const isRegister = mode === 'register';
-  const isForgot   = mode === 'forgot';
+  const isOtp      = mode === 'otp';
   document.getElementById('tab-login-btn').classList.toggle('active', isLogin);
   document.getElementById('tab-register-btn').classList.toggle('active', isRegister);
-  document.getElementById('auth-login-form').style.display    = isLogin    ? '' : 'none';
+  document.getElementById('auth-login-form').style.display    = isLogin ? '' : 'none';
   document.getElementById('auth-register-form').style.display = isRegister ? '' : 'none';
-  document.getElementById('auth-forgot-form').style.display   = isForgot   ? '' : 'none';
-  if (isForgot) {
+  const otpForm = document.getElementById('auth-otp-form');
+  if (otpForm) otpForm.style.display = isOtp ? '' : 'none';
+  if (isOtp) {
     document.getElementById('auth-footer-text').innerHTML =
-      'Remember your password? <span class="auth-link" onclick="showAuthTab(\'login\')">Sign in</span>';
+      'Need a different email? <span class="auth-link" onclick="showAuthTab(\'' + (pendingOtp?.mode === 'register' ? 'register' : 'login') + '\')">Go back</span>';
   } else if (isLogin) {
     document.getElementById('auth-footer-text').innerHTML =
       'Don\'t have an account? <span class="auth-link" onclick="showAuthTab(\'register\')">Sign up free</span>';
@@ -5799,6 +5814,7 @@ function showAuthTab(mode) {
 function showAuthError(msg) {
   const el = document.getElementById('auth-error');
   el.textContent = msg;
+  el.style.color = '';
   el.classList.add('show');
 }
 function clearAuthError() {
@@ -5807,10 +5823,30 @@ function clearAuthError() {
   el.style.color = '';
   el.classList.remove('show');
 }
+function showAuthSuccess(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.style.color = '#10b981';
+  el.classList.add('show');
+}
 function setAuthLoading(loading) {
-  document.getElementById('login-btn').disabled    = loading;
-  document.getElementById('register-btn').disabled = loading;
-  document.getElementById('forgot-btn').disabled   = loading;
+  ['login-btn', 'register-btn', 'otp-btn', 'otp-resend-btn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = loading;
+  });
+}
+function setPendingOtp(payload) {
+  pendingOtp = payload;
+  const emailEl = document.getElementById('otp-email-display');
+  const noteEl = document.getElementById('otp-note');
+  const codeInput = document.getElementById('otp-code');
+  if (emailEl) emailEl.textContent = payload?.email ? `Code sent to ${payload.email}` : '';
+  if (noteEl) {
+    noteEl.textContent = payload?.mode === 'register'
+      ? 'Enter the 6-digit code to create your account and sign in.'
+      : 'Enter the 6-digit code to sign in to your account.';
+  }
+  if (codeInput) codeInput.value = '';
 }
 
 // ── Session check on load ─────────────────────────────────────────────────────
@@ -5830,23 +5866,21 @@ async function checkAuth() {
 
 // ── Login ─────────────────────────────────────────────────────────────────────
 async function doLogin() {
-  const email    = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
-  if (!email || !password) { showAuthError('Please enter your email and password.'); return; }
+  const email = document.getElementById('login-email').value.trim();
+  if (!email) { showAuthError('Please enter your email address.'); return; }
   clearAuthError();
   setAuthLoading(true);
   try {
-    const d = await apiCall('auth.php?action=login', 'POST', { email, password });
-    if (d.success && d.user) {
-      currentUser = d.user;
-      if (d.token) localStorage.setItem('ie_auth_token', d.token);
-      await syncAfterLogin();
-      document.getElementById('auth-overlay').classList.add('hidden');
+    const d = await apiCall('auth.php?action=login', 'POST', { email });
+    if (d.success) {
+      setPendingOtp({ mode: 'login', email });
+      showAuthTab('otp');
+      showAuthSuccess(d.message || 'We sent your sign-in code.');
     } else {
       showAuthError(d.error || 'Login failed. Please try again.');
     }
   } catch(e) {
-    showAuthError('Connection error. Check that auth.php and db.php are on the server.');
+    showAuthError('Connection error. Please try again.');
   }
   setAuthLoading(false);
 }
@@ -5856,50 +5890,75 @@ async function doRegister() {
   const name     = document.getElementById('reg-name').value.trim();
   const email    = document.getElementById('reg-email').value.trim();
   const username = document.getElementById('reg-username').value.trim();
-  const password = document.getElementById('reg-password').value;
   const ageVal   = document.getElementById('reg-age').value.trim();
   const age      = ageVal !== '' ? parseInt(ageVal, 10) : null;
-  if (!name || !email || !username || !password) { showAuthError('All fields are required.'); return; }
+  if (!name || !email || !username) { showAuthError('Name, email, and username are required.'); return; }
   if (age !== null && (isNaN(age) || age < 13 || age > 120)) { showAuthError('Please enter a valid age (13–120).'); return; }
   clearAuthError();
   setAuthLoading(true);
   try {
-    const d = await apiCall('auth.php?action=register', 'POST', { name, email, username, password, age });
-    if (d.success && d.user) {
-      currentUser = d.user;
-      if (d.token) localStorage.setItem('ie_auth_token', d.token);
-      await syncAfterLogin();
-      document.getElementById('auth-overlay').classList.add('hidden');
-    } else if (d.success) {
-      showAuthError(d.message || 'Check your email to confirm your account, then sign in.');
-      document.getElementById('auth-error').style.color = '#10b981';
-      showAuthTab('login');
+    const d = await apiCall('auth.php?action=register', 'POST', { name, email, username, age });
+    if (d.success) {
+      setPendingOtp({ mode: 'register', email, name, username, age });
+      showAuthTab('otp');
+      showAuthSuccess(d.message || 'We sent your sign-up code.');
     } else {
       showAuthError(d.error || 'Registration failed. Please try again.');
     }
   } catch(e) {
-    showAuthError('Connection error. Check that auth.php and db.php are on the server.');
+    showAuthError('Connection error. Please try again.');
   }
   setAuthLoading(false);
 }
 
 // ── Forgot Password — send reset link via email ───────────────────────────────
-async function doForgotPassword() {
-  const email = document.getElementById('forgot-email').value.trim();
-  if (!email) { showAuthError('Please enter your email address.'); return; }
+async function verifyOtpCode() {
+  const code = document.getElementById('otp-code').value.trim();
+  if (!pendingOtp?.email) { showAuthError('Start by requesting a sign-in code first.'); return; }
+  if (!/^\d{6}$/.test(code)) { showAuthError('Enter the full 6-digit code.'); return; }
   clearAuthError();
   setAuthLoading(true);
   try {
-    const d = await apiCall('auth.php?action=forgot-password', 'POST', { email });
+    const d = await apiCall('auth.php?action=verify-otp', 'POST', {
+      email: pendingOtp.email,
+      token: code,
+      name: pendingOtp.name,
+      username: pendingOtp.username,
+      age: pendingOtp.age
+    });
     if (d.success) {
-      document.getElementById('forgot-email').value = '';
-      showAuthError('Check your email for a password reset link.');
-      document.getElementById('auth-error').style.color = '#10b981';
+      currentUser = d.user;
+      pendingOtp = null;
+      await syncAfterLogin();
+      document.getElementById('auth-overlay').classList.add('hidden');
     } else {
-      showAuthError(d.error || 'Failed to send reset email. Please try again.');
+      showAuthError(d.error || 'Verification failed. Please try again.');
     }
   } catch(e) {
-    showAuthError('Connection error. Check that auth.php and db.php are on the server.');
+    showAuthError('Connection error. Please try again.');
+  }
+  setAuthLoading(false);
+}
+
+async function resendOtpCode() {
+  if (!pendingOtp?.email) { showAuthError('Start by requesting a code first.'); return; }
+  clearAuthError();
+  setAuthLoading(true);
+  try {
+    const action = pendingOtp.mode === 'register' ? 'register' : 'login';
+    const d = await apiCall('auth.php?action=' + action, 'POST', {
+      email: pendingOtp.email,
+      name: pendingOtp.name,
+      username: pendingOtp.username,
+      age: pendingOtp.age
+    });
+    if (d.success) {
+      showAuthSuccess(d.message || 'A fresh code is on the way.');
+    } else {
+      showAuthError(d.error || 'Failed to resend the code.');
+    }
+  } catch(e) {
+    showAuthError('Connection error. Please try again.');
   }
   setAuthLoading(false);
 }
@@ -5908,6 +5967,7 @@ async function doForgotPassword() {
 async function doLogout() {
   try { await apiCall('auth.php?action=logout', 'POST'); } catch(e) {}
   localStorage.removeItem('ie_auth_token');
+  pendingOtp              = null;
   currentUser            = null;
   dbPortfolio            = [];
   watchlistSet           = new Set();
