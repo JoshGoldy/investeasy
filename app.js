@@ -5416,8 +5416,355 @@ function resetAllSettings() {
 // AUTH & DATABASE SYNC
 // ═══════════════════════════════════════════════════════════════════════════
 
-// ── Low-level fetch wrapper ───────────────────────────────────────────────────
+// ── Supabase-backed API compatibility layer ──────────────────────────────────
+const SUPABASE_CONFIG = window.SUPABASE_CONFIG || {};
+let supabaseClient = null;
+let supabaseAuthListenerBound = false;
+
+function isSupabaseConfigured() {
+  return !!(window.supabase && SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey);
+}
+
+function getSupabase() {
+  if (!isSupabaseConfigured()) throw new Error('Supabase is not configured.');
+  if (!supabaseClient) {
+    supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
+  }
+  return supabaseClient;
+}
+
+function apiAction(url) {
+  try {
+    return new URL(url, window.location.href).searchParams.get('action') || '';
+  } catch (e) {
+    const q = (url.split('?')[1] || '');
+    return new URLSearchParams(q).get('action') || '';
+  }
+}
+
+function authMeta(user) {
+  return user?.user_metadata || user?.raw_user_meta_data || {};
+}
+
+function fallbackUsername(email = '') {
+  return (email.split('@')[0] || 'investor').replace(/[^a-zA-Z0-9_]/g, '').toLowerCase() || 'investor';
+}
+
+function normalizeCurrentUser(authUser, profile = {}) {
+  const meta = authMeta(authUser);
+  const username = profile.username || meta.username || fallbackUsername(authUser?.email || '');
+  const name = profile.name || meta.name || username || 'Investor';
+  return {
+    id: authUser.id,
+    name,
+    email: authUser.email || '',
+    username,
+    tier: profile.tier || 'free',
+    finbot_credits: profile.finbot_credits ?? 0,
+    credits_reset_at: profile.credits_reset_at ?? null,
+    age: profile.age ?? meta.age ?? null,
+    created_at: profile.created_at || authUser.created_at || null,
+  };
+}
+
+async function ensureProfileRow(authUser, patch = {}) {
+  if (!authUser) return null;
+  const sb = getSupabase();
+  const meta = authMeta(authUser);
+  const payload = {
+    id: authUser.id,
+    name: patch.name || meta.name || authUser.email || 'Investor',
+  };
+  if (patch.username) payload.username = patch.username;
+  if (patch.age !== undefined && patch.age !== null && patch.age !== '') payload.age = patch.age;
+  const { error } = await sb.from('profiles').upsert(payload, { onConflict: 'id' });
+  if (error) throw error;
+  const { data, error: profileError } = await sb.from('profiles').select('*').eq('id', authUser.id).maybeSingle();
+  if (profileError) throw profileError;
+  return data || payload;
+}
+
+async function loadCurrentUserFromSupabase() {
+  const sb = getSupabase();
+  const { data: { session }, error } = await sb.auth.getSession();
+  if (error) throw error;
+  if (!session?.user) return null;
+  let profile = null;
+  try { profile = await ensureProfileRow(session.user); } catch (e) {}
+  currentUser = normalizeCurrentUser(session.user, profile || {});
+  return currentUser;
+}
+
+function settingsFromDb(row = {}) {
+  return {
+    notifications: !!row.notifications,
+    priceAlerts: !!row.price_alerts,
+    newsletter: !!row.newsletter,
+    currency: row.currency ?? 'USD',
+    hideBalances: !!row.hide_balances,
+    compactView: !!row.compact_view,
+    defaultRisk: row.default_risk ?? 'Moderate',
+    defaultHorizon: row.default_horizon ?? '1–5 years',
+    defaultSectors: row.default_sectors ?? 'Tech, Finance',
+  };
+}
+
+function settingsToDb(updates = {}) {
+  const mapped = {};
+  if ('notifications' in updates) mapped.notifications = !!updates.notifications;
+  if ('priceAlerts' in updates) mapped.price_alerts = !!updates.priceAlerts;
+  if ('newsletter' in updates) mapped.newsletter = !!updates.newsletter;
+  if ('currency' in updates) mapped.currency = updates.currency;
+  if ('hideBalances' in updates) mapped.hide_balances = !!updates.hideBalances;
+  if ('compactView' in updates) mapped.compact_view = !!updates.compactView;
+  if ('defaultRisk' in updates) mapped.default_risk = updates.defaultRisk;
+  if ('defaultHorizon' in updates) mapped.default_horizon = updates.defaultHorizon;
+  if ('defaultSectors' in updates) mapped.default_sectors = updates.defaultSectors;
+  return mapped;
+}
+
+async function handleAuthAction(action, method, body) {
+  const sb = getSupabase();
+  switch (action) {
+    case 'me': {
+      const user = await loadCurrentUserFromSupabase();
+      return user ? { success: true, user } : { success: false, error: 'Not logged in' };
+    }
+    case 'login': {
+      const { error } = await sb.auth.signInWithPassword({ email: body.email, password: body.password });
+      if (error) return { success: false, error: error.message };
+      const user = await loadCurrentUserFromSupabase();
+      return { success: true, user };
+    }
+    case 'register': {
+      const cleanName = (body.name || '').trim();
+      const cleanEmail = (body.email || '').trim().toLowerCase();
+      const cleanUser = (body.username || '').trim().replace(/^@+/, '').toLowerCase();
+      const age = body.age ?? null;
+      const { data, error } = await sb.auth.signUp({
+        email: cleanEmail,
+        password: body.password,
+        options: { data: { name: cleanName, username: cleanUser, age } }
+      });
+      if (error) return { success: false, error: error.message };
+      if (data.user) {
+        try {
+          await ensureProfileRow(data.user, { name: cleanName, age });
+        } catch (e) {}
+      }
+      const user = await loadCurrentUserFromSupabase();
+      if (user) return { success: true, user };
+      return { success: true, message: 'Check your email to confirm your account, then sign in.' };
+    }
+    case 'forgot-password': {
+      const redirectTo = new URL('reset-password.html', window.location.href).href;
+      const { error } = await sb.auth.resetPasswordForEmail(body.email, { redirectTo });
+      return error ? { success: false, error: error.message } : { success: true };
+    }
+    case 'logout': {
+      const { error } = await sb.auth.signOut();
+      if (error) return { success: false, error: error.message };
+      return { success: true };
+    }
+    case 'update-profile': {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) return { success: false, error: 'Not logged in' };
+      const authUpdates = { data: { ...authMeta(user), name: body.name, username: body.username } };
+      if (body.email && body.email !== user.email) authUpdates.email = body.email;
+      const { error: authError } = await sb.auth.updateUser(authUpdates);
+      if (authError) return { success: false, error: authError.message };
+      const { error: profileError } = await sb.from('profiles').upsert({
+        id: user.id,
+        name: body.name,
+        username: body.username,
+        age: currentUser?.age ?? null,
+      }, { onConflict: 'id' });
+      if (profileError) return { success: false, error: profileError.message };
+      const mapped = await loadCurrentUserFromSupabase();
+      return { success: true, user: mapped };
+    }
+    case 'change-password': {
+      const email = currentUser?.email;
+      if (!email) return { success: false, error: 'Not logged in' };
+      const reauth = await sb.auth.signInWithPassword({ email, password: body.current_password });
+      if (reauth.error) return { success: false, error: 'Current password is incorrect.' };
+      const { error } = await sb.auth.updateUser({ password: body.new_password });
+      return error ? { success: false, error: error.message } : { success: true };
+    }
+    default:
+      return { success: false, error: `Unsupported auth action: ${action}` };
+  }
+}
+
+async function handleDataAction(action, method, body) {
+  const sb = getSupabase();
+  const uid = currentUser?.id;
+  if (!uid) return { success: false, error: 'Not logged in' };
+
+  switch (action) {
+    case 'settings': {
+      if (method === 'GET') {
+        const { data, error } = await sb.from('user_settings').select('*').eq('user_id', uid).maybeSingle();
+        if (error) return { success: false, error: error.message };
+        return { success: true, settings: settingsFromDb(data || {}) };
+      }
+      const payload = { user_id: uid, ...settingsToDb(body) };
+      const { error } = await sb.from('user_settings').upsert(payload, { onConflict: 'user_id' });
+      return error ? { success: false, error: error.message } : { success: true };
+    }
+    case 'portfolio': {
+      if (method === 'GET') {
+        const { data, error } = await sb.from('portfolio').select('ticker,name,shares,avg_cost').order('ticker');
+        if (error) return { success: false, error: error.message };
+        return { success: true, portfolio: (data || []).map(r => ({ ...r, shares: Number(r.shares), avg_cost: Number(r.avg_cost) })) };
+      }
+      if (method === 'POST') {
+        const payload = { user_id: uid, ticker: body.ticker, name: body.name, shares: body.shares, avg_cost: body.avg_cost };
+        const { error } = await sb.from('portfolio').upsert(payload, { onConflict: 'user_id,ticker' });
+        return error ? { success: false, error: error.message } : { success: true };
+      }
+      if (method === 'DELETE') {
+        const { error } = await sb.from('portfolio').delete().eq('user_id', uid).eq('ticker', body.ticker || '');
+        return error ? { success: false, error: error.message } : { success: true };
+      }
+      break;
+    }
+    case 'watchlist': {
+      if (method === 'GET') {
+        const { data, error } = await sb.from('watchlist').select('ticker,name').order('added_at', { ascending: false });
+        return error ? { success: false, error: error.message } : { success: true, watchlist: data || [] };
+      }
+      if (method === 'POST') {
+        const { error } = await sb.from('watchlist').upsert({ user_id: uid, ticker: body.ticker, name: body.name }, { onConflict: 'user_id,ticker' });
+        return error ? { success: false, error: error.message } : { success: true };
+      }
+      if (method === 'DELETE') {
+        const { error } = await sb.from('watchlist').delete().eq('user_id', uid).eq('ticker', body.ticker || '');
+        return error ? { success: false, error: error.message } : { success: true };
+      }
+      break;
+    }
+    case 'saved_reports': {
+      if (method === 'GET') {
+        const { data, error } = await sb.from('saved_reports').select('*').order('saved_at', { ascending: false });
+        if (error) return { success: false, error: error.message };
+        const reports = (data || []).map(r => ({
+          id: r.id,
+          modeId: r.mode_id,
+          modeTitle: r.mode_title,
+          modeSub: r.mode_sub,
+          modeCol: r.mode_col,
+          modeIcon: r.mode_icon,
+          content: r.content,
+          articleLink: r.article_link,
+          savedAt: Number(r.saved_at),
+          tags: Array.isArray(r.tags) ? r.tags : (() => { try { return JSON.parse(r.tags || '[]'); } catch { return []; } })(),
+          folder: r.folder || '',
+          starred: !!r.starred,
+          note: r.note || '',
+        }));
+        return { success: true, reports };
+      }
+      if (method === 'DELETE') {
+        const { error } = await sb.from('saved_reports').delete().eq('id', body.id || '');
+        return error ? { success: false, error: error.message } : { success: true };
+      }
+      if (method === 'POST' || method === 'PUT') {
+        if (body.modeId) {
+          const payload = {
+            id: body.id,
+            user_id: uid,
+            mode_id: body.modeId,
+            mode_title: body.modeTitle || '',
+            mode_sub: body.modeSub || '',
+            mode_col: body.modeCol || '#10b981',
+            mode_icon: body.modeIcon || '🤖',
+            content: body.content || '',
+            article_link: body.articleLink || '',
+            saved_at: body.savedAt || Date.now(),
+            starred: !!body.starred,
+            tags: JSON.stringify(Array.isArray(body.tags) ? body.tags : []),
+            folder: body.folder || '',
+            note: body.note || '',
+          };
+          const { error } = await sb.from('saved_reports').upsert(payload, { onConflict: 'id' });
+          return error ? { success: false, error: error.message } : { success: true };
+        }
+        const patch = {};
+        if ('modeTitle' in body) patch.mode_title = body.modeTitle;
+        if ('tags' in body) patch.tags = JSON.stringify(Array.isArray(body.tags) ? body.tags : []);
+        if ('folder' in body) patch.folder = body.folder || '';
+        if ('starred' in body) patch.starred = !!body.starred;
+        if ('note' in body) patch.note = body.note || '';
+        const { error } = await sb.from('saved_reports').update(patch).eq('id', body.id || '');
+        return error ? { success: false, error: error.message } : { success: true };
+      }
+      break;
+    }
+    case 'learn_progress': {
+      if (method === 'GET') {
+        const { data, error } = await sb.from('user_progress').select('state').eq('user_id', uid).maybeSingle();
+        if (error) return { success: false, error: error.message };
+        let state = {};
+        try { state = data?.state ? JSON.parse(data.state) : {}; } catch (e) {}
+        return { success: true, state };
+      }
+      const { error } = await sb.from('user_progress').upsert({ user_id: uid, state: JSON.stringify(body.state || {}) }, { onConflict: 'user_id' });
+      return error ? { success: false, error: error.message } : { success: true };
+    }
+    case 'price_alerts': {
+      if (method === 'GET') {
+        const { data, error } = await sb.from('price_alerts').select('*').order('created_at', { ascending: false });
+        return error ? { success: false, error: error.message } : { success: true, alerts: data || [] };
+      }
+      if (method === 'POST') {
+        const payload = { user_id: uid, ticker: body.ticker, name: body.name, target: body.target, direction: body.direction, triggered: false };
+        const { data, error } = await sb.from('price_alerts').insert(payload).select('id').single();
+        return error ? { success: false, error: error.message } : { success: true, id: data.id };
+      }
+      if (method === 'PUT') {
+        const { error } = await sb.from('price_alerts').update({ triggered: true }).eq('id', body.id).eq('user_id', uid);
+        return error ? { success: false, error: error.message } : { success: true };
+      }
+      if (method === 'DELETE') {
+        const { error } = await sb.from('price_alerts').delete().eq('id', body.id).eq('user_id', uid);
+        return error ? { success: false, error: error.message } : { success: true };
+      }
+      break;
+    }
+    default:
+      return { success: false, error: `Unsupported data action: ${action}` };
+  }
+
+  return { success: false, error: `Unsupported ${action} operation.` };
+}
+
+function bindSupabaseAuthListener() {
+  if (supabaseAuthListenerBound || !isSupabaseConfigured()) return;
+  const sb = getSupabase();
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_OUT' || !session?.user) {
+      currentUser = null;
+      updateHeaderUser();
+      return;
+    }
+    currentUser = await loadCurrentUserFromSupabase();
+    updateHeaderUser();
+  });
+  supabaseAuthListenerBound = true;
+}
+
 async function apiCall(url, method = 'GET', body = null) {
+  if (/^(auth|data)\.php/i.test(url)) {
+    if (!isSupabaseConfigured()) return { success: false, error: 'Supabase is not configured. Add your project URL and anon key to supabase-config.js.' };
+    bindSupabaseAuthListener();
+    const action = apiAction(url);
+    return url.startsWith('auth.php')
+      ? handleAuthAction(action, method, body || {})
+      : handleDataAction(action, method, body || {});
+  }
   const opts = { method, credentials: 'include', headers: {} };
   if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
   const token = localStorage.getItem('ie_auth_token');
@@ -5457,6 +5804,7 @@ function showAuthError(msg) {
 function clearAuthError() {
   const el = document.getElementById('auth-error');
   el.textContent = '';
+  el.style.color = '';
   el.classList.remove('show');
 }
 function setAuthLoading(loading) {
@@ -5489,7 +5837,7 @@ async function doLogin() {
   setAuthLoading(true);
   try {
     const d = await apiCall('auth.php?action=login', 'POST', { email, password });
-    if (d.success) {
+    if (d.success && d.user) {
       currentUser = d.user;
       if (d.token) localStorage.setItem('ie_auth_token', d.token);
       await syncAfterLogin();
@@ -5517,11 +5865,15 @@ async function doRegister() {
   setAuthLoading(true);
   try {
     const d = await apiCall('auth.php?action=register', 'POST', { name, email, username, password, age });
-    if (d.success) {
+    if (d.success && d.user) {
       currentUser = d.user;
       if (d.token) localStorage.setItem('ie_auth_token', d.token);
       await syncAfterLogin();
       document.getElementById('auth-overlay').classList.add('hidden');
+    } else if (d.success) {
+      showAuthError(d.message || 'Check your email to confirm your account, then sign in.');
+      document.getElementById('auth-error').style.color = '#10b981';
+      showAuthTab('login');
     } else {
       showAuthError(d.error || 'Registration failed. Please try again.');
     }
