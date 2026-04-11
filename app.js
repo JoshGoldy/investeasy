@@ -6046,8 +6046,11 @@ async function verifyOtpCode() {
     if (d.success) {
       currentUser = d.user;
       pendingOtp = null;
-      await syncAfterLogin();
       document.getElementById('auth-overlay').classList.add('hidden');
+      setAuthLoading(false);
+      updateHeaderUser();
+      syncAfterLogin().catch(() => {});
+      return;
     } else {
       showAuthError(d.error || 'Verification failed. Please try again.');
     }
