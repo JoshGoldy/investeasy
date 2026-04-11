@@ -6038,24 +6038,39 @@ async function verifyOtpCode() {
   clearAuthError();
   setAuthLoading(true);
   try {
-    const d = await apiCall('auth.php?action=verify-otp', 'POST', {
+    const sb = getSupabase();
+    const { data, error } = await sb.auth.verifyOtp({
       email: pendingOtp.email,
       token: code,
-      name: pendingOtp.name,
-      username: pendingOtp.username,
-      age: pendingOtp.age
+      type: 'email'
     });
-    if (d.success) {
-      currentUser = d.user;
-      pendingOtp = null;
-      document.getElementById('auth-overlay').classList.add('hidden');
+    if (error) {
+      showAuthError(error.message || 'Verification failed. Please try again.');
       setAuthLoading(false);
-      updateHeaderUser();
-      syncAfterLogin().catch(() => {});
       return;
-    } else {
-      showAuthError(d.error || 'Verification failed. Please try again.');
     }
+    if (!data?.user) {
+      showAuthError('Verification succeeded, but no user session was returned.');
+      setAuthLoading(false);
+      return;
+    }
+
+    let profile = null;
+    try {
+      profile = await ensureProfileRow(data.user, {
+        name: pendingOtp.name,
+        username: pendingOtp.username,
+        age: pendingOtp.age
+      });
+    } catch (e) {}
+
+    currentUser = normalizeCurrentUser(data.user, profile || {});
+    pendingOtp = null;
+    document.getElementById('auth-overlay').classList.add('hidden');
+    setAuthLoading(false);
+    updateHeaderUser();
+    syncAfterLogin().catch(() => {});
+    return;
   } catch(e) {
     showAuthError('Connection error. Please try again.');
   }
