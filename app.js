@@ -5789,6 +5789,7 @@ async function apiCall(url, method = 'GET', body = null) {
 
 // ── Auth overlay helpers ──────────────────────────────────────────────────────
 function showAuthTab(mode) {
+  ensureOtpAuthUi();
   const isLogin    = mode === 'login';
   const isRegister = mode === 'register';
   const isOtp      = mode === 'otp';
@@ -5817,6 +5818,77 @@ function showAuthError(msg) {
   el.style.color = '';
   el.classList.add('show');
 }
+function ensureOtpAuthUi() {
+  const card = document.querySelector('.auth-card');
+  const footer = document.getElementById('auth-footer-text');
+  if (!card || !footer) return;
+
+  const legacyForgot = document.getElementById('auth-forgot-form');
+  if (legacyForgot) legacyForgot.style.display = 'none';
+
+  const loginPassword = document.getElementById('login-password');
+  if (loginPassword && loginPassword.closest('.auth-field')) {
+    loginPassword.closest('.auth-field').style.display = 'none';
+  }
+
+  const regPassword = document.getElementById('reg-password');
+  if (regPassword && regPassword.closest('.auth-field')) {
+    regPassword.closest('.auth-field').style.display = 'none';
+  }
+
+  const loginInput = document.getElementById('login-email');
+  if (loginInput) {
+    loginInput.setAttribute('onkeydown', "if(event.key==='Enter')doLogin()");
+  }
+
+  const regAge = document.getElementById('reg-age');
+  if (regAge) {
+    regAge.setAttribute('onkeydown', "if(event.key==='Enter')doRegister()");
+  }
+
+  const loginBtn = document.getElementById('login-btn');
+  if (loginBtn) loginBtn.textContent = 'Send Sign-In Code';
+
+  const registerBtn = document.getElementById('register-btn');
+  if (registerBtn) registerBtn.textContent = 'Send Sign-Up Code';
+
+  let loginNote = document.getElementById('login-otp-note');
+  if (!loginNote && loginBtn && loginBtn.parentElement) {
+    loginNote = document.createElement('p');
+    loginNote.id = 'login-otp-note';
+    loginNote.className = 'auth-note';
+    loginNote.textContent = "We'll email you a 6-digit code to sign in securely.";
+    loginBtn.parentElement.insertBefore(loginNote, loginBtn);
+  }
+
+  let registerNote = document.getElementById('register-otp-note');
+  if (!registerNote && registerBtn && registerBtn.parentElement) {
+    registerNote = document.createElement('p');
+    registerNote.id = 'register-otp-note';
+    registerNote.className = 'auth-note';
+    registerNote.textContent = "We'll send a 6-digit verification code to finish creating your account.";
+    registerBtn.parentElement.insertBefore(registerNote, registerBtn);
+  }
+
+  if (!document.getElementById('auth-otp-form')) {
+    const otpForm = document.createElement('div');
+    otpForm.id = 'auth-otp-form';
+    otpForm.style.display = 'none';
+    otpForm.innerHTML = `
+      <p class="auth-note" id="otp-note">Enter the 6-digit code we sent to your email.</p>
+      <div class="auth-otp-meta" id="otp-email-display"></div>
+      <div class="auth-field">
+        <label class="form-label">Verification Code</label>
+        <input id="otp-code" class="form-input auth-otp-box" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456"
+          oninput="this.value=this.value.replace(/\\D/g,'').slice(0,6)"
+          onkeydown="if(event.key==='Enter')verifyOtpCode()">
+      </div>
+      <button class="auth-btn" id="otp-btn" onclick="verifyOtpCode()">Verify Code</button>
+      <button class="auth-secondary-btn" id="otp-resend-btn" onclick="resendOtpCode()">Resend Code</button>
+    `;
+    card.insertBefore(otpForm, footer);
+  }
+}
 function clearAuthError() {
   const el = document.getElementById('auth-error');
   el.textContent = '';
@@ -5830,12 +5902,14 @@ function showAuthSuccess(msg) {
   el.classList.add('show');
 }
 function setAuthLoading(loading) {
+  ensureOtpAuthUi();
   ['login-btn', 'register-btn', 'otp-btn', 'otp-resend-btn'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.disabled = loading;
   });
 }
 function setPendingOtp(payload) {
+  ensureOtpAuthUi();
   pendingOtp = payload;
   const emailEl = document.getElementById('otp-email-display');
   const noteEl = document.getElementById('otp-note');
