@@ -5605,17 +5605,19 @@ async function handleAuthAction(action, method, body) {
         type: 'email'
       });
       if (error) return { success: false, error: error.message };
-      if (data.user) {
-        try {
-          await ensureProfileRow(data.user, {
-            name: body.name,
-            username: body.username,
-            age: body.age
-          });
-        } catch (e) {}
+      if (!data.user) {
+        return { success: false, error: 'Verification succeeded, but no user was returned.' };
       }
-      const user = await loadCurrentUserFromSupabase();
-      return user ? { success: true, user } : { success: false, error: 'Verification succeeded, but no session was returned.' };
+      let profile = null;
+      try {
+        profile = await ensureProfileRow(data.user, {
+          name: body.name,
+          username: body.username,
+          age: body.age
+        });
+      } catch (e) {}
+      currentUser = normalizeCurrentUser(data.user, profile || {});
+      return { success: true, user: currentUser };
     }
     case 'forgot-password': {
       const redirectTo = new URL('reset-password.html', window.location.href).href;
