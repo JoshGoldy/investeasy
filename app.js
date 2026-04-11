@@ -5144,6 +5144,14 @@ function closeEditModal() {
   document.getElementById('edit-profile-modal').classList.add('hidden');
 }
 
+function manageSignInEmail() {
+  openEditModal();
+  const emailInput = document.getElementById('modal-email');
+  if (emailInput) {
+    setTimeout(() => emailInput.focus(), 30);
+  }
+}
+
 async function saveProfile() {
   const name     = document.getElementById('modal-name').value.trim();
   const email    = document.getElementById('modal-email').value.trim();
@@ -5182,6 +5190,7 @@ document.getElementById('edit-profile-modal').addEventListener('click', function
 
 function renderSettings() {
   const s = loadSettings();
+  const tierInfo = getTierPresentation(currentUser?.tier || 'free');
   // Use live DB user data for name/email when logged in
   const displayName  = currentUser ? currentUser.name     : s.name;
   const displayEmail = currentUser ? currentUser.email    : s.email;
@@ -5315,13 +5324,13 @@ function renderSettings() {
       <div class="settings-group" style="overflow:hidden">
         <div class="settings-row">
           <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:${currentUser.tier==='enterprise'?'#d9770614':'#7c3aed14'}">${currentUser.tier==='enterprise'?'🏆':'⚡'}</div>
+            <div class="settings-row-icon" style="background:${tierInfo.iconBg}">${tierInfo.icon}</div>
             <div>
               <p class="settings-row-title">Current Plan</p>
-              <p class="settings-row-sub">${currentUser.tier==='enterprise'?'200 credits/month · Full access':'50 credits/month · Full access'}</p>
+              <p class="settings-row-sub">${tierInfo.sub}</p>
             </div>
           </div>
-          <span style="font-size:11px;font-weight:800;padding:4px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${currentUser.tier==='enterprise'?'#d9770622':'#7c3aed22'};color:${currentUser.tier==='enterprise'?'#fbbf24':'#a78bfa'}">${currentUser.tier==='enterprise'?'Enterprise':'Pro'}</span>
+          <span style="font-size:11px;font-weight:800;padding:4px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${tierInfo.chipBg};color:${tierInfo.chipColor}">${tierInfo.label}</span>
         </div>
         <div class="settings-row">
           <div class="settings-row-left">
@@ -5343,7 +5352,7 @@ function renderSettings() {
       <p class="settings-section-label">Account</p>
       <div class="settings-group" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
         ${currentUser ? `
-          <button class="modal-save-btn" style="background:#3b82f6" disabled>Email Code Sign-In Enabled</button>
+          <button class="modal-save-btn" style="background:#3b82f6" onclick="manageSignInEmail()">Manage Sign-In Email</button>
           <button class="modal-save-btn" style="background:#1e293b" onclick="doLogout()">Sign Out</button>
         ` : `<button class="modal-save-btn" onclick="document.getElementById('auth-overlay').classList.remove('hidden')">Sign In / Create Account</button>`}
         <button class="danger-btn" onclick="resetAllSettings()">Reset All Settings</button>
@@ -5470,6 +5479,37 @@ function normalizeCurrentUser(authUser, profile = {}) {
   };
 }
 
+function getTierPresentation(tier = 'free') {
+  if (tier === 'enterprise') {
+    return {
+      label: 'Enterprise',
+      sub: '200 credits/month · Full access',
+      chipBg: '#d9770622',
+      chipColor: '#fbbf24',
+      iconBg: '#d9770614',
+      icon: '🏆'
+    };
+  }
+  if (tier === 'pro') {
+    return {
+      label: 'Pro',
+      sub: '50 credits/month · Full access',
+      chipBg: '#7c3aed22',
+      chipColor: '#a78bfa',
+      iconBg: '#7c3aed14',
+      icon: '⚡'
+    };
+  }
+  return {
+    label: 'Free',
+    sub: '0 credits/month · Core access',
+    chipBg: '#64748b22',
+    chipColor: '#64748b',
+    iconBg: '#64748b14',
+    icon: '○'
+  };
+}
+
 async function ensureProfileRow(authUser, patch = {}) {
   if (!authUser) return null;
   const sb = getSupabase();
@@ -5477,8 +5517,8 @@ async function ensureProfileRow(authUser, patch = {}) {
   const payload = {
     id: authUser.id,
     name: patch.name || meta.name || authUser.email || 'Investor',
+    username: patch.username || meta.username || fallbackUsername(authUser.email || ''),
   };
-  if (patch.username) payload.username = patch.username;
   if (patch.age !== undefined && patch.age !== null && patch.age !== '') payload.age = patch.age;
   const { error } = await sb.from('profiles').upsert(payload, { onConflict: 'id' });
   if (error) throw error;
@@ -5590,17 +5630,22 @@ async function handleAuthAction(action, method, body) {
     case 'update-profile': {
       const { data: { user } } = await sb.auth.getUser();
       if (!user) return { success: false, error: 'Not logged in' };
-      const authUpdates = { data: { ...authMeta(user), name: body.name, username: body.username } };
-      if (body.email && body.email !== user.email) authUpdates.email = body.email;
+      const cleanName = (body.name || '').trim();
+      const cleanEmail = (body.email || '').trim().toLowerCase();
+      const cleanUsername = (body.username || '').trim().replace(/^@+/, '').toLowerCase();
+      const authUpdates = { data: { ...authMeta(user), name: cleanName, username: cleanUsername } };
+      if (cleanEmail && cleanEmail !== user.email) authUpdates.email = cleanEmail;
       const { error: authError } = await sb.auth.updateUser(authUpdates);
       if (authError) return { success: false, error: authError.message };
-      const { error: profileError } = await sb.from('profiles').upsert({
-        id: user.id,
-        name: body.name,
-        username: body.username,
-        age: currentUser?.age ?? null,
-      }, { onConflict: 'id' });
-      if (profileError) return { success: false, error: profileError.message };
+      try {
+        await ensureProfileRow(user, {
+          name: cleanName,
+          username: cleanUsername,
+          age: currentUser?.age ?? null,
+        });
+      } catch (profileError) {
+        return { success: false, error: profileError.message || 'Failed to update profile.' };
+      }
       const mapped = await loadCurrentUserFromSupabase();
       return { success: true, user: mapped };
     }
@@ -5860,7 +5905,6 @@ function ensureOtpAuthUi() {
     loginNote.textContent = "We'll email you a 6-digit code to sign in securely.";
     loginBtn.parentElement.insertBefore(loginNote, loginBtn);
   }
-
   let registerNote = document.getElementById('register-otp-note');
   if (!registerNote && registerBtn && registerBtn.parentElement) {
     registerNote = document.createElement('p');
@@ -5869,7 +5913,6 @@ function ensureOtpAuthUi() {
     registerNote.textContent = "We'll send a 6-digit verification code to finish creating your account.";
     registerBtn.parentElement.insertBefore(registerNote, registerBtn);
   }
-
   if (!document.getElementById('auth-otp-form')) {
     const otpForm = document.createElement('div');
     otpForm.id = 'auth-otp-form';
@@ -8421,3 +8464,4 @@ updateNewsAlertBadge();
 const initialTabFromPath = Object.entries(TAB_PAGE_MAP).find(([, file]) => file === window.location.pathname.split('/').pop())?.[0];
 const requestedInitialTab = window.__INITIAL_TAB__ || document.body.dataset.initialTab || initialTabFromPath;
 if (requestedInitialTab && requestedInitialTab !== 'news') switchTab(requestedInitialTab);
+
