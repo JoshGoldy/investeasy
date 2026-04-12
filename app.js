@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 let currentUser   = null;          // {id, name, email, username, tier, finbot_credits} when logged in
+const REMEMBER_ME_KEY = 'fs_remember_me';
 let dbPortfolio   = [];            // [{ticker,name,shares,avg_cost}]
 let watchlistSet  = new Set();     // Set of tickers on watchlist
 let dbSavedReports = null;         // null = guest/fallback (localStorage), array = logged-in (DB)
@@ -5837,6 +5838,10 @@ async function apiCall(url, method = 'GET', body = null) {
 // ── Auth overlay helpers ──────────────────────────────────────────────────────
 function showAuthTab(mode) {
   ensureOtpAuthUi();
+  ['remember-login', 'remember-register'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.checked = shouldRememberSession();
+  });
   const isLogin    = mode === 'login';
   const isRegister = mode === 'register';
   const isOtp      = mode === 'otp';
@@ -5946,6 +5951,17 @@ function showAuthSuccess(msg) {
   el.style.color = '#10b981';
   el.classList.add('show');
 }
+function shouldRememberSession() {
+  return localStorage.getItem(REMEMBER_ME_KEY) !== '0';
+}
+function setRememberPreference(remember) {
+  localStorage.setItem(REMEMBER_ME_KEY, remember ? '1' : '0');
+}
+function getRememberChoice(mode = 'login') {
+  const id = mode === 'register' ? 'remember-register' : 'remember-login';
+  const el = document.getElementById(id);
+  return el ? !!el.checked : true;
+}
 function setAuthLoading(loading) {
   ensureOtpAuthUi();
   ['login-btn', 'register-btn', 'otp-btn', 'otp-resend-btn'].forEach(id => {
@@ -5970,6 +5986,12 @@ function setPendingOtp(payload) {
 
 // ── Session check on load ─────────────────────────────────────────────────────
 async function checkAuth() {
+  if (!shouldRememberSession() && isSupabaseConfigured()) {
+    try { await getSupabase().auth.signOut(); } catch (e) {}
+    currentUser = null;
+    updateHeaderUser();
+    return;
+  }
   try {
     const d = await apiCall('auth.php?action=me');
     if (d.success) {
@@ -5986,13 +6008,15 @@ async function checkAuth() {
 // ── Login ─────────────────────────────────────────────────────────────────────
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
+  const remember = getRememberChoice('login');
   if (!email) { showAuthError('Please enter your email address.'); return; }
   clearAuthError();
   setAuthLoading(true);
   try {
     const d = await apiCall('auth.php?action=login', 'POST', { email });
     if (d.success) {
-      setPendingOtp({ mode: 'login', email });
+      setRememberPreference(remember);
+      setPendingOtp({ mode: 'login', email, remember });
       showAuthTab('otp');
       showAuthSuccess(d.message || 'We sent your sign-in code.');
     } else {
@@ -6011,6 +6035,7 @@ async function doRegister() {
   const username = document.getElementById('reg-username').value.trim();
   const ageVal   = document.getElementById('reg-age').value.trim();
   const age      = ageVal !== '' ? parseInt(ageVal, 10) : null;
+  const remember = getRememberChoice('register');
   if (!name || !email || !username) { showAuthError('Name, email, and username are required.'); return; }
   if (age !== null && (isNaN(age) || age < 13 || age > 120)) { showAuthError('Please enter a valid age (13–120).'); return; }
   clearAuthError();
@@ -6018,7 +6043,8 @@ async function doRegister() {
   try {
     const d = await apiCall('auth.php?action=register', 'POST', { name, email, username, age });
     if (d.success) {
-      setPendingOtp({ mode: 'register', email, name, username, age });
+      setRememberPreference(remember);
+      setPendingOtp({ mode: 'register', email, name, username, age, remember });
       showAuthTab('otp');
       showAuthSuccess(d.message || 'We sent your sign-up code.');
     } else {
@@ -6039,18 +6065,28 @@ async function verifyOtpCode() {
   setAuthLoading(true);
   try {
     const sb = getSupabase();
-    const { data, error } = await sb.auth.verifyOtp({
-      email: pendingOtp.email,
-      token: code,
-      type: 'email'
-    });
-    if (error) {
-      showAuthError(error.message || 'Verification failed. Please try again.');
-      setAuthLoading(false);
-      return;
+    const verifyTypes = pendingOtp.mode === 'register'
+      ? ['email', 'signup']
+      : ['email', 'magiclink'];
+    let data = null;
+    let error = null;
+
+    for (const type of verifyTypes) {
+      const result = await sb.auth.verifyOtp({
+        email: pendingOtp.email,
+        token: code,
+        type
+      });
+      if (!result.error && result.data?.user) {
+        data = result.data;
+        error = null;
+        break;
+      }
+      error = result.error || new Error('Verification failed.');
     }
-    if (!data?.user) {
-      showAuthError('Verification succeeded, but no user session was returned.');
+
+    if (error || !data?.user) {
+      showAuthError(error?.message || 'Verification failed. Please try again.');
       setAuthLoading(false);
       return;
     }

@@ -203,6 +203,7 @@
               onkeydown="if(event.key==='Enter')doLogin()">
           </div>
           <p class="auth-note">We'll email you a 6-digit code to sign in securely.</p>
+          <label class="auth-check"><input id="remember-login" type="checkbox" checked> <span>Remember me on this device</span></label>
           <button class="auth-btn" id="login-btn" onclick="doLogin()">Send Sign-In Code</button>
         </div>
 
@@ -226,6 +227,7 @@
               onkeydown="if(event.key==='Enter')doRegister()">
           </div>
           <p class="auth-note">We'll send a 6-digit verification code to finish creating your account.</p>
+          <label class="auth-check"><input id="remember-register" type="checkbox" checked> <span>Remember me on this device</span></label>
           <button class="auth-btn" id="register-btn" onclick="doRegister()">Send Sign-Up Code</button>
         </div>
 
@@ -500,6 +502,7 @@
 </div>
 </body>
 </html>
+
 
 
 
