@@ -5806,14 +5806,20 @@ async function handleDataAction(action, method, body) {
 function bindSupabaseAuthListener() {
   if (supabaseAuthListenerBound || !isSupabaseConfigured()) return;
   const sb = getSupabase();
-  sb.auth.onAuthStateChange(async (event, session) => {
+  sb.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT' || !session?.user) {
       currentUser = null;
       updateHeaderUser();
       return;
     }
-    currentUser = await loadCurrentUserFromSupabase();
-    updateHeaderUser();
+    window.setTimeout(async () => {
+      let profile = null;
+      try {
+        profile = await ensureProfileRow(session.user);
+      } catch (e) {}
+      currentUser = normalizeCurrentUser(session.user, profile || {});
+      updateHeaderUser();
+    }, 0);
   });
   supabaseAuthListenerBound = true;
 }
