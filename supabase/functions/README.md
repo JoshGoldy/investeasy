@@ -32,3 +32,8 @@ supabase secrets set ANTHROPIC_MODEL=claude-3-5-sonnet-latest
 ```
 
 After deployment, the frontend calls the function through `supabase.functions.invoke('finbot')`.
+
+### JWT verification
+
+This repo sets `verify_jwt = false` for `finbot` in [supabase/config.toml](C:/Users/joshu/Desktop/investeasy/supabase/config.toml).
+The function still authenticates the caller internally using the Supabase access token from the request header, but disabling gateway JWT verification avoids false `Invalid JWT` failures from the Edge Function gateway.
