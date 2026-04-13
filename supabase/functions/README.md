@@ -7,7 +7,7 @@ This app now expects a `finbot` Edge Function for AI analysis requests.
 Set these in your Supabase project before deploying:
 
 - `ANTHROPIC_API_KEY`
-- `ANTHROPIC_MODEL` (optional, defaults to `claude-3-5-sonnet-latest`)
+- `ANTHROPIC_MODEL` (optional, defaults to `claude-sonnet-4-5`)
 
 ### Deploy
 
@@ -28,7 +28,7 @@ supabase functions deploy finbot
 
 ```bash
 supabase secrets set ANTHROPIC_API_KEY=your_key_here
-supabase secrets set ANTHROPIC_MODEL=claude-3-5-sonnet-latest
+supabase secrets set ANTHROPIC_MODEL=claude-sonnet-4-5
 ```
 
 After deployment, the frontend calls the function through `supabase.functions.invoke('finbot')`.

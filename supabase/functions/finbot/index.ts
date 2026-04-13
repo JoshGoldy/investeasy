@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
-    const anthropicModel = Deno.env.get("ANTHROPIC_MODEL") || "claude-3-5-sonnet-latest";
+    const anthropicModel = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-4-5";
 
     if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
       return json({ error: "Supabase function is missing required environment configuration." }, 500);
