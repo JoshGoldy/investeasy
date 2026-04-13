@@ -5438,9 +5438,24 @@ async function invokeFinBotFunction(payload) {
   const sb = getSupabase();
   const { data, error } = await sb.functions.invoke('finbot', { body: payload });
   if (error) {
-    const rawMessage = [error.message, error.context ? String(error.context) : ''].filter(Boolean).join(' ').trim();
+    let contextMessage = '';
+    const ctx = error.context;
+    if (ctx && typeof ctx === 'object') {
+      try {
+        if (typeof ctx.clone === 'function') {
+          const cloned = ctx.clone();
+          const parsed = await cloned.json().catch(() => null);
+          if (parsed && typeof parsed === 'object') {
+            contextMessage = parsed.error || parsed.message || JSON.stringify(parsed);
+          } else if (typeof cloned.text === 'function') {
+            contextMessage = (await cloned.text()).trim();
+          }
+        }
+      } catch (_) {}
+    }
+    const rawMessage = [error.message, contextMessage].filter(Boolean).join(' ').trim();
     const lowered = rawMessage.toLowerCase();
-    if (lowered.includes('non-2xx') || lowered.includes('404') || lowered.includes('failed to send a request')) {
+    if (lowered.includes('404') || lowered.includes('failed to send a request')) {
       throw new Error('FinBot is not deployed yet. Deploy the Supabase "finbot" Edge Function first.');
     }
     throw new Error(rawMessage || 'FinBot is unavailable right now.');
