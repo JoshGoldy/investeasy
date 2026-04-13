@@ -270,6 +270,31 @@ function parseMd(text) {
   const out = [];
   let i = 0;
 
+  const gatherContinuationLines = (startIndex, initialLine) => {
+    const parts = [initialLine];
+    let cursor = startIndex + 1;
+    while (cursor < lines.length) {
+      const nextRaw = lines[cursor];
+      const next = nextRaw.trim();
+      if (!next) break;
+      if (
+        next.startsWith('|') ||
+        next.startsWith('#') ||
+        next.startsWith('## ') ||
+        next.startsWith('### ') ||
+        next.startsWith('#### ') ||
+        next.startsWith('- ') ||
+        next.startsWith('* ') ||
+        /^\d+\. /.test(next)
+      ) {
+        break;
+      }
+      parts.push(next);
+      cursor += 1;
+    }
+    return { text: parts.join(' '), nextIndex: cursor };
+  };
+
   while (i < lines.length) {
     const rawLine = lines[i];
     const line = rawLine.trim();
@@ -307,16 +332,27 @@ function parseMd(text) {
     if (line.startsWith('### ')) { out.push(`<h3>${inlineMd(line.slice(4))}</h3>`); i += 1; continue; }
     if (line.startsWith('## '))  { out.push(`<h2>${inlineMd(line.slice(3))}</h2>`); i += 1; continue; }
     if (line.startsWith('# '))   { out.push(`<h1>${inlineMd(line.slice(2))}</h1>`); i += 1; continue; }
-    if (line.startsWith('- ') || line.startsWith('* ')) { out.push(`<div class="bullet"><span>${inlineMd(line.slice(2))}</span></div>`); i += 1; continue; }
-    if (/^\d+\. /.test(line)) { out.push(`<div class="bullet"><span>${inlineMd(line.replace(/^\d+\. /, ''))}</span></div>`); i += 1; continue; }
+    if (line.startsWith('- ') || line.startsWith('* ')) {
+      const merged = gatherContinuationLines(i, line.slice(2).trim());
+      out.push(`<div class="bullet"><span>${inlineMd(merged.text)}</span></div>`);
+      i = merged.nextIndex;
+      continue;
+    }
+    if (/^\d+\. /.test(line)) {
+      const merged = gatherContinuationLines(i, line.replace(/^\d+\. /, '').trim());
+      out.push(`<div class="bullet"><span>${inlineMd(merged.text)}</span></div>`);
+      i = merged.nextIndex;
+      continue;
+    }
     if (line.toLowerCase().includes('legal disclaimer') || line.toLowerCase().includes('informational and educational')) {
       out.push(`<p class="disclaimer">${inlineMd(line.replace(/^\*|\*$/g, ''))}</p>`);
       i += 1;
       continue;
     }
 
-    out.push(`<p>${inlineMd(line)}</p>`);
-    i += 1;
+    const merged = gatherContinuationLines(i, line);
+    out.push(`<p>${inlineMd(merged.text)}</p>`);
+    i = merged.nextIndex;
   }
 
   return out.join('');
