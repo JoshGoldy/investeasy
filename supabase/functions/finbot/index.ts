@@ -17,6 +17,16 @@ const REQUEST_COST: Record<string, number> = {
   finbot: 5,
 };
 
+const MODE_TOKEN_LIMITS: Record<string, number> = {
+  news: 1800,
+  screener: 2200,
+  technical: 2200,
+  earnings: 2400,
+  dcf: 3200,
+  risk: 3600,
+  builder: 4200,
+};
+
 function json(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -84,8 +94,10 @@ Deno.serve(async (req) => {
 
     const payload = (await req.json()) as Record<string, unknown>;
     const requestType = String(payload.request_type || "finbot");
+    const mode = String(payload.mode || requestType || "finbot");
     const cost = REQUEST_COST[requestType] ?? REQUEST_COST.finbot;
     const prompt = getPromptBody(payload);
+    const maxTokens = MODE_TOKEN_LIMITS[mode] ?? MODE_TOKEN_LIMITS[requestType] ?? 2600;
     if (!prompt.message) {
       return json({ error: "No prompt was provided." }, 400);
     }
@@ -141,7 +153,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: anthropicModel,
-        max_tokens: requestType === "news" ? 2200 : 4200,
+        max_tokens: maxTokens,
         system: prompt.system,
         messages: [{ role: "user", content: prompt.message }],
       }),

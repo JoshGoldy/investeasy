@@ -33,6 +33,18 @@ supabase secrets set ANTHROPIC_MODEL=claude-sonnet-4-5
 
 After deployment, the frontend calls the function through `supabase.functions.invoke('finbot')`.
 
+### Token budgets by mode
+
+The function now uses different `max_tokens` caps per mode so shorter analyses stay cheaper:
+
+- `news`: 1800
+- `screener`: 2200
+- `technical`: 2200
+- `earnings`: 2400
+- `dcf`: 3200
+- `risk`: 3600
+- `builder`: 4200
+
 ### JWT verification
 
 This repo sets `verify_jwt = false` for `finbot` in [supabase/config.toml](C:/Users/joshu/Desktop/investeasy/supabase/config.toml).
