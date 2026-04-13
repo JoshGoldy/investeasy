@@ -1090,14 +1090,8 @@ Keep the tone professional but accessible. Use Markdown formatting. End with exa
     </div>`;
 
   try {
-    const resp = await fetch('api.php', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, request_type: 'news' }),
-    });
-    const data = await resp.json();
-    if (!resp.ok || data.error) throw new Error(data.error || `Error ${resp.status}`);
+    const data = await invokeFinBotFunction({ prompt, request_type: 'news' });
+    if (data.error) throw new Error(data.error);
     if (data.credits_remaining !== undefined && currentUser) {
       currentUser.finbot_credits = data.credits_remaining;
       updateHeaderUser();
@@ -2779,17 +2773,11 @@ async function runFinBot(modeId) {
   }
 
   try {
-    const resp = await fetch('api.php', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...buildFinBotPrompt(modeId), mode: modeId, request_type: 'finbot' }),
-    });
-    const data = await resp.json();
-    if (!resp.ok || data.error) {
+    const data = await invokeFinBotFunction({ ...buildFinBotPrompt(modeId), mode: modeId, request_type: 'finbot' });
+    if (data.error) {
       if (data.code === 'upgrade_required') { finbotState.error = 'upgrade_required'; finbotState.loading = false; renderFinBot(); return; }
       if (data.code === 'no_credits')       { if (currentUser) currentUser.finbot_credits = 0; finbotState.error = 'no_credits'; finbotState.loading = false; renderFinBot(); return; }
-      throw new Error(data.error || `Server error (${resp.status})`);
+      throw new Error(data.error || 'FinBot could not complete the analysis.');
     }
     if (data.credits_remaining !== undefined && currentUser) {
       currentUser.finbot_credits = data.credits_remaining;
@@ -5444,6 +5432,23 @@ function getSupabase() {
     });
   }
   return supabaseClient;
+}
+
+async function invokeFinBotFunction(payload) {
+  const sb = getSupabase();
+  const { data, error } = await sb.functions.invoke('finbot', { body: payload });
+  if (error) {
+    const rawMessage = [error.message, error.context ? String(error.context) : ''].filter(Boolean).join(' ').trim();
+    const lowered = rawMessage.toLowerCase();
+    if (lowered.includes('non-2xx') || lowered.includes('404') || lowered.includes('failed to send a request')) {
+      throw new Error('FinBot is not deployed yet. Deploy the Supabase "finbot" Edge Function first.');
+    }
+    throw new Error(rawMessage || 'FinBot is unavailable right now.');
+  }
+  if (!data || typeof data !== 'object') {
+    throw new Error('FinBot returned an invalid response.');
+  }
+  return data;
 }
 
 function apiAction(url) {
