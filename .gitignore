@@ -2,6 +2,7 @@
 api.php
 db.php
 .env
+supabase/.temp/
 
 # ── Docker ────────────────────────────────────────────────────
 # Commit: Dockerfile, docker-compose.yml
