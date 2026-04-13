@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: anthropicModel,
-        max_tokens: requestType === "news" ? 1800 : 2600,
+        max_tokens: requestType === "news" ? 2200 : 4200,
         system: prompt.system,
         messages: [{ role: "user", content: prompt.message }],
       }),
