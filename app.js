@@ -5436,7 +5436,14 @@ function getSupabase() {
 
 async function invokeFinBotFunction(payload) {
   const sb = getSupabase();
-  const { data, error } = await sb.functions.invoke('finbot', { body: payload });
+  const { data: sessionData, error: sessionError } = await sb.auth.getSession();
+  if (sessionError) throw new Error(sessionError.message || 'Could not verify your session.');
+  const accessToken = sessionData?.session?.access_token;
+  if (!accessToken) throw new Error('Please sign in again to use FinBot.');
+  const { data, error } = await sb.functions.invoke('finbot', {
+    body: payload,
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
   if (error) {
     let contextMessage = '';
     const ctx = error.context;
