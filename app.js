@@ -266,23 +266,60 @@ function escHtml(s) {
 }
 
 function parseMd(text) {
-  return text.split('\n').map(line => {
-    if (line.startsWith('#### ')) return `<h4>${inlineMd(line.slice(5))}</h4>`;
-    if (line.startsWith('# ')) return `<h1>${inlineMd(line.slice(2))}</h1>`;
-    if (line.startsWith('## ')) return `<h2>${inlineMd(line.slice(3))}</h2>`;
-    if (line.startsWith('### ')) return `<h3>${inlineMd(line.slice(4))}</h3>`;
-    if (line.startsWith('- ') || line.startsWith('* ')) return `<div class="bullet"><span>${inlineMd(line.slice(2))}</span></div>`;
-    if (/^\d+\. /.test(line)) return `<div class="bullet"><span>${inlineMd(line.replace(/^\d+\. /, ''))}</span></div>`;
-    if (line.startsWith('|')) {
-      const cells = line.split('|').filter(c => c.trim());
-      if (!cells.length || cells.every(c => /^[-: ]+$/.test(c))) return '';
-      return `<div class="md-table" style="grid-template-columns:repeat(${cells.length},1fr)">${cells.map(c => `<div class="td">${inlineMd(c.trim())}</div>`).join('')}</div>`;
+  const lines = String(text || '').replace(/\r\n/g, '\n').split('\n');
+  const out = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const rawLine = lines[i];
+    const line = rawLine.trim();
+
+    if (!line || line === '---') {
+      out.push('<div style="height:6px"></div>');
+      i += 1;
+      continue;
     }
-    if (line.toLowerCase().includes('legal disclaimer') || line.toLowerCase().includes('informational and educational'))
-      return `<p class="disclaimer">${inlineMd(line.replace(/^\*|\*$/g, ''))}</p>`;
-    if (line.trim() === '' || line === '---') return '<div style="height:6px"></div>';
-    return `<p>${inlineMd(line)}</p>`;
-  }).join('');
+
+    if (line.startsWith('|')) {
+      const tableRows = [];
+      while (i < lines.length && lines[i].trim().startsWith('|')) {
+        const row = lines[i].trim();
+        const cells = row.split('|').filter(c => c.trim());
+        if (cells.length && !cells.every(c => /^[-: ]+$/.test(c))) {
+          tableRows.push(cells.map(c => inlineMd(c.trim())));
+        }
+        i += 1;
+      }
+      if (tableRows.length) {
+        const colCount = Math.max(...tableRows.map(r => r.length));
+        const first = tableRows[0];
+        const bodyRows = tableRows.slice(1);
+        const headerHtml = first.map(c => `<div class="th">${c}</div>`).join('');
+        const bodyHtml = bodyRows.flatMap(row =>
+          Array.from({ length: colCount }, (_, idx) => `<div class="td">${row[idx] || ''}</div>`)
+        ).join('');
+        out.push(`<div class="md-table" style="grid-template-columns:repeat(${colCount},minmax(0,1fr))">${headerHtml}${bodyHtml}</div>`);
+      }
+      continue;
+    }
+
+    if (line.startsWith('#### ')) { out.push(`<h4>${inlineMd(line.slice(5))}</h4>`); i += 1; continue; }
+    if (line.startsWith('### ')) { out.push(`<h3>${inlineMd(line.slice(4))}</h3>`); i += 1; continue; }
+    if (line.startsWith('## '))  { out.push(`<h2>${inlineMd(line.slice(3))}</h2>`); i += 1; continue; }
+    if (line.startsWith('# '))   { out.push(`<h1>${inlineMd(line.slice(2))}</h1>`); i += 1; continue; }
+    if (line.startsWith('- ') || line.startsWith('* ')) { out.push(`<div class="bullet"><span>${inlineMd(line.slice(2))}</span></div>`); i += 1; continue; }
+    if (/^\d+\. /.test(line)) { out.push(`<div class="bullet"><span>${inlineMd(line.replace(/^\d+\. /, ''))}</span></div>`); i += 1; continue; }
+    if (line.toLowerCase().includes('legal disclaimer') || line.toLowerCase().includes('informational and educational')) {
+      out.push(`<p class="disclaimer">${inlineMd(line.replace(/^\*|\*$/g, ''))}</p>`);
+      i += 1;
+      continue;
+    }
+
+    out.push(`<p>${inlineMd(line)}</p>`);
+    i += 1;
+  }
+
+  return out.join('');
 }
 
 function inlineMd(t) {
