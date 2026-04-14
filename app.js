@@ -2393,6 +2393,71 @@ function runWhatIf(ticker) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 let finbotState = { mode: null, loading: false, result: null, error: null, savedId: null };
+const FINBOT_CHAT_LIBRARY = {
+  beginner: {
+    label: 'Getting Started',
+    questions: [
+      'What 3 things should I check before buying a stock?',
+      'Explain ETFs vs individual stocks in simple terms',
+      'How should I think about diversification as a beginner?',
+      'What does a good long-term portfolio usually include?',
+      'How much cash should I keep before I start investing?',
+      'What mistakes do first-time investors make most often?',
+    ],
+  },
+  portfolio: {
+    label: 'Portfolio Help',
+    questions: [
+      'How should I split money between ETFs, stocks, and cash?',
+      'When should I rebalance a portfolio?',
+      'How do I know if my portfolio is too concentrated?',
+      'What is a simple portfolio for long-term wealth building?',
+      'How can I reduce risk without killing growth?',
+      'What role should international exposure play in a portfolio?',
+    ],
+  },
+  stocks: {
+    label: 'Stocks & ETFs',
+    questions: [
+      'How do I quickly judge whether a stock is expensive?',
+      'What makes an ETF good for long-term investing?',
+      'What numbers matter most in an earnings report?',
+      'How should I compare two stocks in the same sector?',
+      'What makes a company have a strong moat?',
+      'What are good signs of financial strength in a business?',
+    ],
+  },
+  risk: {
+    label: 'Risk & Strategy',
+    questions: [
+      'How do I think about downside risk before buying?',
+      'What is the difference between volatility and real risk?',
+      'How should I manage position sizing?',
+      'What is a sensible stop-loss strategy for beginners?',
+      'How do I invest during uncertain markets?',
+      'What should I do if one holding grows too large?',
+    ],
+  },
+  market: {
+    label: 'Market & News',
+    questions: [
+      'How should I read market news without overreacting?',
+      'What actually moves stock prices in the short term?',
+      'How do interest rates affect stocks and bonds?',
+      'Why does inflation matter for investors?',
+      'What should I watch when markets are very volatile?',
+      'How do macro events affect my portfolio?',
+    ],
+  },
+};
+const FINBOT_CHAT_WELCOME = `Hi, I'm FinBot. Ask me a market, investing, or portfolio question and I'll give you a quick educational take.`;
+let finbotChatState = {
+  messages: [{ role: 'assistant', text: FINBOT_CHAT_WELCOME }],
+  input: '',
+  loading: false,
+  error: null,
+  category: 'beginner',
+};
 let finbotForm = {
   risk: 'moderate', amount: '', horizon: 'medium', sectors: '',
   ticker: '', portfolio: 'AAPL 28%, MSFT 26%, NVDA 22%, TSLA 13%, AMZN 11%', portVal: '',
@@ -3066,6 +3131,163 @@ function backFromFinBotResult() {
 
 function updateFormField(field, value) { finbotForm[field] = value; renderFinBot(); }
 
+function resetFinBotChat() {
+  finbotChatState = {
+    messages: [{ role: 'assistant', text: FINBOT_CHAT_WELCOME }],
+    input: '',
+    loading: false,
+    error: null,
+    category: 'beginner',
+  };
+}
+
+function setFinBotChatInput(value) {
+  finbotChatState.input = value;
+}
+
+function setFinBotChatCategory(category) {
+  if (!FINBOT_CHAT_LIBRARY[category]) return;
+  finbotChatState.category = category;
+  renderFinBot();
+}
+
+function finBotChatHistoryPayload() {
+  const history = finbotChatState.messages
+    .filter(m => m && (m.role === 'user' || m.role === 'assistant') && m.text && m.text !== FINBOT_CHAT_WELCOME)
+    .slice(-8)
+    .map(m => ({ role: m.role, content: m.text }));
+  return history;
+}
+
+async function sendFinBotChat(prefilled = '') {
+  if (!currentUser) {
+    document.getElementById('auth-overlay')?.classList.remove('hidden');
+    showAuthTab('login');
+    return;
+  }
+  if ((currentUser.finbot_credits ?? 0) <= 0) {
+    showToast('⚡ You need at least 1 credit to chat with FinBot.');
+    renderFinBot();
+    return;
+  }
+  if (finbotChatState.loading) return;
+
+  const message = String(prefilled || finbotChatState.input || '').trim();
+  if (!message) {
+    showToast('Type a question for FinBot first.');
+    return;
+  }
+  const historyPayload = finBotChatHistoryPayload();
+
+  finbotChatState.error = null;
+  finbotChatState.loading = true;
+  finbotChatState.input = '';
+  finbotChatState.messages.push({ role: 'user', text: message });
+  renderFinBot();
+
+  try {
+    const data = await invokeFinBotFunction({
+      request_type: 'chat',
+      mode: 'chat',
+      prompt: message,
+      history: historyPayload,
+    });
+    if (data.error) {
+      if (data.code === 'upgrade_required') {
+        throw new Error('FinBot chat requires a Pro or Enterprise plan.');
+      }
+      if (data.code === 'no_credits') {
+        if (currentUser) currentUser.finbot_credits = Number(data.credits_remaining ?? 0);
+        throw new Error('You are out of FinBot credits.');
+      }
+      throw new Error(data.error || 'FinBot chat is unavailable right now.');
+    }
+    if (data.credits_remaining !== undefined && currentUser) {
+      currentUser.finbot_credits = data.credits_remaining;
+      updateHeaderUser();
+    }
+    finbotChatState.messages.push({
+      role: 'assistant',
+      text: String(data.text || 'I could not generate a response just now.'),
+    });
+  } catch (e) {
+    finbotChatState.error = e.message || 'FinBot chat failed. Please try again.';
+  }
+
+  finbotChatState.loading = false;
+  renderFinBot();
+  requestAnimationFrame(() => {
+    const body = document.getElementById('finbot-chat-body');
+    if (body) body.scrollTop = body.scrollHeight;
+  });
+}
+
+function onFinBotChatKeydown(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendFinBotChat();
+  }
+}
+
+function renderFinBotChatPanel() {
+  const credits = currentUser?.finbot_credits ?? 0;
+  const activeCategory = FINBOT_CHAT_LIBRARY[finbotChatState.category] ? finbotChatState.category : 'beginner';
+  const activeGroup = FINBOT_CHAT_LIBRARY[activeCategory];
+  return `
+    <div class="finbot-chat-card">
+      <div class="finbot-chat-head">
+        <div>
+          <p class="finbot-chat-kicker">New</p>
+          <h3>Quick Chat with FinBot</h3>
+          <p class="finbot-chat-sub">Pick a category, tap a ready-made question, or type your own. Most people should be able to start without writing from scratch.</p>
+        </div>
+        <div class="finbot-chat-credit">⚡ 1 credit / message</div>
+      </div>
+      <div class="finbot-chat-categories">
+        ${Object.entries(FINBOT_CHAT_LIBRARY).map(([key, group]) => `
+          <button class="finbot-chat-category ${key === activeCategory ? 'active' : ''}" onclick="setFinBotChatCategory('${key}')">${group.label}</button>
+        `).join('')}
+      </div>
+      <div class="finbot-chat-starters">
+        ${activeGroup.questions.map(prompt => `
+          <button class="finbot-chat-starter" onclick="sendFinBotChat(${JSON.stringify(prompt).replace(/"/g, '&quot;')})">${escHtml(prompt)}</button>
+        `).join('')}
+      </div>
+      <div class="finbot-chat-body" id="finbot-chat-body">
+        ${finbotChatState.messages.map(m => `
+          <div class="finbot-chat-msg ${m.role}">
+            <div class="finbot-chat-avatar">${m.role === 'assistant' ? '🤖' : 'You'}</div>
+            <div class="finbot-chat-bubble">
+              ${m.role === 'assistant' ? parseMd(m.text) : `<p>${escHtml(m.text)}</p>`}
+            </div>
+          </div>
+        `).join('')}
+        ${finbotChatState.loading ? `
+          <div class="finbot-chat-msg assistant">
+            <div class="finbot-chat-avatar">🤖</div>
+            <div class="finbot-chat-bubble finbot-chat-thinking">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+        ` : ''}
+      </div>
+      ${finbotChatState.error ? `<div class="finbot-chat-error">${escHtml(finbotChatState.error)}</div>` : ''}
+      <div class="finbot-chat-compose">
+        <textarea id="finbot-chat-input" class="finbot-chat-input" rows="2"
+          placeholder="Ask about diversification, stock research, risk, ETFs, market terms..."
+          oninput="setFinBotChatInput(this.value)"
+          onkeydown="onFinBotChatKeydown(event)">${escHtml(finbotChatState.input)}</textarea>
+        <div class="finbot-chat-actions">
+          <span class="finbot-chat-credits-left">${credits} credit${credits === 1 ? '' : 's'} left</span>
+          <button class="finbot-chat-send" onclick="sendFinBotChat()" ${finbotChatState.loading || credits <= 0 ? 'disabled' : ''}>
+            ${finbotChatState.loading ? 'Thinking…' : 'Send →'}
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function renderFinBot() {
   const el = document.getElementById('tab-finbot');
   const mode = finbotState.mode;
@@ -3193,7 +3415,7 @@ function renderFinBot() {
           <div class="finbot-icon">🤖</div>
           <div style="flex:1">
             <h2>FinBot</h2>
-            <p style="font-size:11px;color:var(--faint)">6 elite analysis modes</p>
+            <p style="font-size:11px;color:var(--faint)">Quick chat + 6 elite analysis modes</p>
           </div>
           <div style="display:flex;align-items:center;gap:6px">
             <span style="font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${currentUser.tier==='enterprise'?'#d9770622':'#7c3aed22'};color:${currentUser.tier==='enterprise'?'#fbbf24':'#a78bfa'}">${currentUser.tier==='enterprise'?'Enterprise':'Pro'}</span>
@@ -3212,6 +3434,7 @@ function renderFinBot() {
           </div>
         </div>
       </div>
+      ${renderFinBotChatPanel()}
       <p style="font-weight:700;font-size:11px;color:var(--faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px">Choose Analysis Mode</p>
       ${FINBOT_MODES.map(m => `
         <div class="mode-card" onclick="setFinbotMode('${m.id}')" style="border-color:var(--border)"
@@ -6437,6 +6660,7 @@ async function doLogout() {
   localStorage.removeItem('ie_auth_token');
   pendingOtp              = null;
   currentUser            = null;
+  resetFinBotChat();
   dbPortfolio            = [];
   watchlistSet           = new Set();
   alertsMap              = {};
