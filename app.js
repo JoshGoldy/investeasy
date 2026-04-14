@@ -841,6 +841,7 @@ async function fetchLiveNews(force = false) {
 
   newsLoadState = 'error';
   newsLoadError = 'Live news is temporarily unavailable. Please try refreshing in a moment.';
+  logAppIssue('news', newsLoadError, 'warn');
   renderNewsContent();
 }
 
@@ -1780,6 +1781,7 @@ async function fetchLivePrices() {
     renderNavPulse();
   } catch(e) {
     marketsLoadError = 'Live prices are temporarily unavailable. Showing the last known market snapshot.';
+    logAppIssue('market-data', describeAppError(e, marketsLoadError), 'warn');
     const tab = document.getElementById('tab-markets');
     if (tab && tab.classList.contains('active')) renderMarkets();
     showTransientErrorNotice('market-prices', describeAppError(e, marketsLoadError));
@@ -5745,6 +5747,50 @@ document.getElementById('edit-profile-modal').addEventListener('click', function
 function renderSettings() {
   const s = loadSettings();
   const tierInfo = getTierPresentation(currentUser?.tier || 'free');
+  const diagnostics = getDiagnosticsLog();
+  const recentIssues = diagnostics.slice(0, 5);
+  const latestByService = diagnostics.reduce((acc, entry) => {
+    if (!acc[entry.service]) acc[entry.service] = entry;
+    return acc;
+  }, {});
+  const serviceStatus = [
+    {
+      label: 'Supabase',
+      state: isSupabaseConfigured() ? 'Healthy' : 'Needs setup',
+      tone: isSupabaseConfigured() ? '#10b981' : '#f59e0b',
+      sub: isSupabaseConfigured() ? 'Client configured and available' : 'Missing project URL or anon key',
+    },
+    {
+      label: 'Session',
+      state: currentUser ? 'Active' : 'Signed out',
+      tone: currentUser ? '#3b82f6' : '#64748b',
+      sub: currentUser ? `Signed in as @${currentUser.username}` : 'No active authenticated session',
+    },
+    {
+      label: 'FinBot',
+      state: latestByService.finbot ? 'Attention' : 'Healthy',
+      tone: latestByService.finbot ? '#ef4444' : '#10b981',
+      sub: latestByService.finbot ? latestByService.finbot.message : 'No recent function issues',
+    },
+    {
+      label: 'Markets',
+      state: latestByService['market-data'] ? 'Attention' : 'Healthy',
+      tone: latestByService['market-data'] ? '#ef4444' : '#10b981',
+      sub: latestByService['market-data'] ? latestByService['market-data'].message : 'Live prices and charts responding',
+    },
+    {
+      label: 'News',
+      state: latestByService.news ? 'Attention' : 'Healthy',
+      tone: latestByService.news ? '#f59e0b' : '#10b981',
+      sub: latestByService.news ? latestByService.news.message : 'News feed loading normally',
+    },
+    {
+      label: 'Calendar',
+      state: latestByService.calendar ? 'Attention' : 'Healthy',
+      tone: latestByService.calendar ? '#f59e0b' : '#10b981',
+      sub: latestByService.calendar ? latestByService.calendar.message : 'Calendar data loading normally',
+    },
+  ];
   // Use live DB user data for name/email when logged in
   const displayName  = currentUser ? currentUser.name     : s.name;
   const displayEmail = currentUser ? currentUser.email    : s.email;
@@ -5900,6 +5946,53 @@ function renderSettings() {
     </div>
     ` : ''}
 
+    <!-- System Status -->
+    <div class="settings-section">
+      <p class="settings-section-label">System Status</p>
+      <div class="settings-group" style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+          ${serviceStatus.map(item => `
+            <div style="background:#f8fafc;border:1px solid var(--border);border-radius:14px;padding:12px 13px">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px">
+                <span style="font-size:12px;font-weight:800;color:var(--text)">${item.label}</span>
+                <span style="font-size:10px;font-weight:800;padding:4px 8px;border-radius:999px;background:${item.tone}18;color:${item.tone};text-transform:uppercase;letter-spacing:0.05em">${item.state}</span>
+              </div>
+              <p style="font-size:12px;line-height:1.45;color:var(--muted)">${escHtml(item.sub)}</p>
+            </div>
+          `).join('')}
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <div>
+            <p style="font-size:13px;font-weight:800;color:var(--text)">Recent diagnostics</p>
+            <p style="font-size:12px;color:var(--muted);margin-top:2px">Last 5 captured runtime issues from auth, FinBot, markets, news, and calendar.</p>
+          </div>
+          <button class="settings-select" onclick="clearDiagnosticsLog()" style="cursor:pointer;min-width:140px">Clear Diagnostics</button>
+        </div>
+
+        ${recentIssues.length ? `
+          <div style="display:flex;flex-direction:column;gap:8px">
+            ${recentIssues.map(issue => `
+              <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:11px 12px">
+                <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap">
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                    <span style="font-size:11px;font-weight:800;padding:4px 8px;border-radius:999px;background:${issue.severity === 'error' ? '#ef444418' : '#f59e0b18'};color:${issue.severity === 'error' ? '#ef4444' : '#f59e0b'};text-transform:uppercase;letter-spacing:0.05em">${issue.severity}</span>
+                    <span style="font-size:12px;font-weight:700;color:var(--text)">${escHtml(issue.service)}</span>
+                  </div>
+                  <span style="font-size:11px;color:var(--muted)">${formatDiagnosticsTime(issue.at)}</span>
+                </div>
+                <p style="margin-top:8px;font-size:12px;line-height:1.5;color:var(--text)">${escHtml(issue.message)}</p>
+              </div>
+            `).join('')}
+          </div>
+        ` : `
+          <div style="background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:12px 14px">
+            <p style="font-size:12px;color:var(--muted)">No runtime issues have been captured recently. Once the app hits a real auth, function, or market-data problem, it will appear here.</p>
+          </div>
+        `}
+      </div>
+    </div>
+
 
     <!-- Account -->
     <div class="settings-section">
@@ -6003,9 +6096,16 @@ function getSupabase() {
 async function invokeFinBotFunction(payload) {
   const sb = getSupabase();
   const { data: sessionData, error: sessionError } = await sb.auth.getSession();
-  if (sessionError) throw new Error(sessionError.message || 'Could not verify your session.');
+  if (sessionError) {
+    const message = sessionError.message || 'Could not verify your session.';
+    logAppIssue('auth', message, 'error');
+    throw new Error(message);
+  }
   const accessToken = sessionData?.session?.access_token;
-  if (!accessToken) throw new Error('Please sign in again to use FinBot.');
+  if (!accessToken) {
+    logAppIssue('auth', 'Please sign in again to use FinBot.', 'warn');
+    throw new Error('Please sign in again to use FinBot.');
+  }
   const { data, error } = await sb.functions.invoke('finbot', {
     body: payload,
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -6029,11 +6129,16 @@ async function invokeFinBotFunction(payload) {
     const rawMessage = [error.message, contextMessage].filter(Boolean).join(' ').trim();
     const lowered = rawMessage.toLowerCase();
     if (lowered.includes('404') || lowered.includes('failed to send a request')) {
-      throw new Error('FinBot is not deployed yet. Deploy the Supabase "finbot" Edge Function first.');
+      const message = 'FinBot is not deployed yet. Deploy the Supabase "finbot" Edge Function first.';
+      logAppIssue('finbot', message, 'error');
+      throw new Error(message);
     }
-    throw new Error(describeAppError(rawMessage, 'FinBot is unavailable right now.'));
+    const message = describeAppError(rawMessage, 'FinBot is unavailable right now.');
+    logAppIssue('finbot', message, 'error');
+    throw new Error(message);
   }
   if (!data || typeof data !== 'object') {
+    logAppIssue('finbot', 'FinBot returned an invalid response.', 'error');
     throw new Error('FinBot returned an invalid response.');
   }
   return data;
@@ -6058,7 +6163,9 @@ async function invokeMarketDataFunction(payload) {
         }
       } catch (_) {}
     }
-    throw new Error(describeAppError([error.message, contextMessage].filter(Boolean).join(' ').trim(), 'Market data is unavailable right now.'));
+    const message = describeAppError([error.message, contextMessage].filter(Boolean).join(' ').trim(), 'Market data is unavailable right now.');
+    logAppIssue('market-data', message, 'warn');
+    throw new Error(message);
   }
   return data;
 }
@@ -6237,6 +6344,17 @@ function logAppIssue(service, error, severity = 'error') {
 function clearDiagnosticsLog() {
   localStorage.removeItem(DIAGNOSTICS_KEY);
   if (document.getElementById('tab-settings')?.classList.contains('active')) renderSettings();
+}
+
+function formatDiagnosticsTime(ts) {
+  if (!ts) return 'Unknown time';
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return 'Unknown time';
+  const diffMs = Date.now() - d.getTime();
+  if (diffMs < 60 * 1000) return 'Just now';
+  if (diffMs < 60 * 60 * 1000) return `${Math.floor(diffMs / (60 * 1000))}m ago`;
+  if (diffMs < 24 * 60 * 60 * 1000) return `${Math.floor(diffMs / (60 * 60 * 1000))}h ago`;
+  return d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 async function handleAuthAction(action, method, body) {
@@ -6707,10 +6825,14 @@ async function doLogin() {
       showAuthTab('otp');
       showAuthSuccess(d.message || 'We sent your sign-in code.');
     } else {
-      showAuthError(describeAppError(d.error, 'Login failed. Please try again.'));
+      const message = describeAppError(d.error, 'Login failed. Please try again.');
+      logAppIssue('auth', message, 'warn');
+      showAuthError(message);
     }
   } catch(e) {
-    showAuthError(describeAppError(e, 'Connection error. Please try again.'));
+    const message = describeAppError(e, 'Connection error. Please try again.');
+    logAppIssue('auth', message, 'error');
+    showAuthError(message);
   }
   setAuthLoading(false);
 }
@@ -6735,10 +6857,14 @@ async function doRegister() {
       showAuthTab('otp');
       showAuthSuccess(d.message || 'We sent your sign-up code.');
     } else {
-      showAuthError(describeAppError(d.error, 'Registration failed. Please try again.'));
+      const message = describeAppError(d.error, 'Registration failed. Please try again.');
+      logAppIssue('auth', message, 'warn');
+      showAuthError(message);
     }
   } catch(e) {
-    showAuthError(describeAppError(e, 'Connection error. Please try again.'));
+    const message = describeAppError(e, 'Connection error. Please try again.');
+    logAppIssue('auth', message, 'error');
+    showAuthError(message);
   }
   setAuthLoading(false);
 }
@@ -6773,7 +6899,9 @@ async function verifyOtpCode() {
     }
 
     if (error || !data?.user) {
-      showAuthError(describeAppError(error, 'Verification failed. Please try again.'));
+      const message = describeAppError(error, 'Verification failed. Please try again.');
+      logAppIssue('auth', message, 'warn');
+      showAuthError(message);
       setAuthLoading(false);
       return;
     }
@@ -6795,7 +6923,9 @@ async function verifyOtpCode() {
     syncAfterLogin().catch(() => {});
     return;
   } catch(e) {
-    showAuthError(describeAppError(e, 'Connection error. Please try again.'));
+    const message = describeAppError(e, 'Connection error. Please try again.');
+    logAppIssue('auth', message, 'error');
+    showAuthError(message);
   }
   setAuthLoading(false);
 }
@@ -6815,10 +6945,14 @@ async function resendOtpCode() {
     if (d.success) {
       showAuthSuccess(d.message || 'A fresh code is on the way.');
     } else {
-      showAuthError(describeAppError(d.error, 'Failed to resend the code.'));
+      const message = describeAppError(d.error, 'Failed to resend the code.');
+      logAppIssue('auth', message, 'warn');
+      showAuthError(message);
     }
   } catch(e) {
-    showAuthError(describeAppError(e, 'Connection error. Please try again.'));
+    const message = describeAppError(e, 'Connection error. Please try again.');
+    logAppIssue('auth', message, 'error');
+    showAuthError(message);
   }
   setAuthLoading(false);
 }
@@ -8742,6 +8876,7 @@ function renderCalendar() {
     .catch((error) => {
       // Fallback: show a notice but still render (empty) so the tab isn't broken
       calendarLoadError = describeAppError(error, 'Calendar data is temporarily unavailable.');
+      logAppIssue('calendar', calendarLoadError, 'warn');
       _calCache   = { events: [], live: false };
       _calCacheTs = Date.now();
       buildUI([], false, 'all', _calView || 'list');
