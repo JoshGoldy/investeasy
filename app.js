@@ -261,6 +261,205 @@ function fmtUnitPrice(v) {
   return cfg.symbol + c.toFixed(2);
 }
 
+const UI_ICON_PATHS = {
+  "chart-bar": ['M4 19V10', 'M12 19V5', 'M20 19v-8'],
+  "trend-up": ['M4 16l6-6 4 4 6-8', 'M14 6h6v6'],
+  "trend-down": ['M4 8l6 6 4-4 6 8', 'M14 18h6v-6'],
+  shield: ['M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z'],
+  clipboard: ['M9 4h6', 'M9 2h6v4H9z', 'M8 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2'],
+  briefcase: ['M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2', 'M3 8h18v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z', 'M3 12h18'],
+  bell: ['M15 17H9', 'M18 17H6l1.5-2.5V10a4.5 4.5 0 0 1 9 0v4.5L18 17z', 'M10 19a2 2 0 0 0 4 0'],
+  bookmark: ['M7 4h10a1 1 0 0 1 1 1v15l-6-3-6 3V5a1 1 0 0 1 1-1z'],
+  newspaper: ['M5 5h12a2 2 0 0 1 2 2v12H7a2 2 0 0 1-2-2V5z', 'M8 9h8', 'M8 12h8', 'M8 15h5'],
+  inbox: ['M4 5h16v11H4z', 'M4 13h4l2 3h4l2-3h4'],
+  book: ['M5 4.5A2.5 2.5 0 0 1 7.5 2H19v18H7.5A2.5 2.5 0 0 0 5 22', 'M5 4.5V20'],
+  globe: ['M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z', 'M2 12h20', 'M12 2a15 15 0 0 1 0 20', 'M12 2a15 15 0 0 0 0 20'],
+  spark: ['M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z'],
+  cap: ['M3 9l9-4 9 4-9 4-9-4z', 'M7 11v4c0 1.5 2.5 3 5 3s5-1.5 5-3v-4', 'M21 10v5'],
+  award: ['M12 15a4 4 0 1 0 0-8 4 4 0 0 0 0 8z', 'M8.5 14.5 7 21l5-2 5 2-1.5-6.5'],
+  target: ['M12 3v3', 'M12 18v3', 'M3 12h3', 'M18 12h3', 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z', 'M12 11.5v1'],
+  flame: ['M12 3s4 3.2 4 7.2A4 4 0 0 1 8 10c0-2.1 1.1-3.5 2.2-4.8.4 1.7 1.5 2.6 1.8 2.8.8-1 1.4-2.5 0-5.2z', 'M8 14a4 4 0 0 0 8 0c0-1.7-1.1-3.2-2.5-4.2.1 2.3-1.3 4.2-3.5 4.2-1.2 0-2.2-.5-3-1.4A4.8 4.8 0 0 0 8 14z'],
+  bolt: ['M13 2L5 13h5l-1 9 8-11h-5l1-9z'],
+  star: ['M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17l-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3z'],
+  cards: ['M8 7h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z', 'M6 15H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1'],
+  coin: ['M12 4c4.4 0 8 1.8 8 4s-3.6 4-8 4-8-1.8-8-4 3.6-4 8-4z', 'M4 8v8c0 2.2 3.6 4 8 4s8-1.8 8-4V8'],
+  close: ['M6 6l12 12', 'M18 6 6 18'],
+  "chevron-left": ['M15 18l-6-6 6-6'],
+  plus: ['M12 5v14', 'M5 12h14'],
+  bot: ['M9 4h6', 'M12 2v2', 'M7 8h10a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-5a3 3 0 0 1 3-3z', 'M9 13h.01', 'M15 13h.01', 'M9 17h6'],
+  folder: ['M3 7h5l2 2h11v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z'],
+  tag: ['M20 10l-8 8-8-8V4h6l10 10z', 'M7.5 7.5h.01'],
+  lock: ['M7 11V8a5 5 0 0 1 10 0v3', 'M5 11h14v10H5z'],
+  trash: ['M4 7h16', 'M9 7V4h6v3', 'M8 7l1 13h6l1-13'],
+  mail: ['M4 6h16v12H4z', 'M4 7l8 6 8-6'],
+  wallet: ['M3 7h18v11H3z', 'M16 12h5', 'M3 10h18'],
+  "eye-off": ['M3 3l18 18', 'M10.6 10.6a3 3 0 1 0 4.2 4.2', 'M9.9 5.1A10.9 10.9 0 0 1 12 5c5 0 9 4 10 7a18.3 18.3 0 0 1-4.3 4.9', 'M6.6 6.6A18.2 18.2 0 0 0 2 12c1 3 5 7 10 7 1.6 0 3.1-.4 4.5-1.1'],
+  clock: ['M12 7v5l3 3', 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z'],
+  rocket: ['M5 19c1.5-1 3-1.5 4.5-1.5L18 9c.2-2.5-.5-4.5-2-6-1.5 1.5-3.5 2.2-6 2L1.5 13.5C1.5 15 1 16.5 0 18c2 0 3.5-.5 5-1.5z', 'M14 10l4 4', 'M7 17l-2 2'],
+  search: ['M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14z', 'M20 20l-4-4'],
+  map: ['M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2V6z', 'M9 4v14', 'M15 6v14'],
+  note: ['M6 3h9l3 3v15H6z', 'M9 12h6', 'M9 16h6', 'M15 3v4h4'],
+  scale: ['M12 3v18', 'M7 7h10', 'M5 7l-3 5h6l-3-5z', 'M19 7l-3 5h6l-3-5z'],
+  check: ['M5 12l4 4L19 6'],
+  "bell-off": ['M9 17h6', 'M18 17H6l1.5-2.5V10a4.5 4.5 0 0 1 7.6-3.2', 'M10 19a2 2 0 0 0 4 0', 'M3 3l18 18'],
+  eye: ['M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z', 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'],
+  refresh: ['M21 12a9 9 0 1 1-2.6-6.4', 'M21 3v6h-6'],
+  compare: ['M4 7h10', 'M10 3l4 4-4 4', 'M20 17H10', 'M14 13l-4 4 4 4'],
+  list: ['M8 6h13', 'M8 12h13', 'M8 18h13', 'M3 6h.01', 'M3 12h.01', 'M3 18h.01'],
+  grid: ['M4 4h7v7H4z', 'M13 4h7v7h-7z', 'M4 13h7v7H4z', 'M13 13h7v7h-7z'],
+  calendar: ['M3 5h18v16H3z', 'M16 3v4', 'M8 3v4', 'M3 10h18'],
+};
+
+const UI_ICON_ALIASES = {
+  '\u{1F4CA}': 'chart-bar',
+  '\u{1F4C8}': 'trend-up',
+  '\u{1F6E1}': 'shield',
+  '\u{1F4CB}': 'clipboard',
+  '\u{1F3D7}': 'briefcase',
+  '\u{1F4C9}': 'trend-down',
+  '\u{1F916}': 'bot',
+  '\u{1F4F0}': 'newspaper',
+  '\u{1F514}': 'bell',
+  '\u{1F516}': 'bookmark',
+  '\u{1F4E5}': 'inbox',
+  '\u{1F310}': 'globe',
+  '\u{1F331}': 'spark',
+  '\u{1F4D6}': 'book',
+  '\u{1F393}': 'cap',
+  '\u{270F}': 'clipboard',
+  '\u{1F4AF}': 'target',
+  '\u{1F3C6}': 'award',
+  '\u{1F525}': 'flame',
+  '\u{26A1}': 'bolt',
+  '\u{2B50}': 'star',
+  '\u{1F0CF}': 'cards',
+  '\u{20BF}': 'coin',
+  '\u{2696}': 'scale',
+  '\u{1F680}': 'rocket',
+  '\u{1F4DD}': 'note',
+  '\u{1F5FA}': 'map',
+  '\u{1F3C5}': 'award',
+  '\u{2705}': 'check',
+  '\u{1F4DA}': 'book',
+};
+
+function iconMarkup(name, className = '') {
+  const key = UI_ICON_ALIASES[name] || name || 'spark';
+  const paths = UI_ICON_PATHS[key] || UI_ICON_PATHS.spark;
+  const pathHtml = paths.map(d => `<path d="${d}" />`).join('');
+  const classes = ['ui-icon', className].filter(Boolean).join(' ');
+  return `<span class="${classes}" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${pathHtml}</svg></span>`;
+}
+
+function stripLeadingDecorativeIcon(line) {
+  return line.replace(/^(?:[\p{Extended_Pictographic}\p{Emoji_Presentation}]\uFE0F?|[₿Ξ◎Ð])+[\s-]*/u, '');
+}
+
+function hydrateStaticUiIcons() {
+  const exactReplacements = [
+    ['#alert-dir-above', `${iconMarkup('trend-up', 'inline-icon')} Above`],
+    ['#alert-dir-below', `${iconMarkup('trend-down', 'inline-icon')} Below`],
+    ['.alert-save-btn', `${iconMarkup('bell', 'inline-icon')} Set Alert`],
+    ['#news-alerts-modal-bg h3', `${iconMarkup('bell', 'inline-icon')} News Alerts`],
+  ];
+  exactReplacements.forEach(([selector, html]) => {
+    document.querySelectorAll(selector).forEach((el) => { el.innerHTML = html; });
+  });
+
+  const textReplacements = new Map([
+    ['📥', iconMarkup('inbox', 'modal-header-icon')],
+    ['⚡', iconMarkup('bolt', 'modal-header-icon')],
+    ['🤖', iconMarkup('bot', 'modal-header-icon')],
+    ['📈 Popular Stocks', `${iconMarkup('trend-up', 'inline-icon')} Popular Stocks`],
+    ['₿ Crypto', `${iconMarkup('coin', 'inline-icon')} Crypto`],
+    ['📊 ETFs', `${iconMarkup('chart-bar', 'inline-icon')} ETFs`],
+    ['🥇 Commodities', `${iconMarkup('briefcase', 'inline-icon')} Commodities`],
+    ['🥇 Gold', `${iconMarkup('coin', 'inline-icon')} Gold`],
+    ['🥈 Silver', `${iconMarkup('coin', 'inline-icon')} Silver`],
+    ['🛢 Oil', `${iconMarkup('briefcase', 'inline-icon')} Oil`],
+    ['📦 Multi', `${iconMarkup('folder', 'inline-icon')} Multi`],
+    ['₿ Bitcoin', 'Bitcoin'],
+    ['Ξ Ethereum', 'Ethereum'],
+    ['◎ Solana', 'Solana'],
+    ['Ð Doge', 'Doge'],
+  ]);
+
+  document.querySelectorAll('button, div, p, h3').forEach((el) => {
+    const text = (el.textContent || '').trim();
+    const replacement = textReplacements.get(text);
+    if (replacement) el.innerHTML = replacement;
+  });
+}
+
+const UI_TOKEN_ICON_MAP = {
+  '\u{1F514}': 'bell',
+  '\u{1F516}': 'bookmark',
+  '\u{1F3F7}': 'tag',
+  '\u{1F4F0}': 'newspaper',
+  '\u{1F916}': 'bot',
+  '\u{1F4CA}': 'chart-bar',
+  '\u{1F4C8}': 'trend-up',
+  '\u{1F4C9}': 'trend-down',
+  '\u{1F4E5}': 'inbox',
+  '\u{26A1}': 'bolt',
+  '\u{1F3C6}': 'award',
+  '\u{1F4C1}': 'folder',
+  '\u{1F4DD}': 'note',
+  '\u{1F5D1}': 'trash',
+  '\u{1F512}': 'lock',
+  '\u{1F50D}': 'search',
+  '\u{1F9E0}': 'spark',
+  '\u{1F4B0}': 'wallet',
+  '\u{1F3E6}': 'briefcase',
+  '\u{1F5D2}': 'book',
+  '\u{1F4D6}': 'book',
+  '\u{1F4DA}': 'book',
+  '\u{1F3C5}': 'award',
+  '\u{1F4AE}': 'spark',
+  '\u{1F389}': 'award',
+  '\u{1F0CF}': 'cards',
+  '\u{1F525}': 'flame',
+  '\u{1F4A4}': 'spark',
+  '\u{1F680}': 'rocket',
+  '\u{1F5FA}': 'map',
+  '\u{2696}': 'scale',
+  '\u{2705}': 'check',
+  '\u{2713}': 'check',
+  '\u{2714}': 'check',
+  '\u{2715}': 'close',
+  '\u{2716}': 'close',
+  '\u{274C}': 'close',
+  '\u{2606}': 'star',
+  '\u{2605}': 'star',
+  '\u{1F515}': 'bell-off',
+  '\u{1F441}': 'eye',
+};
+
+function replaceUiEmojiTokens(root = document) {
+  const selectors = [
+    'button', 'h3', 'p', '.badge', '.saved-card-sub', '.saved-card-folder', '.saved-card-note-preview',
+    '.daily-done-badge', '.path-step-status', '.cal-badge', '.cal-ticker-chip', '.result-content p',
+    '.result-content h1', '.result-content h2', '.result-content h3', '.result-content h4', '.result-content .bullet',
+    '.settings-row-icon', '.finbot-icon', '.streak-flame', '.qc-section-label', '.quick-chip', '.alert-txt', '.alert-bell'
+  ];
+  root.querySelectorAll(selectors.join(',')).forEach((el) => {
+    let html = el.innerHTML;
+    Object.entries(UI_TOKEN_ICON_MAP).forEach(([token, iconName]) => {
+      html = html.replaceAll(token, iconMarkup(iconName, 'inline-icon'));
+    });
+    el.innerHTML = html;
+  });
+}
+
+function refreshUiIcons(root = document) {
+  hydrateStaticUiIcons();
+  replaceUiEmojiTokens(root);
+}
+
+function scheduleUiIconRefresh(root = document) {
+  requestAnimationFrame(() => refreshUiIcons(root));
+}
+
 function escHtml(s) {
   const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
 }
@@ -297,7 +496,7 @@ function parseMd(text) {
 
   while (i < lines.length) {
     const rawLine = lines[i];
-    const line = rawLine.trim();
+    const line = stripLeadingDecorativeIcon(rawLine.trim());
 
     if (!line || line === '---') {
       out.push('<div style="height:6px"></div>');
@@ -485,6 +684,7 @@ function switchTab(id) {
   if (targetPage && window.location.pathname.split('/').pop() !== targetPage) {
     try { history.replaceState(null, '', targetPage); } catch (e) {}
   }
+  scheduleUiIconRefresh(document.getElementById('tab-' + id) || document);
 }
 
 navBtns.forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
@@ -674,7 +874,7 @@ function renderNews(filter, search) {
           style="position:relative;display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--radius-xs);
                  background:${alertCount>0?'#ef444418':'var(--border)'};color:${alertCount>0?'var(--red)':'var(--muted)'};
                  font-size:11px;font-weight:600;border:none;cursor:pointer;transition:all .2s">
-          🔔 Alerts${alertCount > 0 ? ` <span style="background:#ef4444;color:#fff;border-radius:8px;padding:1px 5px;font-size:9px;font-weight:800">${alertCount}</span>` : ''}
+          ${iconMarkup('bell', 'btn-icon')} Alerts${alertCount > 0 ? ` <span style="background:#ef4444;color:#fff;border-radius:8px;padding:1px 5px;font-size:9px;font-weight:800">${alertCount}</span>` : ''}
         </button>
         <button class="news-refresh-btn" id="refresh-btn" onclick="refreshNews()" title="Refresh news">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
@@ -684,8 +884,8 @@ function renderNews(filter, search) {
     </div>
     <div class="filter-row">
       ${cats.map(c => `<button class="news-filter-btn ${newsFilter===c&&!myStocksActive&&!bookmarksActive?'active':''}" onclick="setNewsFilter('${c}')">${c}</button>`).join('')}
-      <button class="news-filter-btn ${myStocksActive?'mystocks-active':''}" onclick="setNewsFilter('My Stocks')" title="Articles mentioning your portfolio & watchlist tickers">⭐ My Stocks</button>
-      <button class="news-filter-btn ${bookmarksActive?'bookmarks-active':''}" onclick="toggleNewsBookmarksView()">🔖 Bookmarks${Object.keys(bookmarkedArticles).length > 0 ? ' ('+Object.keys(bookmarkedArticles).length+')' : ''}</button>
+      <button class="news-filter-btn ${myStocksActive?'mystocks-active':''}" onclick="setNewsFilter('My Stocks')" title="Articles mentioning your portfolio & watchlist tickers">${iconMarkup('star', 'inline-icon')} My Stocks</button>
+      <button class="news-filter-btn ${bookmarksActive?'bookmarks-active':''}" onclick="toggleNewsBookmarksView()">${iconMarkup('bookmark', 'inline-icon')} Bookmarks${Object.keys(bookmarkedArticles).length > 0 ? ' ('+Object.keys(bookmarkedArticles).length+')' : ''}</button>
     </div>
     <div class="time-range-row">
       <span style="font-size:11px;font-weight:700;color:var(--faint);flex-shrink:0">Time:</span>
@@ -701,6 +901,7 @@ function renderNews(filter, search) {
     showNewsSkeletons();
     fetchLiveNews();
   }
+  scheduleUiIconRefresh(el);
 }
 
 function showNewsSkeletons() {
@@ -764,12 +965,12 @@ function renderNewsContent() {
   c.innerHTML = `
     <div class="live-banner" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px">
-        <span class="badge">${newsShowBookmarks ? '🔖' : 'LIVE'}</span>
+        <span class="badge">${newsShowBookmarks ? iconMarkup('bookmark', 'inline-icon') : 'LIVE'}</span>
         <span style="font-weight:500;font-size:13px">${liveNews.length ? list.length + ' articles' : 'Loading…'}</span>
       </div>
       <span style="font-size:11px;color:rgba(255,255,255,0.7)">${lastUpdatedStr}</span>
     </div>
-    ${list.length === 0 ? `<div style="text-align:center;padding:40px;color:var(--faint);font-size:13px">${newsShowBookmarks ? 'No bookmarked articles yet — click 🔖 on any card to save it.' : 'No articles found'}</div>` : ''}
+    ${list.length === 0 ? `<div style="text-align:center;padding:40px;color:var(--faint);font-size:13px">${newsShowBookmarks ? `No bookmarked articles yet - click ${iconMarkup('bookmark', 'inline-icon')} on any card to save it.` : 'No articles found'}</div>` : ''}
     <div class="news-cols">
     ${list.map(n => {
       // Ensure article is accessible by index — add to liveNews if from bookmarks only
@@ -788,15 +989,15 @@ function renderNewsContent() {
       const catColor = CAT_COLORS[n.cat] || '#10b981';
       return `
       <div class="card news-card${isRead?' read':''}" style="break-inside:avoid;margin-bottom:12px;${isAlert?'border:1.5px solid #ef444440;':''}" onclick="openNewsArticle(${actualIdx},true)">
-        ${isAlert ? '<div style="font-size:10px;font-weight:800;color:#ef4444;margin-bottom:6px;letter-spacing:.04em">🔔 ALERT MATCH</div>' : ''}
+        ${isAlert ? `<div style="font-size:10px;font-weight:800;color:#ef4444;margin-bottom:6px;letter-spacing:.04em">${iconMarkup('bell', 'inline-icon')} ALERT MATCH</div>` : ''}
         ${n.thumbnail ? `<img class="news-thumb" src="${escHtml(n.thumbnail)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
         <div class="meta">
           <span class="cat" style="background:${catColor}18;color:${catColor}">${n.cat}</span>
           <div style="display:flex;align-items:center;gap:5px">
-            ${n.hot ? '<span>🔥</span>' : ''}
+            ${n.hot ? `<span>${iconMarkup('flame')}</span>` : ''}
             <span style="font-size:11px;color:var(--faint)">${n.time}</span>
             <button class="news-bookmark-btn${isBookmarked?' saved':''}" title="${isBookmarked?'Remove bookmark':'Bookmark'}"
-              onclick="event.stopPropagation();toggleNewsBookmark('${escHtml(n.uuid)}',${actualIdx})">${isBookmarked?'🔖':'🏷️'}</button>
+              onclick="event.stopPropagation();toggleNewsBookmark('${escHtml(n.uuid)}',${actualIdx})">${isBookmarked ? iconMarkup('bookmark') : iconMarkup('tag')}</button>
           </div>
         </div>
         <h3 style="${isRead?'color:var(--muted)':''}">${escHtml(n.title)}</h3>
@@ -809,12 +1010,13 @@ function renderNewsContent() {
                  font-size:11px;font-weight:700;border:1px solid #7c3aed30;cursor:pointer;
                  display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s"
           onmouseenter="this.style.background='#7c3aed22'" onmouseleave="this.style.background='#7c3aed14'">
-          🤖 Analyze with FinBot <span style="font-size:10px;font-weight:600;opacity:.7">· 2 credits</span>
+          ${iconMarkup('bot', 'btn-icon')} Analyze with FinBot <span style="font-size:10px;font-weight:600;opacity:.7">· 2 credits</span>
         </button>
       </div>`;
     }).join('')}
     </div>
   `;
+  scheduleUiIconRefresh(c);
 }
 
 function refreshNews() {
@@ -977,7 +1179,7 @@ function updateNewsAlertBadge() {
   if (alertBtn) {
     alertBtn.style.background = count > 0 ? '#ef444418' : 'var(--border)';
     alertBtn.style.color = count > 0 ? 'var(--red)' : 'var(--muted)';
-    alertBtn.innerHTML = `🔔 Alerts${count > 0 ? ` <span style="background:#ef4444;color:#fff;border-radius:8px;padding:1px 5px;font-size:9px;font-weight:800">${count}</span>` : ''}`;
+    alertBtn.innerHTML = `${iconMarkup('bell', 'btn-icon')} Alerts${count > 0 ? ` <span style="background:#ef4444;color:#fff;border-radius:8px;padding:1px 5px;font-size:9px;font-weight:800">${count}</span>` : ''}`;
   }
 }
 
@@ -1025,21 +1227,21 @@ function openNewsArticle(idx, fromLive) {
           <span class="news-sheet-time">${escHtml(n.time)}</span>
           <button id="sheet-bookmark-btn" class="news-bookmark-btn${isBookmarked?' saved':''}"
             title="${isBookmarked?'Remove bookmark':'Bookmark this article'}"
-            onclick="toggleNewsBookmark('${n.uuid ? escHtml(n.uuid) : ''}',${idx});document.getElementById('sheet-bookmark-btn').textContent=bookmarkedArticles['${n.uuid ? escHtml(n.uuid) : ''}']?'🔖':'🏷️';document.getElementById('sheet-bookmark-btn').classList.toggle('saved',!!bookmarkedArticles['${n.uuid ? escHtml(n.uuid) : ''}'])"
-            style="font-size:18px">${isBookmarked?'🔖':'🏷️'}</button>
+            onclick="toggleNewsBookmark('${n.uuid ? escHtml(n.uuid) : ''}',${idx});document.getElementById('sheet-bookmark-btn').innerHTML=bookmarkedArticles['${n.uuid ? escHtml(n.uuid) : ''}']?window.iconMarkup('bookmark'):window.iconMarkup('tag');document.getElementById('sheet-bookmark-btn').classList.toggle('saved',!!bookmarkedArticles['${n.uuid ? escHtml(n.uuid) : ''}'])"
+            style="font-size:18px">${isBookmarked ? iconMarkup('bookmark') : iconMarkup('tag')}</button>
         </div>
       </div>
       ${n.thumbnail ? `<img class="news-sheet-img" src="${escHtml(n.thumbnail)}" alt="" onerror="this.style.display='none'">` : ''}
       <div class="news-sheet-title">${escHtml(n.title)}</div>
       ${cleanTickers.length ? `<div class="news-sheet-tickers">${cleanTickers.map(t=>`<span class="news-ticker-chip">${escHtml(t)}</span>`).join('')}</div>` : ''}
       <div id="news-body-box" style="margin:14px 0 16px">${bodyHtml}</div>
-      <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">2 credits</strong></p>
+      <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">${iconMarkup('bolt', 'inline-icon')} This analysis uses <strong style="color:var(--text)">2 credits</strong></p>
       <button onclick="confirmAndAnalyzeNews(${idx})"
         style="width:100%;padding:14px;border-radius:var(--radius-sm);background:linear-gradient(135deg,#7c3aed,#6d28d9);
                color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;margin-bottom:10px;
                display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s"
         onmouseenter="this.style.opacity='.9'" onmouseleave="this.style.opacity='1'">
-        🤖 Analyze with FinBot
+        ${iconMarkup('bot', 'btn-icon')} Analyze with FinBot
       </button>
       <a class="news-btn-primary" href="${escHtml(articleLink)}" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">
         Read Full Article on ${escHtml(n.publisher || 'Publisher')} ↗
@@ -1154,7 +1356,7 @@ Keep the tone professional but accessible. Use Markdown formatting. End with exa
   content.innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;padding:48px 20px;gap:14px">
       <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#6d28d9);
-                  display:flex;align-items:center;justify-content:center;font-size:24px">🤖</div>
+                  display:flex;align-items:center;justify-content:center;font-size:24px">${iconMarkup('bot')}</div>
       <p style="font-weight:800;font-size:16px;color:var(--text)">Analyzing article…</p>
       <p style="font-size:12px;color:var(--faint);text-align:center;line-height:1.6">FinBot is reading and breaking down<br>this article for you</p>
       <div class="loading-dots" style="margin-top:4px">
@@ -1193,7 +1395,7 @@ function renderFinBotNewsResult(idx, text, articleLink, n) {
   content.innerHTML = `
     <div style="padding:20px 0 8px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)">
-        <span style="font-size:20px">🤖</span>
+        ${iconMarkup('bot', 'finbot-analysis-icon')}
         <div>
           <p style="font-weight:800;font-size:14px;color:var(--text)">FinBot Analysis</p>
           <p style="font-size:11px;color:#a78bfa;font-weight:600">AI Financial Analyst</p>
@@ -1203,7 +1405,7 @@ function renderFinBotNewsResult(idx, text, articleLink, n) {
           <button id="finbot-news-save-btn" onclick="saveNewsAnalysis(${idx})"
             style="padding:5px 12px;border-radius:10px;${isSaved ? 'background:#10b98122;color:#10b981' : 'background:var(--border);color:var(--text)'};
                    font-size:12px;font-weight:700;border:none;cursor:pointer;white-space:nowrap">
-            ${isSaved ? '🔖 Saved' : '🔖 Save'}
+            ${isSaved ? `${iconMarkup('bookmark', 'btn-icon')} Saved` : `${iconMarkup('bookmark', 'btn-icon')} Save`}
           </button>
         </div>
       </div>
@@ -1212,7 +1414,7 @@ function renderFinBotNewsResult(idx, text, articleLink, n) {
         <button onclick="saveNewsAnalysis(${idx})" id="finbot-news-save-btn-big"
           style="width:100%;padding:13px;border-radius:12px;${isSaved ? 'background:#10b98122;color:#10b981;border:1.5px solid #10b981' : 'background:#7c3aed18;color:#a78bfa;border:1.5px solid #7c3aed40'};
                  font-size:13px;font-weight:700;cursor:pointer;transition:all .2s">
-          ${isSaved ? '🔖 View in Saved Reports →' : '🔖 Save Report'}
+          ${isSaved ? `${iconMarkup('bookmark', 'btn-icon')} View in Saved Reports →` : `${iconMarkup('bookmark', 'btn-icon')} Save Report`}
         </button>
         <a href="${escHtml(articleLink)}" target="_blank" rel="noopener"
           style="width:100%;padding:13px;border-radius:12px;background:var(--green);color:#fff;
@@ -1441,7 +1643,7 @@ function renderMarkets(filter) {
     </div>
     <!-- Top Movers strip -->
     <div style="margin-bottom:16px">
-      <p style="font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">🔥 Top Movers</p>
+      <p style="font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">${iconMarkup('flame', 'inline-icon')} Top Movers</p>
       <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none">
         ${topGain.map(m => `
           <div onclick="${compareMode?`toggleCompareAsset('${m.ticker}')`:`openStockDetail(${MARKETS.indexOf(m)})`}" style="flex-shrink:0;background:var(--card);border:1px solid #10b98130;border-radius:12px;padding:8px 12px;cursor:pointer;min-width:90px${compareSet.has(m.ticker)?';border-color:#3b82f6':''}">
@@ -1460,9 +1662,9 @@ function renderMarkets(filter) {
     </div>
     ${shown.length === 0 && marketsFilter === 'Watchlist' ? `
       <div style="text-align:center;padding:40px 20px">
-        <p style="font-size:32px;margin-bottom:12px">⭐</p>
+        <p style="font-size:32px;margin-bottom:12px">${iconMarkup('star')}</p>
         <p style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:6px">No watchlist items</p>
-        <p style="font-size:12px;color:var(--faint)">Tap the ☆ star on any asset tile to add it to your watchlist.</p>
+        <p style="font-size:12px;color:var(--faint)">Tap the ${iconMarkup('star', 'inline-icon')} star on any asset tile to add it to your watchlist.</p>
       </div>
     ` : ''}
     <div class="market-grid">
@@ -1477,12 +1679,12 @@ function renderMarkets(filter) {
         const starBtn = currentUser && !compareMode
           ? `<button onclick="event.stopPropagation();toggleWatchlist('${m.ticker}','${m.name.replace(/'/g,"\\'")}')"
                style="position:absolute;top:8px;right:8px;background:none;font-size:15px;line-height:1;padding:2px"
-               title="${starred?'Remove from watchlist':'Add to watchlist'}">${starred?'⭐':'☆'}</button>`
+               title="${starred?'Remove from watchlist':'Add to watchlist'}">${iconMarkup('star')}</button>`
           : '';
         const bellBtn = currentUser && !compareMode
           ? `<button class="alert-bell${hasAlert?' active':''}" onclick="event.stopPropagation();openAlertModal('${m.ticker}','${m.name.replace(/'/g,"\\'")}',${m.val})"
                style="position:absolute;top:8px;right:${currentUser?'30px':'8px'};background:none;border:none;cursor:pointer;font-size:13px;padding:2px"
-               title="${hasAlert?'Manage alerts':'Set price alert'}">${hasAlert?'🔔':'🔕'}</button>`
+               title="${hasAlert?'Manage alerts':'Set price alert'}">${hasAlert ? iconMarkup('bell') : iconMarkup('bell-off')}</button>`
           : '';
         const overlapBadge = overlapPct
           ? `<div class="overlap-badge">In Portfolio · ${overlapPct}%</div>`
@@ -1503,6 +1705,7 @@ function renderMarkets(filter) {
       }).join('')}
     </div>
   `;
+  scheduleUiIconRefresh(document.getElementById('tab-markets'));
 
   // Render charts after DOM update
   requestAnimationFrame(() => {
@@ -1813,7 +2016,7 @@ function openAlertModal(ticker, name, currentPrice) {
   if (!currentUser) { document.getElementById('auth-overlay').classList.remove('hidden'); showAuthTab('login'); return; }
   document.getElementById('alert-ticker').value = ticker;
   document.getElementById('alert-ticker-name').value = name;
-  document.getElementById('alert-modal-title').textContent = '🔔 Alert — ' + ticker;
+  document.getElementById('alert-modal-title').innerHTML = `${iconMarkup('bell', 'inline-icon')} Alert - ${escHtml(ticker)}`;
   document.getElementById('alert-modal-sub').textContent = 'Current price: ' + fmtUnitPrice(currentPrice);
   document.getElementById('alert-target').value = '';
   alertDirection = 'above';
@@ -1839,8 +2042,8 @@ function renderAlertList(ticker) {
   if (!alerts.length) { list.innerHTML = ''; return; }
   list.innerHTML = alerts.map(a => `
     <div class="alert-item">
-      <span class="alert-txt">${a.direction === 'above' ? '📈 Above' : '📉 Below'} ${fmtUnitPrice(a.target)}${a.triggered ? ' ✓' : ''}</span>
-      <button class="alert-del" onclick="deleteAlert(${a.id},'${ticker}')" title="Delete">✕</button>
+      <span class="alert-txt">${a.direction === 'above' ? `${iconMarkup('trend-up', 'inline-icon')} Above` : `${iconMarkup('trend-down', 'inline-icon')} Below`} ${fmtUnitPrice(a.target)}${a.triggered ? ` ${iconMarkup('check', 'inline-icon')}` : ''}</span>
+      <button class="alert-del" onclick="deleteAlert(${a.id},'${ticker}')" title="Delete">${iconMarkup('close')}</button>
     </div>`).join('');
 }
 
@@ -1856,7 +2059,7 @@ async function saveAlert() {
       alertsMap[ticker].push({ id: d.id, ticker, name, target, direction: alertDirection, triggered: false });
       renderAlertList(ticker);
       document.getElementById('alert-target').value = '';
-      showToast('🔔 Alert set!');
+      showToast('Alert set!');
     }
   } catch(e) { showToast('Error saving alert'); }
 }
@@ -1880,7 +2083,7 @@ function checkAlerts() {
       const hit = (a.direction === 'above' && m.val >= a.target) || (a.direction === 'below' && m.val <= a.target);
       if (hit) {
         a.triggered = true;
-        showToast(`🔔 ${m.ticker} ${a.direction === 'above' ? 'crossed above' : 'dropped below'} ${fmtUnitPrice(a.target)}!`, 5000);
+        showToast(`${m.ticker} ${a.direction === 'above' ? 'crossed above' : 'dropped below'} ${fmtUnitPrice(a.target)}!`, 5000);
         apiCall('data.php?action=price_alerts', 'PUT', { id: a.id }).catch(() => {});
       }
     });
@@ -2904,7 +3107,7 @@ function renderFinBot() {
       ${FINBOT_MODES.map(m => `
         <div class="mode-card" style="opacity:.6;cursor:default;border-color:var(--border);pointer-events:none">
           <div style="display:flex;gap:14px;align-items:flex-start">
-            <div class="mode-icon" style="background:linear-gradient(135deg,${m.col},${m.col}dd)">${m.icon}</div>
+            <div class="mode-icon" style="background:linear-gradient(135deg,${m.col},${m.col}dd)">${iconMarkup(m.icon, 'mode-icon-glyph')}</div>
             <div style="flex:1;min-width:0">
               <div style="display:flex;align-items:center;justify-content:space-between">
                 <p style="font-weight:800;font-size:14px;color:var(--text)">${m.title}</p>
@@ -2960,7 +3163,7 @@ function renderFinBot() {
       ${FINBOT_MODES.map(m => `
         <div class="mode-card" style="opacity:.5;cursor:default;border-color:var(--border);pointer-events:none">
           <div style="display:flex;gap:14px;align-items:flex-start">
-            <div class="mode-icon" style="background:linear-gradient(135deg,${m.col},${m.col}dd)">${m.icon}</div>
+            <div class="mode-icon" style="background:linear-gradient(135deg,${m.col},${m.col}dd)">${iconMarkup(m.icon, 'mode-icon-glyph')}</div>
             <div style="flex:1;min-width:0">
               <div style="display:flex;align-items:center;justify-content:space-between">
                 <p style="font-weight:800;font-size:14px;color:var(--text)">${m.title}</p>
@@ -2980,7 +3183,7 @@ function renderFinBot() {
     el.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 20px 24px">
         <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#dc2626,#991b1b);
-                    display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px">⚡</div>
+                    display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px">${iconMarkup('bolt')}</div>
         <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:#dc262622;margin-bottom:12px">
           <span style="font-size:11px;font-weight:800;color:#f87171;text-transform:uppercase;letter-spacing:0.06em">0 Credits Remaining</span>
         </div>
@@ -3003,20 +3206,20 @@ function renderFinBot() {
     el.innerHTML = `
       <div class="section-title">
         <div class="finbot-header">
-          <div class="finbot-icon">🤖</div>
+          <div class="finbot-icon">${iconMarkup('bot')}</div>
           <div style="flex:1">
             <h2>FinBot</h2>
             <p style="font-size:11px;color:var(--faint)">6 elite analysis modes</p>
           </div>
           <div style="display:flex;align-items:center;gap:6px">
             <span style="font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${currentUser.tier==='enterprise'?'#d9770622':'#7c3aed22'};color:${currentUser.tier==='enterprise'?'#fbbf24':'#a78bfa'}">${currentUser.tier==='enterprise'?'Enterprise':'Pro'}</span>
-            <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:#10b98122;color:#10b981">⚡ ${currentUser.finbot_credits??0} credits</span>
+            <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:#10b98122;color:#10b981">${iconMarkup('bolt', 'inline-icon')} ${currentUser.finbot_credits??0} credits</span>
           </div>
         </div>
       </div>
       <div class="disclaimer-box">
         <div style="display:flex;gap:10px;align-items:flex-start">
-          <span style="font-size:18px;flex-shrink:0">⚖️</span>
+          <span style="font-size:18px;flex-shrink:0">${iconMarkup('scale')}</span>
           <div>
             <p style="font-weight:800;font-size:12px;color:var(--border);margin-bottom:4px">Educational Tool Only</p>
             <p style="font-size:11.5px;color:var(--faint);line-height:1.65">
@@ -3030,7 +3233,7 @@ function renderFinBot() {
         <div class="mode-card" onclick="setFinbotMode('${m.id}')" style="border-color:var(--border)"
           onmouseenter="this.style.borderColor='${m.col}'" onmouseleave="this.style.borderColor='var(--border)'">
           <div style="display:flex;gap:14px;align-items:flex-start">
-            <div class="mode-icon" style="background:linear-gradient(135deg,${m.col},${m.col}dd)">${m.icon}</div>
+            <div class="mode-icon" style="background:linear-gradient(135deg,${m.col},${m.col}dd)">${iconMarkup(m.icon, 'mode-icon-glyph')}</div>
             <div style="flex:1;min-width:0">
               <div style="display:flex;align-items:center;justify-content:space-between">
                 <p style="font-weight:800;font-size:14px;color:var(--text)">${m.title}</p>
@@ -3049,7 +3252,7 @@ function renderFinBot() {
   if (finbotState.loading) {
     el.innerHTML = `
       <div class="loading-screen">
-        <div class="loading-icon" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)">${modeObj.icon}</div>
+        <div class="loading-icon" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)">${iconMarkup(modeObj.icon, 'loading-icon-glyph')}</div>
         <p style="font-weight:800;font-size:18px;color:var(--text);margin-top:20px">Analyzing…</p>
         <p style="font-size:13px;color:var(--faint);margin-top:8px;text-align:center;line-height:1.6">
           Generating your <strong>${modeObj.title}</strong><br>
@@ -3076,10 +3279,10 @@ function renderFinBot() {
           </div>
         </div>
         ${finbotState.result ? `<div style="display:flex;align-items:center;gap:8px">
-          <span class="chip chip-green">✓ Complete</span>
+          <span class="chip chip-green">${iconMarkup('check', 'inline-icon')} Complete</span>
           <button id="finbot-save-btn-top" onclick="saveFinBotReport()"
             style="padding:5px 11px;border-radius:10px;${isSaved ? 'background:#10b98122;color:#10b981' : 'background:var(--border);color:var(--text)'};font-size:12px;font-weight:700;border:none;cursor:pointer;white-space:nowrap">
-            ${isSaved ? '🔖 Saved' : '🔖 Save'}
+            ${isSaved ? `${iconMarkup('bookmark', 'btn-icon')} Saved` : `${iconMarkup('bookmark', 'btn-icon')} Save`}
           </button>
         </div>` : ''}
       </div>
@@ -3106,7 +3309,7 @@ function renderFinBot() {
         ${finbotState.result ? `
           <button onclick="saveFinBotReport()" class="finbot-save-btn-big"
             style="${isSaved ? 'background:#10b98122;color:#10b981;border:1.5px solid #10b981' : 'background:var(--green-bg);color:var(--green);border:1.5px solid var(--green)'}">
-            ${isSaved ? '🔖 View in Saved →' : '🔖 Save Report'}
+            ${isSaved ? `${iconMarkup('bookmark', 'btn-icon')} View in Saved →` : `${iconMarkup('bookmark', 'btn-icon')} Save Report`}
           </button>
         ` : ''}
         <button onclick="backFromFinBotResult()"
@@ -3134,7 +3337,7 @@ function renderFinBot() {
         const sel = finbotForm[field] === k;
         return `<button class="pill ${sel?'selected':''}" style="${sel?`border-color:${col};background:${col}14;color:${col}`:''}"
           onclick="updateFormField('${field}','${k}')">
-          ${o.e ? `<div class="emoji">${o.e}</div>` : ''}
+          ${o.e ? `<div class="pill-icon">${iconMarkup(o.e)}</div>` : ''}
           <div>${o.l || o}</div>
           ${o.s ? `<div class="sub">${o.s}</div>` : ''}
         </button>`;
@@ -3252,6 +3455,7 @@ function renderFinBot() {
         <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!finbotForm.techTicker.trim()?'disabled':''} onclick="confirmAndRunFinBot('technical')">Run Technical Analysis →</button>
       </div>`;
   }
+  scheduleUiIconRefresh(el);
 }
 renderFinBot();
 
@@ -3480,7 +3684,7 @@ function renderSaved(filter) {
     el.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 20px 24px">
         <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#0d9488,#10b981);
-                    display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px">🔖</div>
+                    display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px">${iconMarkup('bookmark')}</div>
         <h2 style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px">Saved Reports</h2>
         <p style="font-size:13.5px;color:var(--muted);line-height:1.65;max-width:300px;margin-bottom:24px">
           Save any FinBot analysis or news breakdown and access it from any device. Reports are stored securely with your account.
@@ -3498,8 +3702,8 @@ function renderSaved(filter) {
       ].map(f => `
         <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:14px;
                     background:var(--card);border:1px solid var(--border);margin-bottom:10px;opacity:.7">
-          <div style="width:40px;height:40px;border-radius:12px;background:${f.col}18;flex-shrink:0;
-                      display:flex;align-items:center;justify-content:center;font-size:18px">${f.icon}</div>
+            <div style="width:40px;height:40px;border-radius:12px;background:${f.col}18;flex-shrink:0;
+                      display:flex;align-items:center;justify-content:center;font-size:18px">${iconMarkup(f.icon, 'saved-feature-icon')}</div>
           <div>
             <p style="font-weight:800;font-size:13px;color:var(--text);margin-bottom:3px">${f.title}</p>
             <p style="font-size:12px;color:var(--faint);line-height:1.55">${f.desc}</p>
@@ -3521,10 +3725,10 @@ function renderSaved(filter) {
     el.innerHTML = `
       <div class="section-title"><h2>Saved Reports</h2></div>
       <div class="saved-empty">
-        <div class="saved-empty-icon">🔖</div>
+        <div class="saved-empty-icon">${iconMarkup('bookmark', 'saved-empty-icon-glyph')}</div>
         <p style="font-size:15px;font-weight:700;color:var(--text)">No saved reports yet</p>
         <p style="font-size:13px;color:var(--faint);line-height:1.6;max-width:280px">
-          Run any analysis in FinBot or analyze a news article and tap <strong style="color:var(--text)">🔖 Save</strong> to keep it here.
+          Run any analysis in FinBot or analyze a news article and tap <strong style="color:var(--text)">${iconMarkup('bookmark', 'inline-icon')} Save</strong> to keep it here.
         </p>
       </div>`;
     return;
@@ -3632,7 +3836,7 @@ function renderSaved(filter) {
       <span style="font-size:13px;font-weight:700">${savedSelected.size} selected</span>
       <button onclick="bulkDeleteReports()" style="padding:6px 14px;border-radius:8px;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:700">🗑 Delete</button>
       <button onclick="exportReportsZip([...savedSelected])" style="padding:6px 14px;border-radius:8px;background:var(--blue);color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:700">↓ Export .zip</button>
-      <button onclick="savedSelected.clear();renderSaved()" style="padding:6px 14px;border-radius:8px;background:var(--border);color:var(--muted);border:none;cursor:pointer;font-size:12px;font-weight:700;margin-left:auto">✕ Deselect</button>
+      <button onclick="savedSelected.clear();renderSaved()" style="padding:6px 14px;border-radius:8px;background:var(--border);color:var(--muted);border:none;cursor:pointer;font-size:12px;font-weight:700;margin-left:auto">${iconMarkup('close', 'btn-icon')} Deselect</button>
     </div>` : allReports.length >= 2 ? `
     <div style="margin-bottom:12px;text-align:right">
       <button onclick="exportReportsZip()" style="font-size:11px;font-weight:700;color:var(--muted);background:var(--border);border:none;cursor:pointer;padding:6px 12px;border-radius:8px">↓ Export all (.zip)</button>
@@ -3653,10 +3857,10 @@ function renderSaved(filter) {
               ${checked ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
             </div>
             <div class="saved-card-meta">
-              <div class="saved-card-icon" style="background:${r.modeCol}22">${r.modeIcon}</div>
+              <div class="saved-card-icon" style="background:${r.modeCol}22">${iconMarkup(r.modeIcon, 'saved-card-icon-glyph')}</div>
               <div>
                 <div class="saved-card-title">${escHtml(r.modeTitle)}</div>
-                <div class="saved-card-sub">${r.modeId === 'news' ? '📰 News Analysis' : 'by ' + escHtml(r.modeSub)} &nbsp;·&nbsp; ${dateStr}, ${timeStr}</div>
+                <div class="saved-card-sub">${r.modeId === 'news' ? `${iconMarkup('newspaper', 'inline-icon')} News Analysis` : 'by ' + escHtml(r.modeSub)} &nbsp;·&nbsp; ${dateStr}, ${timeStr}</div>
               </div>
             </div>
             <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
@@ -3667,10 +3871,10 @@ function renderSaved(filter) {
               </button>
             </div>
           </div>
-          ${r.folder ? `<div class="saved-card-folder">📁 ${escHtml(r.folder)}</div>` : ''}
+          ${r.folder ? `<div class="saved-card-folder">${iconMarkup('folder', 'inline-icon')} ${escHtml(r.folder)}</div>` : ''}
           ${tags.length ? `<div class="saved-card-tags">${tags.map(t => `<span class="saved-tag-chip" onclick="_srTag(${JSON.stringify(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;')})" title="Filter by tag">${escHtml(t)}</span>`).join('')}</div>` : ''}
           <div class="saved-preview">${escHtml(preview)}</div>
-          ${r.note ? `<div class="saved-card-note-preview" onclick="openReportEditModal('${r.id}')">📝 ${escHtml(r.note.slice(0,120))}${r.note.length>120?'…':''}</div>` : ''}
+          ${r.note ? `<div class="saved-card-note-preview" onclick="openReportEditModal('${r.id}')">${iconMarkup('note', 'inline-icon')} ${escHtml(r.note.slice(0,120))}${r.note.length>120?'…':''}</div>` : ''}
           <div class="saved-card-actions">
             <button class="saved-action-btn" style="background:${r.modeCol}18;color:${r.modeCol}"
               onclick="viewSavedReport('${r.id}')">
@@ -4095,6 +4299,7 @@ function portfolioDashboardHeading(title, subtitle, actionHtml = '') {
       ${actionHtml || ''}
     </div>
   `;
+  scheduleUiIconRefresh(document.getElementById('tab-saved'));
 }
 
 function portfolioStatCard(icon, value, label) {
@@ -5423,6 +5628,7 @@ function renderSettings() {
 
     <div style="height:8px"></div>
   `;
+  scheduleUiIconRefresh(document.getElementById('tab-settings'));
 }
 
 function openChangePasswordModal() {
@@ -5588,7 +5794,7 @@ function getTierPresentation(tier = 'free') {
       chipBg: '#d9770622',
       chipColor: '#fbbf24',
       iconBg: '#d9770614',
-      icon: '🏆'
+      icon: iconMarkup('award')
     };
   }
   if (tier === 'pro') {
@@ -5598,7 +5804,7 @@ function getTierPresentation(tier = 'free') {
       chipBg: '#7c3aed22',
       chipColor: '#a78bfa',
       iconBg: '#7c3aed14',
-      icon: '⚡'
+      icon: iconMarkup('bolt')
     };
   }
   return {
@@ -5607,7 +5813,7 @@ function getTierPresentation(tier = 'free') {
     chipBg: '#64748b22',
     chipColor: '#64748b',
     iconBg: '#64748b14',
-    icon: '○'
+    icon: iconMarkup('spark')
   };
 }
 
@@ -6309,7 +6515,7 @@ function updateHeaderUser() {
         credEl.title = 'FinBot credits remaining';
         tierBadge.parentNode.insertBefore(credEl, tierBadge.nextSibling);
       }
-      credEl.textContent = '⚡ ' + (currentUser.finbot_credits ?? 0) + ' credits';
+      credEl.innerHTML = `${iconMarkup('bolt', 'inline-icon')} ${currentUser.finbot_credits ?? 0} credits`;
     } else if (credEl) {
       credEl.remove();
     }
@@ -7716,7 +7922,7 @@ function _showNextToast() {
   const el = document.createElement('div');
   el.className = 'badge-toast';
   el.innerHTML = `
-    <div class="badge-toast-icon">${badge.icon}</div>
+    <div class="badge-toast-icon">${iconMarkup(badge.icon, 'badge-icon-glyph')}</div>
     <div>
       <div class="badge-toast-label">Achievement Unlocked</div>
       <div class="badge-toast-name">${escHtml(badge.name)}</div>
@@ -7824,7 +8030,7 @@ function renderLearningPath() {
           const clickAction = unlocked ? `onclick="openTopic('${topicId}')"` : '';
           return `
             <div class="path-step" style="margin-bottom:${idx < LEARN_PATH_ORDER.length-1?'12':'0'}px">
-              <div class="path-node ${nodeClass}" ${unlocked ? `onclick="openTopic('${topicId}')"` : ''}>${done ? '✓' : topic.icon}</div>
+        <div class="path-node ${nodeClass}" ${unlocked ? `onclick="openTopic('${topicId}')"` : ''}>${done ? iconMarkup('award', 'path-node-icon') : iconMarkup(topic.icon, 'path-node-icon')}</div>
               <div class="path-info ${infoClass}" ${clickAction}>
                 <div class="path-step-title">${idx + 1}. ${escHtml(topic.title)}</div>
                 <div class="path-step-sub">${topic.lessons.length} lessons · <span class="learn-difficulty diff-${topic.difficulty}" style="display:inline;padding:1px 6px">${topic.difficulty}</span></div>
@@ -7835,6 +8041,7 @@ function renderLearningPath() {
       </div>
     </div>`;
   el.parentElement.scrollTop = 0;
+  scheduleUiIconRefresh(el);
 }
 
 function updateStreak() {
@@ -8240,7 +8447,7 @@ function renderLearn() {
         return `
           <div class="learn-topic-card ${p.pct === 100 ? 'completed-card' : ''}" onclick="openTopic('${t.id}')">
             <div style="display:flex;justify-content:space-between;align-items:flex-start">
-              <div class="learn-topic-icon" style="background:${t.iconBg}">${t.icon}</div>
+          <div class="learn-topic-icon" style="background:${t.iconBg}">${iconMarkup(t.icon, 'learn-topic-icon-glyph')}</div>
               ${p.pct === 100 ? '<span style="font-size:16px">✅</span>' : ''}
             </div>
             <h3 style="margin-top:10px">${t.title}</h3>
@@ -8260,7 +8467,14 @@ function renderLearn() {
       }).join('')}
     </div>
   `;
+  scheduleUiIconRefresh(el);
 }
+const _renderCalendarOriginal = renderCalendar;
+renderCalendar = function(...args) {
+  const result = _renderCalendarOriginal.apply(this, args);
+  scheduleUiIconRefresh(document.getElementById('tab-calendar'));
+  return result;
+};
 
 function openTopic(topicId, lessonIdx = 0) {
   const topic = LEARN_TOPICS.find(t => t.id === topicId);
@@ -8275,7 +8489,7 @@ function openTopic(topicId, lessonIdx = 0) {
     <div class="learn-detail">
       <button class="learn-back" onclick="renderLearn()">← Back to Topics</button>
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
-        <span style="font-size:28px">${topic.icon}</span>
+        ${iconMarkup(topic.icon, 'learn-detail-icon')}
         <div>
           <h2 style="font-size:20px;font-weight:800;color:var(--text)">${topic.title}</h2>
           <p style="font-size:12px;color:var(--faint)">${p.lessonsRead} of ${p.total} lessons completed</p>
@@ -8313,6 +8527,7 @@ function openTopic(topicId, lessonIdx = 0) {
     </div>
   `;
   el.parentElement.scrollTop = 0;
+  scheduleUiIconRefresh(el);
 }
 
 let quizState = {};
@@ -8362,6 +8577,7 @@ function renderQuizQuestion() {
     </div>
   `;
   el.parentElement.scrollTop = 0;
+  scheduleUiIconRefresh(el);
 }
 
 function answerQuiz(choice) {
@@ -8434,6 +8650,7 @@ function finishQuiz() {
     </div>
   `;
   el.parentElement.scrollTop = 0;
+  scheduleUiIconRefresh(el);
 }
 
 // ── Glossary view ─────────────────────────────────────────────────────────────
@@ -8490,6 +8707,7 @@ function renderGlossary() {
   `;
   el.parentElement.scrollTop = 0;
   document.getElementById('glossary-input').focus();
+  scheduleUiIconRefresh(el);
 }
 
 // ── Badges page ───────────────────────────────────────────────────────────────
@@ -8509,7 +8727,7 @@ function renderBadgesPage() {
       <div class="badges-grid">
         ${BADGES.map(b => `
           <div class="badge-item ${earned.has(b.id) ? 'earned' : 'locked'}">
-            <div class="badge-icon">${b.icon}</div>
+            <div class="badge-icon">${iconMarkup(b.icon, 'badge-icon-glyph')}</div>
             <div class="badge-name">${escHtml(b.name)}</div>
             <div class="badge-desc">${escHtml(b.desc)}</div>
           </div>`).join('')}
@@ -8517,6 +8735,7 @@ function renderBadgesPage() {
     </div>
   `;
   el.parentElement.scrollTop = 0;
+  scheduleUiIconRefresh(el);
 }
 
 // ── Flashcards view ───────────────────────────────────────────────────────────
@@ -8611,6 +8830,7 @@ function fcNav(dir) {
 // INIT
 // ═══════════════════════════════════════════════════════════════════════════
 
+hydrateStaticUiIcons();
 // Pre-render the default tab
 renderNews();
 // Check auth — shows login overlay if not logged in, syncs data if session exists

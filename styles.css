@@ -74,7 +74,7 @@ button{cursor:pointer}
 .saved-tag-chip.active{background:#f59e0b;color:#fff}
 .saved-folder-tab{flex-shrink:0;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:700;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
 .saved-folder-tab.active{background:#06b6d422;color:var(--cyan)}
-.saved-card-star{background:none;border:none;cursor:pointer;font-size:16px;opacity:.35;padding:2px;transition:all .15s;line-height:1;flex-shrink:0}
+.saved-card-star{background:none;border:none;cursor:pointer;font-size:16px;opacity:.35;padding:2px;transition:all .15s;line-height:1;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center}
 .saved-card-star.starred{opacity:1}
 .saved-card-note-preview{font-size:11px;color:var(--blue);background:#3b82f615;border-radius:7px;padding:5px 10px;margin-top:7px;line-height:1.45;cursor:pointer}
 .saved-card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
@@ -92,6 +92,12 @@ button{cursor:pointer}
 .section-title{padding:10px 0 18px}
 .section-title h2{font-size:22px;font-weight:800;color:var(--text)}
 .section-title p{margin-top:6px;font-size:14px;color:var(--muted)}
+.ui-icon{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;color:currentColor}
+.ui-icon svg{width:1em;height:1em;display:block}
+.inline-icon{margin-right:6px}
+.btn-icon{margin-right:6px}
+.mode-icon-glyph svg,.loading-icon-glyph svg,.pill-icon .ui-icon svg{width:1.15em;height:1.15em}
+.learn-topic-icon-glyph svg,.badge-icon-glyph svg,.path-node-icon svg,.learn-detail-icon svg,.modal-header-icon svg,.saved-card-icon-glyph svg,.saved-empty-icon-glyph svg,.saved-feature-icon svg,.finbot-analysis-icon svg,.settings-row-icon .ui-icon svg,.finbot-icon .ui-icon svg,.streak-flame .ui-icon svg,.news-bookmark-btn .ui-icon svg,.alert-bell .ui-icon svg,.saved-card-star .ui-icon svg{width:1.1em;height:1.1em}
 .filter-row{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:0 0 10px}
 .filter-btn,.news-filter-btn{flex-shrink:0;padding:8px 18px;border-radius:20px;font-size:12px;font-weight:500;
   background:var(--border);color:var(--muted);transition:all 0.2s}
@@ -228,7 +234,7 @@ button{cursor:pointer}
 .pill{padding:10px 6px;border-radius:12px;border:2px solid var(--border2);background:#fff;
   font-size:12px;font-weight:500;color:var(--muted);transition:all 0.2s;text-align:center}
 .pill.selected{font-weight:700}
-.pill .emoji{font-size:16px;margin-bottom:3px}
+.pill .emoji,.pill-icon{font-size:16px;margin-bottom:3px;display:flex;justify-content:center}
 .pill .sub{font-size:10px;font-weight:400;color:var(--faint);margin-top:2px}
 .run-btn{width:100%;padding:17px;border-radius:16px;color:#fff;font-weight:800;font-size:15px;
   transition:all 0.2s;box-shadow:0 4px 16px rgba(0,0,0,0.15)}
@@ -546,7 +552,7 @@ button{cursor:pointer}
 .fc-progress{font-size:12px;color:var(--faint);font-family:var(--mono);text-align:center;margin-bottom:12px}
 .fc-hint{font-size:11px;color:var(--faint);text-align:center;margin-bottom:16px}
 /* ── STREAK ───────────────────────────────────────────────────── */
-.streak-flame{font-size:20px;line-height:1}
+.streak-flame{font-size:20px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
 /* ── BADGE TOAST NOTIFICATION ────────────────────────────────── */
 .badge-toast{position:fixed;bottom:80px;right:16px;z-index:9999;background:var(--card);border:2px solid var(--green);
   border-radius:var(--radius);padding:14px 18px;box-shadow:0 8px 32px rgba(0,0,0,.35);
@@ -771,7 +777,7 @@ button{cursor:pointer}
 .overlap-badge{position:absolute;top:8px;left:8px;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:800;background:#3b82f620;color:#3b82f6;border:1px solid #3b82f630;font-family:var(--mono)}
 
 /* ── ALERT BELL ───────────────────────────────────────────────── */
-.alert-bell{background:none;border:none;cursor:pointer;font-size:14px;line-height:1;padding:2px;transition:transform .15s}
+.alert-bell{background:none;border:none;cursor:pointer;font-size:14px;line-height:1;padding:2px;transition:transform .15s;display:inline-flex;align-items:center;justify-content:center}
 .alert-bell:hover{transform:scale(1.2)}
 .alert-bell.active{filter:drop-shadow(0 0 3px #f59e0b)}
 
@@ -782,7 +788,7 @@ button{cursor:pointer}
 
 /* Bookmark button on card */
 .news-bookmark-btn{background:none;border:none;cursor:pointer;font-size:15px;line-height:1;
-  padding:3px;transition:transform .15s,filter .15s;flex-shrink:0}
+  padding:3px;transition:transform .15s,filter .15s;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center}
 .news-bookmark-btn:hover{transform:scale(1.2)}
 .news-bookmark-btn.saved{filter:drop-shadow(0 0 4px #f59e0b)}
 
