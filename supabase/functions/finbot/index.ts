@@ -18,6 +18,12 @@ const REQUEST_COST: Record<string, number> = {
   finbot: 5,
 };
 
+const RATE_LIMITS: Record<string, { limit: number; windowSeconds: number }> = {
+  chat: { limit: 12, windowSeconds: 5 * 60 },
+  news: { limit: 8, windowSeconds: 10 * 60 },
+  finbot: { limit: 6, windowSeconds: 15 * 60 },
+};
+
 const MODE_TOKEN_LIMITS: Record<string, number> = {
   news: 1800,
   chat: 900,
@@ -43,14 +49,39 @@ function resetNeeded(creditsResetAt?: string | null) {
   return Date.now() - resetAt.getTime() >= 30 * 24 * 60 * 60 * 1000;
 }
 
+function trimText(value: unknown, max = 2400) {
+  return String(value || "").trim().slice(0, max);
+}
+
+async function consumeRateLimit(
+  adminClient: ReturnType<typeof createClient>,
+  scope: string,
+  subject: string,
+  limit: number,
+  windowSeconds: number,
+) {
+  const { data, error } = await adminClient.rpc("consume_rate_limit", {
+    p_scope: scope,
+    p_subject: subject,
+    p_limit: limit,
+    p_window_seconds: windowSeconds,
+  });
+  if (error) throw new Error(`Rate limit check failed: ${error.message}`);
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row?.allowed) {
+    const resetAt = row?.reset_at ? new Date(row.reset_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : "soon";
+    throw new Error(`Rate limit reached. Please wait and try again after ${resetAt}.`);
+  }
+}
+
 function getPromptBody(payload: Record<string, unknown>) {
   if (payload.request_type === "chat") {
-    const latest = String(payload.prompt || payload.user || payload.message || "").trim();
+    const latest = trimText(payload.prompt || payload.user || payload.message || "", 1800);
     const history = Array.isArray(payload.history)
       ? payload.history
           .map((entry) => {
             const role = entry && typeof entry === "object" ? String((entry as Record<string, unknown>).role || "") : "";
-            const content = entry && typeof entry === "object" ? String((entry as Record<string, unknown>).content || "") : "";
+            const content = entry && typeof entry === "object" ? trimText((entry as Record<string, unknown>).content || "", 1200) : "";
             if (!content.trim() || (role !== "user" && role !== "assistant")) return null;
             return { role, content: content.trim() };
           })
@@ -67,13 +98,13 @@ function getPromptBody(payload: Record<string, unknown>) {
   if (payload.request_type === "news") {
     return {
       system: "You are FinBot, an expert financial analyst AI. Reply in Markdown and keep the analysis concise but useful.",
-      messages: [{ role: "user" as const, content: String(payload.prompt || "").trim() }],
+      messages: [{ role: "user" as const, content: trimText(payload.prompt || "", 3200) }],
     };
   }
 
   return {
     system: String(payload.system || "You are FinBot, an expert financial analyst AI. Reply in Markdown.").trim(),
-    messages: [{ role: "user" as const, content: String(payload.user || payload.prompt || "").trim() }],
+    messages: [{ role: "user" as const, content: trimText(payload.user || payload.prompt || "", 3600) }],
   };
 }
 
@@ -118,11 +149,18 @@ Deno.serve(async (req) => {
     const requestType = String(payload.request_type || "finbot");
     const mode = String(payload.mode || requestType || "finbot");
     const cost = REQUEST_COST[requestType] ?? REQUEST_COST.finbot;
+    const rateLimit = RATE_LIMITS[requestType] ?? RATE_LIMITS.finbot;
     const prompt = getPromptBody(payload);
     const maxTokens = MODE_TOKEN_LIMITS[mode] ?? MODE_TOKEN_LIMITS[requestType] ?? 2600;
     const lastMessage = prompt.messages?.[prompt.messages.length - 1]?.content || "";
     if (!lastMessage) {
       return json({ error: "No prompt was provided." }, 400);
+    }
+    if (lastMessage.length < 8) {
+      return json({ error: "Please provide a bit more detail so FinBot can help." }, 400);
+    }
+    if (Array.isArray(payload.history) && payload.history.length > 20) {
+      return json({ error: "Chat history is too long. Start a fresh conversation and try again." }, 400);
     }
 
     const { data: currentProfile, error: profileError } = await adminClient
@@ -166,6 +204,14 @@ Deno.serve(async (req) => {
         credits_remaining: creditsRemaining,
       }, 402);
     }
+
+    await consumeRateLimit(
+      adminClient,
+      `finbot:${requestType}:${mode}`,
+      authData.user.id,
+      rateLimit.limit,
+      rateLimit.windowSeconds,
+    );
 
     const anthropicResp = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",

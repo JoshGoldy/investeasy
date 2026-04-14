@@ -51,6 +51,7 @@ npx supabase@latest secrets set ANTHROPIC_MODEL="claude-sonnet-4-5"
 ### 5. Deploy the Edge Functions
 
 ```bash
+npx supabase@latest db push
 npx supabase@latest functions deploy finbot
 npx supabase@latest functions deploy market-data
 ```
@@ -92,6 +93,7 @@ Handles:
 - AI analysis modes
 - quick FinBot chat
 - credit usage enforcement
+- user-based rate limiting
 
 ### `market-data`
 
@@ -102,6 +104,7 @@ Handles:
 - news
 - article extraction
 - calendar events
+- IP-based rate limiting and safer article source allowlisting
 
 ## Legacy Files
 

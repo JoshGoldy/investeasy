@@ -1,8 +1,34 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+const RATE_LIMITS: Record<string, { limit: number; windowSeconds: number }> = {
+  quotes: { limit: 60, windowSeconds: 60 },
+  chart: { limit: 120, windowSeconds: 5 * 60 },
+  news: { limit: 20, windowSeconds: 5 * 60 },
+  article: { limit: 20, windowSeconds: 10 * 60 },
+  calendar: { limit: 20, windowSeconds: 10 * 60 },
+};
+
+const ALLOWED_ARTICLE_HOSTS = new Set([
+  "www.cnbc.com",
+  "cnbc.com",
+  "www.marketwatch.com",
+  "marketwatch.com",
+  "www.wsj.com",
+  "wsj.com",
+  "www.reuters.com",
+  "reuters.com",
+  "rss.nytimes.com",
+  "www.nytimes.com",
+  "nytimes.com",
+]);
+
+let adminClient: ReturnType<typeof createClient> | null = null;
 
 const TICKER_MAP: Record<string, string> = {
   SPX: "^GSPC",
@@ -146,6 +172,42 @@ function json(body: Record<string, unknown>, status = 200) {
   });
 }
 
+function getClientIp(req: Request) {
+  const forwarded = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "";
+  return forwarded.split(",")[0]?.trim() || "unknown";
+}
+
+async function createAdminClient() {
+  if (adminClient) return adminClient;
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("Missing Supabase environment configuration for rate limiting.");
+  }
+  adminClient = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  return adminClient;
+}
+
+async function consumeRateLimit(action: string, subject: string) {
+  const cfg = RATE_LIMITS[action];
+  if (!cfg) return;
+  const adminClient = await createAdminClient();
+  const { data, error } = await adminClient.rpc("consume_rate_limit", {
+    p_scope: `market-data:${action}`,
+    p_subject: subject.slice(0, 160),
+    p_limit: cfg.limit,
+    p_window_seconds: cfg.windowSeconds,
+  });
+  if (error) throw new Error(`Rate limit check failed: ${error.message}`);
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row?.allowed) {
+    return json({ error: "Rate limit reached. Please wait a moment and try again." }, 429);
+  }
+  return null;
+}
+
 async function fetchJson(url: string, init?: RequestInit) {
   const resp = await fetch(url, init);
   if (!resp.ok) throw new Error(`Upstream request failed with ${resp.status}`);
@@ -181,6 +243,8 @@ async function fetchYahooChart(symbol: string, interval: string, range: string) 
 
 async function handleQuotes(rawTickers: unknown) {
   const tickers = parseTickers(rawTickers);
+  if (!tickers.length) return json({ success: false, error: "No tickers provided." }, 400);
+  if (tickers.length > 80) return json({ success: false, error: "Too many tickers requested at once." }, 400);
   const quotes: Record<string, unknown> = {};
 
   await Promise.all(
@@ -264,6 +328,16 @@ function extractArticleParagraphs(html: string) {
 
 async function handleArticle(url: string) {
   if (!/^https?:\/\//i.test(url)) return json({ success: false, error: "Invalid URL" }, 400);
+  if (url.length > 2000) return json({ success: false, error: "Article URL is too long." }, 400);
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch (_) {
+    return json({ success: false, error: "Invalid URL" }, 400);
+  }
+  if (!ALLOWED_ARTICLE_HOSTS.has(parsed.hostname.toLowerCase())) {
+    return json({ success: false, error: "This article source is not supported." }, 400);
+  }
   const html = await fetchText(url, {
     headers: {
       "User-Agent": "Mozilla/5.0",
@@ -501,6 +575,9 @@ Deno.serve(async (req) => {
   try {
     const payload = await req.json();
     const action = String(payload?.action || "").trim();
+    const ip = getClientIp(req);
+    const throttleResponse = await consumeRateLimit(action, `${ip}:${action}`);
+    if (throttleResponse) return throttleResponse;
 
     if (action === "quotes") return await handleQuotes(payload?.tickers);
     if (action === "chart") return await handleChart(String(payload?.ticker || "").trim(), String(payload?.tf || "1M"));
