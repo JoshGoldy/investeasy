@@ -905,8 +905,14 @@ button{cursor:pointer}
 .finbot-chat-msg.user{flex-direction:row-reverse}
 .finbot-chat-avatar{width:32px;height:32px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#ede9fe;color:#6d28d9;font-size:12px;font-weight:800}
 .finbot-chat-msg.user .finbot-chat-avatar{background:#dcfce7;color:#047857}
-.finbot-chat-bubble{max-width:min(100%,560px);background:#fff;border:1px solid #ede9fe;border-radius:16px;padding:12px 14px;color:var(--text);box-shadow:0 6px 18px rgba(15,23,42,.04)}
+.finbot-chat-bubble{max-width:min(100%,560px);background:#fff;border:1px solid #ede9fe;border-radius:16px;padding:12px 14px;color:var(--text);box-shadow:0 6px 18px rgba(15,23,42,.04);font-size:12.5px;line-height:1.6}
 .finbot-chat-msg.user .finbot-chat-bubble{background:#f0fdf4;border-color:#bbf7d0}
+.finbot-chat-msg.assistant .finbot-chat-bubble h1,
+.finbot-chat-msg.assistant .finbot-chat-bubble h2,
+.finbot-chat-msg.assistant .finbot-chat-bubble h3,
+.finbot-chat-msg.assistant .finbot-chat-bubble h4{font-size:1.05em;line-height:1.35}
+.finbot-chat-msg.assistant .finbot-chat-bubble p,
+.finbot-chat-msg.assistant .finbot-chat-bubble li{font-size:1em;line-height:1.6}
 .finbot-chat-bubble p:last-child,.finbot-chat-bubble .md-table:last-child{margin-bottom:0}
 .finbot-chat-error{margin-top:10px;padding:10px 12px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-size:12px;font-weight:600}
 .finbot-chat-compose{margin-top:12px;padding-top:12px;border-top:1px solid #ede9fe}
