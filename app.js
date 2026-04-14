@@ -661,6 +661,7 @@ const tabPanels = document.querySelectorAll('.tab-content');
 
 function switchTab(id) {
   closeHeaderDropdown();
+  closeMobileNav();
   if (id === 'settings' && !currentUser) {
     document.getElementById('auth-overlay').classList.remove('hidden');
     showAuthTab('login');
@@ -691,6 +692,70 @@ navBtns.forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab))
 
 function isMobileViewport() {
   return window.matchMedia('(max-width: 768px)').matches;
+}
+
+function closeMobileNav() {
+  document.body.classList.remove('mobile-nav-open');
+}
+
+function toggleMobileNav(forceOpen) {
+  const shouldOpen = typeof forceOpen === 'boolean'
+    ? forceOpen
+    : !document.body.classList.contains('mobile-nav-open');
+  document.body.classList.toggle('mobile-nav-open', shouldOpen);
+}
+
+function setupMobileChrome() {
+  const header = document.querySelector('.header');
+  const brand = document.querySelector('.header-brand');
+  if (header && !document.getElementById('mobile-nav-toggle')) {
+    const toggle = document.createElement('button');
+    toggle.id = 'mobile-nav-toggle';
+    toggle.className = 'mobile-nav-toggle';
+    toggle.type = 'button';
+    toggle.setAttribute('aria-label', 'Open navigation menu');
+    toggle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>';
+    toggle.addEventListener('click', (event) => {
+      event.stopPropagation();
+      toggleMobileNav();
+    });
+    header.insertBefore(toggle, brand || header.firstChild);
+  }
+
+  if (!document.querySelector('.mobile-nav-backdrop')) {
+    const backdrop = document.createElement('button');
+    backdrop.type = 'button';
+    backdrop.className = 'mobile-nav-backdrop';
+    backdrop.setAttribute('aria-label', 'Close navigation menu');
+    backdrop.addEventListener('click', () => closeMobileNav());
+    document.body.appendChild(backdrop);
+  }
+
+  if (!document.getElementById('mobile-finbot-bubble')) {
+    const bubble = document.createElement('button');
+    bubble.id = 'mobile-finbot-bubble';
+    bubble.type = 'button';
+    bubble.className = 'mobile-finbot-bubble';
+    bubble.setAttribute('aria-label', 'Open FinBot');
+    bubble.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4M2 13h2M20 13h2"/></svg>
+      <span class="mobile-finbot-bubble-label">FinBot</span>
+    `;
+    bubble.addEventListener('click', () => switchTab('finbot'));
+    document.body.appendChild(bubble);
+  }
+
+  document.addEventListener('click', (event) => {
+    const nav = document.querySelector('.nav');
+    const toggle = document.getElementById('mobile-nav-toggle');
+    if (!isMobileViewport() || !document.body.classList.contains('mobile-nav-open')) return;
+    if (nav?.contains(event.target) || toggle?.contains(event.target)) return;
+    closeMobileNav();
+  });
+
+  window.addEventListener('resize', () => {
+    if (!isMobileViewport()) closeMobileNav();
+  });
 }
 
 function closeHeaderDropdown() {
@@ -6260,6 +6325,7 @@ const SUPABASE_CONFIG = window.SUPABASE_CONFIG || {};
 let supabaseClient = null;
 let supabaseAuthListenerBound = false;
 let pendingOtp = null;
+let authLoginMethod = 'otp';
 
 function isSupabaseConfigured() {
   return !!(window.supabase && SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey);
@@ -6609,6 +6675,17 @@ async function handleAuthAction(action, method, body) {
       return user ? { success: true, user } : { success: false, error: 'Not logged in' };
     }
     case 'login': {
+      const loginMethod = body.method === 'password' ? 'password' : 'otp';
+      if (loginMethod === 'password') {
+        const { data, error } = await sb.auth.signInWithPassword({
+          email: body.email,
+          password: body.password || ''
+        });
+        if (error) return { success: false, error: error.message };
+        const mapped = await loadCurrentUserFromSupabase();
+        currentUser = mapped || normalizeCurrentUser(data.user, {});
+        return { success: true, user: currentUser, message: 'Signed in successfully.' };
+      }
       const { error } = await sb.auth.signInWithOtp({
         email: body.email,
         options: { shouldCreateUser: false }
@@ -6876,6 +6953,28 @@ async function dataRequest(action, method = 'GET', body = {}) {
 
 
 // ── Auth overlay helpers ──────────────────────────────────────────────────────
+function setAuthLoginMethod(method = 'otp') {
+  authLoginMethod = method === 'password' ? 'password' : 'otp';
+  const otpBtn = document.getElementById('auth-login-method-otp');
+  const passwordBtn = document.getElementById('auth-login-method-password');
+  otpBtn?.classList.toggle('active', authLoginMethod === 'otp');
+  passwordBtn?.classList.toggle('active', authLoginMethod === 'password');
+
+  const passwordField = document.getElementById('login-password-field');
+  const passwordInput = document.getElementById('login-password');
+  const loginBtn = document.getElementById('login-btn');
+  const loginNote = document.getElementById('login-otp-note');
+
+  if (passwordField) passwordField.style.display = authLoginMethod === 'password' ? '' : 'none';
+  if (loginBtn) loginBtn.textContent = authLoginMethod === 'password' ? 'Sign In with Password' : 'Send Sign-In Code';
+  if (loginNote) {
+    loginNote.textContent = authLoginMethod === 'password'
+      ? 'Use your account password to sign in instantly.'
+      : "We'll email you a 6-digit code to sign in securely.";
+  }
+  if (passwordInput && authLoginMethod !== 'password') passwordInput.value = '';
+}
+
 function showAuthTab(mode) {
   ensureOtpAuthUi();
   ['remember-login', 'remember-register'].forEach(id => {
@@ -6919,16 +7018,37 @@ function ensureOtpAuthUi() {
   if (legacyForgot) legacyForgot.style.display = 'none';
 
   const loginPassword = document.getElementById('login-password');
-  if (loginPassword && loginPassword.closest('.auth-field')) {
-    loginPassword.closest('.auth-field').style.display = 'none';
-  }
-
+  const loginForm = document.getElementById('auth-login-form');
   const regPassword = document.getElementById('reg-password');
-  if (regPassword && regPassword.closest('.auth-field')) {
-    regPassword.closest('.auth-field').style.display = 'none';
+  if (regPassword && regPassword.closest('.auth-field')) regPassword.closest('.auth-field').style.display = 'none';
+
+  let loginSwitch = document.getElementById('auth-login-method-switch');
+  if (!loginSwitch && loginForm) {
+    loginSwitch = document.createElement('div');
+    loginSwitch.id = 'auth-login-method-switch';
+    loginSwitch.className = 'auth-method-switch';
+    loginSwitch.innerHTML = `
+      <button type="button" class="auth-method-btn active" id="auth-login-method-otp" onclick="setAuthLoginMethod('otp')">Email Code</button>
+      <button type="button" class="auth-method-btn" id="auth-login-method-password" onclick="setAuthLoginMethod('password')">Password</button>
+    `;
+    loginForm.insertBefore(loginSwitch, loginForm.firstElementChild);
   }
 
   const loginInput = document.getElementById('login-email');
+  let passwordField = document.getElementById('login-password-field');
+  if (!passwordField && loginInput && loginInput.parentElement) {
+    passwordField = document.createElement('div');
+    passwordField.className = 'auth-field';
+    passwordField.id = 'login-password-field';
+    passwordField.style.display = 'none';
+    passwordField.innerHTML = `
+      <label class="form-label">Password</label>
+      <input id="login-password" class="form-input" type="password" placeholder="Enter your password" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    `;
+    loginInput.parentElement.insertAdjacentElement('afterend', passwordField);
+  }
+
   if (loginInput) {
     loginInput.setAttribute('onkeydown', "if(event.key==='Enter')doLogin()");
   }
@@ -6978,6 +7098,7 @@ function ensureOtpAuthUi() {
     `;
     card.insertBefore(otpForm, footer);
   }
+  setAuthLoginMethod(authLoginMethod);
 }
 function clearAuthError() {
   const el = document.getElementById('auth-error');
@@ -7004,8 +7125,10 @@ function getRememberChoice(mode = 'login') {
 }
 function setAuthLoading(loading, activeAction = 'all') {
   ensureOtpAuthUi();
+  const loginIdleText = authLoginMethod === 'password' ? 'Sign In with Password' : 'Send Sign-In Code';
+  const loginBusyText = authLoginMethod === 'password' ? 'Signing In…' : 'Sending Code…';
   const buttonStates = {
-    'login-btn': ['Send Sign-In Code', 'Sending Code…'],
+    'login-btn': [loginIdleText, loginBusyText],
     'register-btn': ['Send Sign-Up Code', 'Sending Code…'],
     'otp-btn': ['Verify Code', 'Verifying…'],
     'otp-resend-btn': ['Resend Code', 'Resending…'],
@@ -7057,17 +7180,26 @@ async function checkAuth() {
 // ── Login ─────────────────────────────────────────────────────────────────────
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password')?.value || '';
   const remember = getRememberChoice('login');
   if (!email) { showAuthError('Please enter your email address.'); return; }
+  if (authLoginMethod === 'password' && !password) { showAuthError('Please enter your password.'); return; }
   clearAuthError();
   setAuthLoading(true, 'login-btn');
   try {
-    const d = await authRequest('login', 'POST', { email });
+    const d = await authRequest('login', 'POST', { email, password, method: authLoginMethod });
     if (d.success) {
       setRememberPreference(remember);
-      setPendingOtp({ mode: 'login', email, remember });
-      showAuthTab('otp');
-      showAuthSuccess(d.message || 'We sent your sign-in code.');
+      if (authLoginMethod === 'password') {
+        pendingOtp = null;
+        currentUser = d.user || currentUser;
+        await syncAfterLogin();
+        document.getElementById('auth-overlay').classList.add('hidden');
+      } else {
+        setPendingOtp({ mode: 'login', email, remember });
+        showAuthTab('otp');
+        showAuthSuccess(d.message || 'We sent your sign-in code.');
+      }
     } else {
       const message = describeAppError(d.error, 'Login failed. Please try again.');
       logAppIssue('auth', message, 'warn');
@@ -9587,6 +9719,7 @@ function fcNav(dir) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 hydrateStaticUiIcons();
+setupMobileChrome();
 // Pre-render the default tab
 renderNews();
 // Check auth — shows login overlay if not logged in, syncs data if session exists
