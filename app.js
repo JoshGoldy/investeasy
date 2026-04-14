@@ -1829,8 +1829,8 @@ function openStockDetail(idx) {
         </div>
       </div>
       <div style="text-align:right">
-        <p class="mono" style="font-size:24px;font-weight:700;color:#fff">${fmtUnitPrice(stock.val)}</p>
-        <span style="font-size:13px;font-weight:700;color:${color}">${up?'▲':'▼'} ${Math.abs(stock.chg).toFixed(2)}% today</span>
+        <p id="sd-live-price" class="mono" style="font-size:24px;font-weight:700;color:#fff">${fmtUnitPrice(stock.val)}</p>
+        <span id="sd-live-change" style="font-size:13px;font-weight:700;color:${color}">${up?'▲':'▼'} ${Math.abs(stock.chg).toFixed(2)}% today</span>
       </div>
     </div>
 
@@ -1843,11 +1843,11 @@ function openStockDetail(idx) {
     <div style="padding:16px 20px 12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <span style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">52-Week Range</span>
-        <span style="font-size:10px;font-weight:700;color:#94a3b8;font-family:var(--mono)">${rangePct}% of range</span>
+        <span id="sd-range-pct" style="font-size:10px;font-weight:700;color:#94a3b8;font-family:var(--mono)">${rangePct}% of range</span>
       </div>
       <div style="height:5px;background:#1e293b;border-radius:4px;position:relative">
-        <div style="position:absolute;left:0;width:${rangePct}%;height:100%;background:linear-gradient(90deg,${color}50,${color});border-radius:4px"></div>
-        <div style="position:absolute;left:${rangePct}%;transform:translateX(-50%);top:-4px;width:12px;height:12px;background:${color};border-radius:50%;border:2px solid #0c1320;box-shadow:0 0 6px ${color}80"></div>
+        <div id="sd-range-fill" style="position:absolute;left:0;width:${rangePct}%;height:100%;background:linear-gradient(90deg,${color}50,${color});border-radius:4px"></div>
+        <div id="sd-range-dot" style="position:absolute;left:${rangePct}%;transform:translateX(-50%);top:-4px;width:12px;height:12px;background:${color};border-radius:50%;border:2px solid #0c1320;box-shadow:0 0 6px ${color}80"></div>
       </div>
       <div style="display:flex;justify-content:space-between;margin-top:6px">
         <span style="font-size:11px;color:#64748b;font-family:var(--mono)">${fmtUnitPrice(parseFloat(stock.lo52))}</span>
@@ -1863,10 +1863,10 @@ function openStockDetail(idx) {
         {l:'Volume',      v:stock.vol    || '—', c:''},
         {l:'52W High',    v:fmtUnitPrice(parseFloat(stock.hi52)), c:'#10b981'},
         {l:'52W Low',     v:fmtUnitPrice(parseFloat(stock.lo52)), c:'#ef4444'},
-        {l:'Day Change',  v:(stock.chg>0?'+':'')+stock.chg+'%', c:color},
+        {l:'Day Change',  v:(stock.chg>0?'+':'')+stock.chg+'%', c:color, id:'sd-stat-day-change'},
       ].map(s => `<div class="stat-box">
         <p class="label">${s.l}</p>
-        <p class="val" style="${s.c?'color:'+s.c:''}">${s.v}</p>
+        <p ${s.id ? `id="${s.id}"` : ''} class="val" style="${s.c?'color:'+s.c:''}">${s.v}</p>
       </div>`).join('')}
     </div>
 
@@ -1933,10 +1933,51 @@ function openStockDetail(idx) {
       const ratio = last / stock._initVal;
       if (!last || !stock._initVal || ratio < 0.02 || ratio > 50) return;
       stock.charts['1D'] = points;
+      syncStockDetailSummary(stock, points);
       const el2 = document.getElementById('sd-chart-canvas');
       if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, convertChartData(points), color, 300); }
     });
   });
+}
+
+function syncStockDetailSummary(stock, points) {
+  if (currentDetailIdx === null || !Array.isArray(points) || points.length < 2) return;
+
+  const first = points[0]?.value;
+  const last = points[points.length - 1]?.value;
+  const hi52n = parseFloat(stock.hi52);
+  const lo52n = parseFloat(stock.lo52);
+  if (!first || !last) return;
+
+  const dayChange = ((last - first) / first) * 100;
+  const up = dayChange >= 0;
+  const color = up ? '#10b981' : '#ef4444';
+  const rangePct = hi52n > lo52n
+    ? Math.max(0, Math.min(100, Math.round((last - lo52n) / (hi52n - lo52n) * 100)))
+    : 50;
+
+  stock.val = last;
+  stock.chg = parseFloat(dayChange.toFixed(2));
+
+  const priceEl = document.getElementById('sd-live-price');
+  const changeEl = document.getElementById('sd-live-change');
+  const statEl = document.getElementById('sd-stat-day-change');
+  const rangePctEl = document.getElementById('sd-range-pct');
+  const rangeFillEl = document.getElementById('sd-range-fill');
+  const rangeDotEl = document.getElementById('sd-range-dot');
+
+  if (priceEl) priceEl.textContent = fmtUnitPrice(last);
+  if (changeEl) {
+    changeEl.textContent = `${up ? '▲' : '▼'} ${Math.abs(dayChange).toFixed(2)}% today`;
+    changeEl.style.color = color;
+  }
+  if (statEl) {
+    statEl.textContent = `${dayChange >= 0 ? '+' : ''}${dayChange.toFixed(2)}%`;
+    statEl.style.color = color;
+  }
+  if (rangePctEl) rangePctEl.textContent = `${rangePct}% of range`;
+  if (rangeFillEl) rangeFillEl.style.width = `${rangePct}%`;
+  if (rangeDotEl) rangeDotEl.style.left = `${rangePct}%`;
 }
 
 function switchDetailTF(idx, tf) {
@@ -1959,6 +2000,7 @@ function switchDetailTF(idx, tf) {
       const ratio = last / stock._initVal;
       if (!last || !stock._initVal || ratio < 0.02 || ratio > 50) return;
       stock.charts[tf] = points;
+      if (tf === '1D') syncStockDetailSummary(stock, points);
       const el2 = document.getElementById('sd-chart-canvas');
       if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, convertChartData(points), color, 300); }
     });
