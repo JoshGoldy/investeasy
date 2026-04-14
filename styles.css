@@ -1,7 +1,7 @@
 /* ── RESET & BASE ─────────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{-webkit-text-size-adjust:100%;font-family:'Outfit',sans-serif;background:#e2e8f0;height:100%}
-body{height:100vh;overflow:hidden;display:flex;background:var(--bg)}
+html{-webkit-text-size-adjust:100%;font-family:'Outfit',sans-serif;background:#e2e8f0;height:100%;overscroll-behavior:none}
+body{height:100vh;overflow:hidden;display:flex;background:var(--bg);overscroll-behavior:none}
 input,textarea,button{font-family:inherit;border:none;outline:none}
 button{cursor:pointer}
 ::-webkit-scrollbar{width:4px;height:4px}
@@ -25,7 +25,7 @@ button{cursor:pointer}
 .shell{width:100%;background:linear-gradient(180deg,#f8f5ee 0%,#f4eee3 100%);display:grid;
   grid-template-areas:"nav header""nav content";
   grid-template-columns:272px 1fr;grid-template-rows:72px 1fr;
-  height:100vh;overflow:hidden;position:relative}
+  height:100vh;height:100dvh;overflow:hidden;position:relative}
 .header{grid-area:header;background:rgba(255,253,248,.88);padding:0 32px;
   border-bottom:1px solid var(--border);flex-shrink:0;
   display:flex;justify-content:space-between;align-items:center}
@@ -34,7 +34,7 @@ button{cursor:pointer}
 .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:var(--green-glow);
   display:inline-block;margin-right:6px}
 .live-txt{font-size:11px;color:var(--green);font-weight:600}
-.content{grid-area:content;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#d8cebb transparent}
+.content{grid-area:content;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#d8cebb transparent;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
 .tab-content{display:none;padding:28px 34px 40px}
 .tab-content.active{display:block}
 
@@ -700,11 +700,11 @@ button{cursor:pointer}
 
 /* ── RESPONSIVE ───────────────────────────────────────────────── */
 @media(max-width:768px){
-  body{overflow:auto}
+  html,body{height:100dvh;overflow:hidden}
   .shell{grid-template-areas:"header""content""nav";
-    grid-template-columns:1fr;grid-template-rows:auto 1fr auto;height:100svh}
+    grid-template-columns:1fr;grid-template-rows:60px minmax(0,1fr) auto;height:100dvh;max-height:100dvh}
   #nav-pulse{display:none!important}
-  .nav{flex-direction:row;border-right:none;border-top:1px solid var(--border);padding:4px 4px 8px}
+  .nav{flex-direction:row;border-right:none;border-top:1px solid var(--border);padding:4px 4px calc(env(safe-area-inset-bottom, 0px) + 8px);min-height:72px;overflow:hidden}
   .nav-brand{display:none}
   .nav button{flex:1;flex-direction:column;align-items:center;gap:3px;
     padding:10px 4px 6px;border-left:none;border-top:3px solid transparent}
@@ -737,7 +737,7 @@ button{cursor:pointer}
   .holding-actions{flex-direction:column}
 
   /* Header: show brand logo, less padding */
-  .header{padding:0 14px}
+  .header{padding:0 14px;min-height:60px}
   .header-brand{display:flex}
 
   /* Stock detail: compress timeframe buttons */
@@ -768,6 +768,11 @@ button{cursor:pointer}
   /* Auth popup: full width on small screens */
   .auth-overlay{padding:12px}
   .auth-popup{border-radius:18px;padding:20px 16px 16px}
+
+  input,select,textarea,button{touch-action:manipulation}
+  input,select,textarea,.settings-select,.saved-search,.auth-input,.auth-otp-box,.finbot-chat-input,.whatif-input{
+    font-size:16px!important;
+  }
 
   /* Settings: let rows wrap instead of squeezing */
   .profile-card{padding:16px}
@@ -945,13 +950,12 @@ button{cursor:pointer}
   .header-brand-name{font-size:14px}
   .header-right{gap:8px}
   .header-right > *{min-width:0}
-  .user-chip{padding:2px 4px}
-  #header-username-text{font-size:12px}
-  #header-tier-badge{font-size:9px!important;padding:2px 6px!important;margin-left:2px!important}
-  #header-credits{font-size:10px!important;padding:5px 8px!important}
-  .nav{padding:4px 2px calc(env(safe-area-inset-bottom, 0px) + 8px)}
-  .nav button{padding:8px 2px 5px}
-  .nav button span{font-size:9px}
+  .user-chip{padding:2px 4px;gap:6px}
+  #header-username-text,#header-tier-badge,#header-credits{display:none!important}
+  .nav{padding:2px 2px calc(env(safe-area-inset-bottom, 0px) + 6px)}
+  .nav button{padding:9px 0 6px;gap:2px;min-height:54px;justify-content:center}
+  .nav button span{display:none}
+  .nav button svg{width:21px;height:21px}
 
   .section-title{flex-direction:column;align-items:flex-start;gap:8px}
   .section-title h2{font-size:17px}
@@ -1022,7 +1026,8 @@ button{cursor:pointer}
 @media (max-width: 420px){
   .header{padding:0 8px}
   .header-brand-name{font-size:13px}
-  #header-credits{font-size:9px!important;padding:4px 7px!important}
+  .header-right{gap:6px}
+  .user-chip{padding:0}
   .finbot-chat-categories{grid-template-columns:1fr}
   .market-grid{grid-template-columns:1fr 1fr}
 }
