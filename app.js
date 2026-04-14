@@ -805,8 +805,7 @@ async function fetchLiveNews(force = false) {
 
   // 1. Try server-side PHP (works when server has outbound internet access)
   try {
-    const r = await fetch('prices.php?action=news&count=30');
-    const d = await r.json();
+    const d = await fetchMarketData('news', { count: 30 });
     if (d.success && d.articles && d.articles.length) {
       const cutoff72h = Math.floor(Date.now() / 1000) - 72 * 60 * 60;
       liveNews = d.articles.filter(a => (a.pubTime || 0) >= cutoff72h).slice(0, 30);
@@ -1260,8 +1259,7 @@ function openNewsArticle(idx, fromLive) {
     return;
   }
 
-  fetch(`prices.php?action=article&url=${encodeURIComponent(n.link)}`)
-    .then(r => r.json())
+  fetchMarketData('article', { url: n.link })
     .then(d => {
       const box = document.getElementById('news-body-box');
       if (!box) return;
@@ -1725,8 +1723,7 @@ let currentDetailIdx = null;
 async function fetchLivePrices() {
   const tickers = MARKETS.map(m => m.ticker).join(',');
   try {
-    const r = await fetch('prices.php?action=quotes&tickers=' + tickers);
-    const d = await r.json();
+    const d = await fetchMarketData('quotes', { tickers });
     if (!d.success) return;
     let updated = false;
     MARKETS.forEach(m => {
@@ -1754,8 +1751,7 @@ async function fetchLivePrices() {
 
 async function fetchLiveChart(ticker, tf, callback) {
   try {
-    const r = await fetch(`prices.php?action=chart&ticker=${encodeURIComponent(ticker)}&tf=${tf}`);
-    const d = await r.json();
+    const d = await fetchMarketData('chart', { ticker, tf });
     if (d.success && d.points && d.points.length > 1) callback(d.points);
   } catch(e) { /* silent fallback */ }
 }
@@ -3085,8 +3081,7 @@ async function runFinBot(modeId) {
   // Fetch live price for technical analysis before building the prompt
   if (modeId === 'technical' && finbotForm.techTicker) {
     try {
-      const priceResp = await fetch(`prices.php?action=quotes&tickers=${encodeURIComponent(finbotForm.techTicker)}`);
-      const priceData = await priceResp.json();
+      const priceData = await fetchMarketData('quotes', { tickers: finbotForm.techTicker });
       const q = priceData?.quotes?.[finbotForm.techTicker];
       finbotForm.techLivePrice = q?.price ?? null;
       finbotForm.techLiveChg   = q?.chg   ?? null;
@@ -5958,6 +5953,45 @@ async function invokeFinBotFunction(payload) {
   return data;
 }
 
+async function invokeMarketDataFunction(payload) {
+  const sb = getSupabase();
+  const { data, error } = await sb.functions.invoke('market-data', { body: payload });
+  if (error) {
+    let contextMessage = '';
+    const ctx = error.context;
+    if (ctx && typeof ctx === 'object') {
+      try {
+        if (typeof ctx.clone === 'function') {
+          const cloned = ctx.clone();
+          const parsed = await cloned.json().catch(() => null);
+          if (parsed && typeof parsed === 'object') {
+            contextMessage = parsed.error || parsed.message || JSON.stringify(parsed);
+          } else if (typeof cloned.text === 'function') {
+            contextMessage = (await cloned.text()).trim();
+          }
+        }
+      } catch (_) {}
+    }
+    throw new Error([error.message, contextMessage].filter(Boolean).join(' ').trim() || 'Market data is unavailable right now.');
+  }
+  return data;
+}
+
+async function fetchMarketData(action, params = {}) {
+  if (isSupabaseConfigured()) {
+    return invokeMarketDataFunction({ action, ...params });
+  }
+
+  const qs = new URLSearchParams();
+  qs.set('action', action);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    qs.set(key, Array.isArray(value) ? value.join(',') : String(value));
+  });
+  const resp = await fetch(`prices.php?${qs.toString()}`);
+  return resp.json();
+}
+
 function apiAction(url) {
   try {
     return new URL(url, window.location.href).searchParams.get('action') || '';
@@ -8558,8 +8592,7 @@ function renderCalendar() {
   const from = new Date().toISOString().slice(0, 10);
   const to   = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
 
-  fetch(`prices.php?action=calendar&from=${from}&to=${to}`)
-    .then(r => r.json())
+  fetchMarketData('calendar', { from, to })
     .then(data => {
       if (!data.success) throw new Error(data.error || 'API error');
       const events = [
