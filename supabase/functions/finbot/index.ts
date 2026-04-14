@@ -14,11 +14,13 @@ const DEFAULT_CREDITS: Record<string, number> = {
 
 const REQUEST_COST: Record<string, number> = {
   news: 2,
+  chat: 1,
   finbot: 5,
 };
 
 const MODE_TOKEN_LIMITS: Record<string, number> = {
   news: 1800,
+  chat: 900,
   screener: 2200,
   technical: 2200,
   earnings: 2400,
@@ -42,16 +44,36 @@ function resetNeeded(creditsResetAt?: string | null) {
 }
 
 function getPromptBody(payload: Record<string, unknown>) {
+  if (payload.request_type === "chat") {
+    const latest = String(payload.prompt || payload.user || payload.message || "").trim();
+    const history = Array.isArray(payload.history)
+      ? payload.history
+          .map((entry) => {
+            const role = entry && typeof entry === "object" ? String((entry as Record<string, unknown>).role || "") : "";
+            const content = entry && typeof entry === "object" ? String((entry as Record<string, unknown>).content || "") : "";
+            if (!content.trim() || (role !== "user" && role !== "assistant")) return null;
+            return { role, content: content.trim() };
+          })
+          .filter(Boolean)
+          .slice(-8) as Array<{ role: "user" | "assistant"; content: string }>
+      : [];
+    return {
+      system:
+        "You are FinBot, a concise educational financial assistant. Help users understand investing concepts, portfolio decisions, market news, and risk in clear language. Keep answers practical and reasonably short. Do not give personalized financial advice or guarantees. If a user asks what to buy or sell, frame your answer as general education and key factors to consider.",
+      messages: [...history, { role: "user" as const, content: latest }],
+    };
+  }
+
   if (payload.request_type === "news") {
     return {
       system: "You are FinBot, an expert financial analyst AI. Reply in Markdown and keep the analysis concise but useful.",
-      message: String(payload.prompt || "").trim(),
+      messages: [{ role: "user" as const, content: String(payload.prompt || "").trim() }],
     };
   }
 
   return {
     system: String(payload.system || "You are FinBot, an expert financial analyst AI. Reply in Markdown.").trim(),
-    message: String(payload.user || payload.prompt || "").trim(),
+    messages: [{ role: "user" as const, content: String(payload.user || payload.prompt || "").trim() }],
   };
 }
 
@@ -98,7 +120,8 @@ Deno.serve(async (req) => {
     const cost = REQUEST_COST[requestType] ?? REQUEST_COST.finbot;
     const prompt = getPromptBody(payload);
     const maxTokens = MODE_TOKEN_LIMITS[mode] ?? MODE_TOKEN_LIMITS[requestType] ?? 2600;
-    if (!prompt.message) {
+    const lastMessage = prompt.messages?.[prompt.messages.length - 1]?.content || "";
+    if (!lastMessage) {
       return json({ error: "No prompt was provided." }, 400);
     }
 
@@ -155,7 +178,7 @@ Deno.serve(async (req) => {
         model: anthropicModel,
         max_tokens: maxTokens,
         system: prompt.system,
-        messages: [{ role: "user", content: prompt.message }],
+        messages: prompt.messages,
       }),
     });
 
