@@ -2393,18 +2393,70 @@ function runWhatIf(ticker) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 let finbotState = { mode: null, loading: false, result: null, error: null, savedId: null };
-const FINBOT_CHAT_STARTERS = [
-  'What 3 things should I check before buying a stock?',
-  'Explain ETFs vs individual stocks in simple terms',
-  'How should I think about diversification as a beginner?',
-  'What does a good long-term portfolio usually include?',
-];
+const FINBOT_CHAT_LIBRARY = {
+  beginner: {
+    label: 'Getting Started',
+    questions: [
+      'What 3 things should I check before buying a stock?',
+      'Explain ETFs vs individual stocks in simple terms',
+      'How should I think about diversification as a beginner?',
+      'What does a good long-term portfolio usually include?',
+      'How much cash should I keep before I start investing?',
+      'What mistakes do first-time investors make most often?',
+    ],
+  },
+  portfolio: {
+    label: 'Portfolio Help',
+    questions: [
+      'How should I split money between ETFs, stocks, and cash?',
+      'When should I rebalance a portfolio?',
+      'How do I know if my portfolio is too concentrated?',
+      'What is a simple portfolio for long-term wealth building?',
+      'How can I reduce risk without killing growth?',
+      'What role should international exposure play in a portfolio?',
+    ],
+  },
+  stocks: {
+    label: 'Stocks & ETFs',
+    questions: [
+      'How do I quickly judge whether a stock is expensive?',
+      'What makes an ETF good for long-term investing?',
+      'What numbers matter most in an earnings report?',
+      'How should I compare two stocks in the same sector?',
+      'What makes a company have a strong moat?',
+      'What are good signs of financial strength in a business?',
+    ],
+  },
+  risk: {
+    label: 'Risk & Strategy',
+    questions: [
+      'How do I think about downside risk before buying?',
+      'What is the difference between volatility and real risk?',
+      'How should I manage position sizing?',
+      'What is a sensible stop-loss strategy for beginners?',
+      'How do I invest during uncertain markets?',
+      'What should I do if one holding grows too large?',
+    ],
+  },
+  market: {
+    label: 'Market & News',
+    questions: [
+      'How should I read market news without overreacting?',
+      'What actually moves stock prices in the short term?',
+      'How do interest rates affect stocks and bonds?',
+      'Why does inflation matter for investors?',
+      'What should I watch when markets are very volatile?',
+      'How do macro events affect my portfolio?',
+    ],
+  },
+};
 const FINBOT_CHAT_WELCOME = `Hi, I'm FinBot. Ask me a market, investing, or portfolio question and I'll give you a quick educational take.`;
 let finbotChatState = {
   messages: [{ role: 'assistant', text: FINBOT_CHAT_WELCOME }],
   input: '',
   loading: false,
   error: null,
+  category: 'beginner',
 };
 let finbotForm = {
   risk: 'moderate', amount: '', horizon: 'medium', sectors: '',
@@ -3085,11 +3137,18 @@ function resetFinBotChat() {
     input: '',
     loading: false,
     error: null,
+    category: 'beginner',
   };
 }
 
 function setFinBotChatInput(value) {
   finbotChatState.input = value;
+}
+
+function setFinBotChatCategory(category) {
+  if (!FINBOT_CHAT_LIBRARY[category]) return;
+  finbotChatState.category = category;
+  renderFinBot();
 }
 
 function finBotChatHistoryPayload() {
@@ -3172,18 +3231,25 @@ function onFinBotChatKeydown(event) {
 
 function renderFinBotChatPanel() {
   const credits = currentUser?.finbot_credits ?? 0;
+  const activeCategory = FINBOT_CHAT_LIBRARY[finbotChatState.category] ? finbotChatState.category : 'beginner';
+  const activeGroup = FINBOT_CHAT_LIBRARY[activeCategory];
   return `
     <div class="finbot-chat-card">
       <div class="finbot-chat-head">
         <div>
           <p class="finbot-chat-kicker">New</p>
           <h3>Quick Chat with FinBot</h3>
-          <p class="finbot-chat-sub">Ask for fast investing insight, definitions, or a second opinion on an idea.</p>
+          <p class="finbot-chat-sub">Pick a category, tap a ready-made question, or type your own. Most people should be able to start without writing from scratch.</p>
         </div>
         <div class="finbot-chat-credit">⚡ 1 credit / message</div>
       </div>
+      <div class="finbot-chat-categories">
+        ${Object.entries(FINBOT_CHAT_LIBRARY).map(([key, group]) => `
+          <button class="finbot-chat-category ${key === activeCategory ? 'active' : ''}" onclick="setFinBotChatCategory('${key}')">${group.label}</button>
+        `).join('')}
+      </div>
       <div class="finbot-chat-starters">
-        ${FINBOT_CHAT_STARTERS.map(prompt => `
+        ${activeGroup.questions.map(prompt => `
           <button class="finbot-chat-starter" onclick="sendFinBotChat(${JSON.stringify(prompt).replace(/"/g, '&quot;')})">${escHtml(prompt)}</button>
         `).join('')}
       </div>
