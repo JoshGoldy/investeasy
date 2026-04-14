@@ -46,6 +46,7 @@ npx supabase@latest link --project-ref YOUR_PROJECT_REF
 ```bash
 npx supabase@latest secrets set ANTHROPIC_API_KEY="YOUR_ANTHROPIC_KEY"
 npx supabase@latest secrets set ANTHROPIC_MODEL="claude-sonnet-4-5"
+npx supabase@latest secrets set OPS_ALLOWED_EMAILS="you@example.com"
 ```
 
 ### 5. Deploy the Edge Functions
@@ -54,6 +55,7 @@ npx supabase@latest secrets set ANTHROPIC_MODEL="claude-sonnet-4-5"
 npx supabase@latest db push
 npx supabase@latest functions deploy finbot
 npx supabase@latest functions deploy market-data
+npx supabase@latest functions deploy ops-status
 ```
 
 ### 6. Push to GitHub Pages
@@ -106,6 +108,14 @@ Handles:
 - calendar events
 - IP-based rate limiting and safer article source allowlisting
 - server-side event logging for failures and throttles
+
+### `ops-status`
+
+Handles:
+
+- enterprise admin health snapshots
+- recent server-side function events
+- plan/credit summary metrics for internal monitoring
 
 ## Legacy Files
 

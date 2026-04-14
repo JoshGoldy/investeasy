@@ -11,6 +11,7 @@ Set these in your Supabase project before deploying:
 
 - `ANTHROPIC_API_KEY`
 - `ANTHROPIC_MODEL` (optional, defaults to `claude-sonnet-4-5`)
+- `OPS_ALLOWED_EMAILS` (comma-separated admin emails for the `ops-status` function)
 
 ### Deploy
 
@@ -20,6 +21,7 @@ From the project root:
 supabase db push
 supabase functions deploy finbot
 supabase functions deploy market-data
+supabase functions deploy ops-status
 ```
 
 If you are linking the project locally first:
@@ -29,6 +31,7 @@ supabase link --project-ref myldggtkyfdtymaxzspa
 supabase db push
 supabase functions deploy finbot
 supabase functions deploy market-data
+supabase functions deploy ops-status
 ```
 
 ### Local secret setup example
@@ -36,10 +39,12 @@ supabase functions deploy market-data
 ```bash
 supabase secrets set ANTHROPIC_API_KEY=your_key_here
 supabase secrets set ANTHROPIC_MODEL=claude-sonnet-4-5
+supabase secrets set OPS_ALLOWED_EMAILS=you@example.com
 ```
 
 After deployment, the frontend calls the function through `supabase.functions.invoke('finbot')`.
 Market data calls go through `supabase.functions.invoke('market-data')`.
+Enterprise admin diagnostics go through `supabase.functions.invoke('ops-status')`.
 
 ### Abuse protection
 

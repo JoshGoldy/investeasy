@@ -21,6 +21,12 @@ let newsLoadError = '';
 let marketsLoadError = '';
 let calendarLoadError = '';
 let transientErrorNotices = {};
+let opsStatusState = {
+  loading: false,
+  error: '',
+  data: null,
+  loadedAt: 0,
+};
 let portSort   = 'value';          // 'value' | 'pnl_pct' | 'ticker'
 let portFilter = 'all';            // 'all' | 'gainers' | 'losers'
 const TAB_PAGE_MAP = {
@@ -5749,6 +5755,7 @@ function renderSettings() {
   const tierInfo = getTierPresentation(currentUser?.tier || 'free');
   const diagnostics = getDiagnosticsLog();
   const recentIssues = diagnostics.slice(0, 5);
+  const opsData = opsStatusState.data;
   const latestByService = diagnostics.reduce((acc, entry) => {
     if (!acc[entry.service]) acc[entry.service] = entry;
     return acc;
@@ -5797,6 +5804,11 @@ function renderSettings() {
   const displayUser  = currentUser ? '@' + currentUser.username : s.username;
   const initials  = getInitials(displayName);
   const avatarCol = getAvatarColor(displayName);
+  const canViewOps = currentUser?.tier === 'enterprise';
+
+  if (canViewOps && !opsStatusState.loading && !opsStatusState.data && !opsStatusState.error) {
+    loadOpsStatus().catch(() => {});
+  }
 
   document.getElementById('tab-settings').innerHTML = `
     <div class="section-title"><h2>Settings</h2><p>Manage your profile & preferences</p></div>
@@ -5993,6 +6005,88 @@ function renderSettings() {
       </div>
     </div>
 
+    ${canViewOps ? `
+    <div class="settings-section">
+      <p class="settings-section-label">Server Health</p>
+      <div class="settings-group" style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <div>
+            <p style="font-size:13px;font-weight:800;color:var(--text)">Supabase function activity</p>
+            <p style="font-size:12px;color:var(--muted);margin-top:2px">Recent backend signals from FinBot and market-data.</p>
+          </div>
+          <button class="settings-select" onclick="loadOpsStatus(true)" style="cursor:pointer;min-width:140px">${opsStatusState.loading ? 'Refreshing…' : 'Refresh Health'}</button>
+        </div>
+
+        ${opsStatusState.loading && !opsData ? `
+          <div style="background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:12px 14px">
+            <p style="font-size:12px;color:var(--muted)">Loading server-side health data…</p>
+          </div>
+        ` : ''}
+
+        ${opsStatusState.error ? `
+          <div class="error-box" style="margin:0">
+            <p style="font-weight:700;font-size:14px;color:var(--red)">Server diagnostics unavailable</p>
+            <p style="margin:6px 0 0;font-size:13px;line-height:1.5;color:#b91c1c">${escHtml(opsStatusState.error)}</p>
+          </div>
+        ` : ''}
+
+        ${opsData ? `
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+            ${Object.entries(opsData.plan_counts || {}).map(([plan, count]) => `
+              <div style="background:#f8fafc;border:1px solid var(--border);border-radius:14px;padding:12px 13px">
+                <p style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">${escHtml(plan)} users</p>
+                <p style="font-size:22px;font-weight:800;color:var(--text);margin-top:6px">${Number(count || 0)}</p>
+              </div>
+            `).join('')}
+            <div style="background:#f8fafc;border:1px solid var(--border);border-radius:14px;padding:12px 13px">
+              <p style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">Low credits</p>
+              <p style="font-size:22px;font-weight:800;color:${Number(opsData.low_credit_users || 0) > 0 ? '#f59e0b' : 'var(--text)'};margin-top:6px">${Number(opsData.low_credit_users || 0)}</p>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
+            ${Object.entries(opsData.service_summary || {}).map(([service, info]) => `
+              <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px 13px">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+                  <span style="font-size:12px;font-weight:800;color:var(--text)">${escHtml(service)}</span>
+                  <span style="font-size:11px;color:var(--muted)">${formatDiagnosticsTime(info.lastAt)}</span>
+                </div>
+                <p style="margin-top:8px;font-size:12px;color:var(--muted)">Last event: ${escHtml(info.lastEvent || 'none')}</p>
+                <div style="display:flex;gap:8px;margin-top:10px">
+                  <span style="font-size:11px;font-weight:800;padding:4px 8px;border-radius:999px;background:#ef444418;color:#ef4444">Errors ${Number(info.errors || 0)}</span>
+                  <span style="font-size:11px;font-weight:800;padding:4px 8px;border-radius:999px;background:#f59e0b18;color:#f59e0b">Warns ${Number(info.warns || 0)}</span>
+                </div>
+              </div>
+            `).join('') || `
+              <div style="background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:12px 14px">
+                <p style="font-size:12px;color:var(--muted)">No server-side events captured in the last 24 hours.</p>
+              </div>
+            `}
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px">
+            ${(opsData.recent_events || []).map(event => `
+              <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:11px 12px">
+                <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap">
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                    <span style="font-size:11px;font-weight:800;padding:4px 8px;border-radius:999px;background:${event.level === 'error' ? '#ef444418' : event.level === 'warn' ? '#f59e0b18' : '#10b98118'};color:${event.level === 'error' ? '#ef4444' : event.level === 'warn' ? '#f59e0b' : '#10b981'};text-transform:uppercase;letter-spacing:0.05em">${escHtml(event.level)}</span>
+                    <span style="font-size:12px;font-weight:700;color:var(--text)">${escHtml(event.service)} · ${escHtml(event.event)}</span>
+                  </div>
+                  <span style="font-size:11px;color:var(--muted)">${formatDiagnosticsTime(event.created_at)}</span>
+                </div>
+                ${event.detail ? `<p style="margin-top:8px;font-size:12px;line-height:1.5;color:var(--text)">${escHtml(event.detail)}</p>` : ''}
+              </div>
+            `).join('') || `
+              <div style="background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:12px 14px">
+                <p style="font-size:12px;color:var(--muted)">No recent server-side events yet.</p>
+              </div>
+            `}
+          </div>
+        ` : ''}
+      </div>
+    </div>
+    ` : ''}
+
 
     <!-- Account -->
     <div class="settings-section">
@@ -6168,6 +6262,68 @@ async function invokeMarketDataFunction(payload) {
     throw new Error(message);
   }
   return data;
+}
+
+async function invokeOpsStatusFunction() {
+  const sb = getSupabase();
+  const { data: sessionData, error: sessionError } = await sb.auth.getSession();
+  if (sessionError) throw new Error(sessionError.message || 'Could not verify your session.');
+  const accessToken = sessionData?.session?.access_token;
+  if (!accessToken) throw new Error('Please sign in again to view system diagnostics.');
+
+  const { data, error } = await sb.functions.invoke('ops-status', {
+    body: {},
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (error) {
+    let contextMessage = '';
+    const ctx = error.context;
+    if (ctx && typeof ctx === 'object') {
+      try {
+        if (typeof ctx.clone === 'function') {
+          const cloned = ctx.clone();
+          const parsed = await cloned.json().catch(() => null);
+          if (parsed && typeof parsed === 'object') {
+            contextMessage = parsed.error || parsed.message || JSON.stringify(parsed);
+          } else if (typeof cloned.text === 'function') {
+            contextMessage = (await cloned.text()).trim();
+          }
+        }
+      } catch (_) {}
+    }
+    throw new Error(describeAppError([error.message, contextMessage].filter(Boolean).join(' ').trim(), 'System diagnostics are unavailable right now.'));
+  }
+  return data;
+}
+
+async function loadOpsStatus(force = false) {
+  if (!currentUser) return null;
+  if (!force && opsStatusState.data && (Date.now() - opsStatusState.loadedAt) < 60 * 1000) {
+    return opsStatusState.data;
+  }
+  opsStatusState.loading = true;
+  opsStatusState.error = '';
+  if (document.getElementById('tab-settings')?.classList.contains('active')) renderSettings();
+  try {
+    const data = await invokeOpsStatusFunction();
+    opsStatusState = {
+      loading: false,
+      error: '',
+      data,
+      loadedAt: Date.now(),
+    };
+    return data;
+  } catch (error) {
+    opsStatusState = {
+      loading: false,
+      error: describeAppError(error, 'System diagnostics are unavailable right now.'),
+      data: null,
+      loadedAt: Date.now(),
+    };
+    return null;
+  } finally {
+    if (document.getElementById('tab-settings')?.classList.contains('active')) renderSettings();
+  }
 }
 
 async function fetchMarketData(action, params = {}) {
@@ -6963,6 +7119,7 @@ async function doLogout() {
   localStorage.removeItem('ie_auth_token');
   pendingOtp              = null;
   currentUser            = null;
+  opsStatusState         = { loading: false, error: '', data: null, loadedAt: 0 };
   resetFinBotChat();
   dbPortfolio            = [];
   watchlistSet           = new Set();

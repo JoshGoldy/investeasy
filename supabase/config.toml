@@ -3,3 +3,6 @@ verify_jwt = false
 
 [functions.market-data]
 verify_jwt = false
+
+[functions.ops-status]
+verify_jwt = false
