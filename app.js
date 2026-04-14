@@ -2023,7 +2023,7 @@ function closeStockDetail() {
 async function loadAlertsFromDB() {
   if (!currentUser) return;
   try {
-    const d = await apiCall('data.php?action=price_alerts');
+    const d = await dataRequest('price_alerts');
     if (d.success) {
       alertsMap = {};
       d.alerts.forEach(a => {
@@ -2075,7 +2075,7 @@ async function saveAlert() {
   const target = parseFloat(document.getElementById('alert-target').value);
   if (!ticker || !target || isNaN(target)) { showToast('Enter a valid target price'); return; }
   try {
-    const d = await apiCall('data.php?action=price_alerts', 'POST', { ticker, name, target, direction: alertDirection });
+    const d = await dataRequest('price_alerts', 'POST', { ticker, name, target, direction: alertDirection });
     if (d.success) {
       if (!alertsMap[ticker]) alertsMap[ticker] = [];
       alertsMap[ticker].push({ id: d.id, ticker, name, target, direction: alertDirection, triggered: false });
@@ -2088,7 +2088,7 @@ async function saveAlert() {
 
 async function deleteAlert(id, ticker) {
   try {
-    await apiCall('data.php?action=price_alerts', 'DELETE', { id });
+    await dataRequest('price_alerts', 'DELETE', { id });
     if (alertsMap[ticker]) alertsMap[ticker] = alertsMap[ticker].filter(a => a.id !== id);
     renderAlertList(ticker);
     showToast('Alert removed');
@@ -2106,7 +2106,7 @@ function checkAlerts() {
       if (hit) {
         a.triggered = true;
         showToast(`${m.ticker} ${a.direction === 'above' ? 'crossed above' : 'dropped below'} ${fmtUnitPrice(a.target)}!`, 5000);
-        apiCall('data.php?action=price_alerts', 'PUT', { id: a.id }).catch(() => {});
+        dataRequest('price_alerts', 'PUT', { id: a.id }).catch(() => {});
       }
     });
   });
@@ -3716,7 +3716,7 @@ function getSavedReports() {
 async function loadSavedReportsFromDB() {
   dbSavedReportsLoading = true;
   try {
-    const d = await apiCall('data.php?action=saved_reports');
+    const d = await dataRequest('saved_reports');
     if (d.success && Array.isArray(d.reports)) {
       dbSavedReports = d.reports;
       updateSavedBadge();
@@ -3734,7 +3734,7 @@ async function loadSavedReportsFromDB() {
 async function persistReport(report) {
   if (currentUser) {
     try {
-      const d = await apiCall('data.php?action=saved_reports', 'POST', {
+      const d = await dataRequest('saved_reports', 'POST', {
         id:          report.id,
         modeId:      report.modeId,
         modeTitle:   report.modeTitle,
@@ -3774,7 +3774,7 @@ function localPersistReport(report) {
 async function deletePersistedReport(id) {
   if (currentUser) {
     try {
-      const d = await apiCall('data.php?action=saved_reports', 'DELETE', { id });
+      const d = await dataRequest('saved_reports', 'DELETE', { id });
       if (!d.success) throw new Error(d.error || 'Delete failed.');
       if (dbSavedReports) dbSavedReports = dbSavedReports.filter(r => r.id !== id);
     } catch(e) { showToast('Could not delete from server. Please try again.'); return false; }
@@ -3820,7 +3820,7 @@ async function clearAllSavedReports() {
   if (currentUser) {
     // Delete each from DB
     const ids = getSavedReports().map(r => r.id);
-    await Promise.all(ids.map(id => apiCall('data.php?action=saved_reports', 'DELETE', { id }).catch(() => {})));
+    await Promise.all(ids.map(id => dataRequest('saved_reports', 'DELETE', { id }).catch(() => {})));
     dbSavedReports = [];
   } else {
     localStorage.removeItem(SAVED_KEY);
@@ -4161,7 +4161,7 @@ function renderSaved(filter) {
 async function updateReport(id, fields) {
   if (currentUser && dbSavedReports !== null) {
     try {
-      const d = await apiCall('data.php?action=saved_reports', 'POST', { id, ...fields });
+      const d = await dataRequest('saved_reports', 'POST', { id, ...fields });
       if (!d.success) throw new Error(d.error || 'Update failed.');
       const r = dbSavedReports.find(r => r.id === id);
       if (r) Object.assign(r, fields);
@@ -4197,7 +4197,7 @@ async function bulkDeleteReports() {
   );
   if (!confirmed) return;
   if (currentUser) {
-    await Promise.all(ids.map(id => apiCall('data.php?action=saved_reports', 'DELETE', { id }).catch(() => {})));
+    await Promise.all(ids.map(id => dataRequest('saved_reports', 'DELETE', { id }).catch(() => {})));
     if (dbSavedReports) dbSavedReports = dbSavedReports.filter(r => !ids.includes(r.id));
   } else {
     const reports = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]').filter(r => !ids.includes(r.id));
@@ -5903,7 +5903,7 @@ async function doChangePassword() {
 
   saveBtn.disabled = true; saveBtn.textContent = 'Updating…';
   try {
-    const d = await apiCall('auth.php?action=change-password', 'POST', {
+    const d = await authRequest('change-password', 'POST', {
       current_password: current, new_password: newPass, confirm_password: confirm
     });
     if (d.success) {
@@ -6020,27 +6020,10 @@ async function invokeMarketDataFunction(payload) {
 }
 
 async function fetchMarketData(action, params = {}) {
-  if (isSupabaseConfigured()) {
-    return invokeMarketDataFunction({ action, ...params });
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase is not configured. Market data requires the Supabase "market-data" function.');
   }
-
-  const qs = new URLSearchParams();
-  qs.set('action', action);
-  Object.entries(params).forEach(([key, value]) => {
-    if (value === undefined || value === null) return;
-    qs.set(key, Array.isArray(value) ? value.join(',') : String(value));
-  });
-  const resp = await fetch(`prices.php?${qs.toString()}`);
-  return resp.json();
-}
-
-function apiAction(url) {
-  try {
-    return new URL(url, window.location.href).searchParams.get('action') || '';
-  } catch (e) {
-    const q = (url.split('?')[1] || '');
-    return new URLSearchParams(q).get('action') || '';
-  }
+  return invokeMarketDataFunction({ action, ...params });
 }
 
 function authMeta(user) {
@@ -6412,22 +6395,22 @@ function bindSupabaseAuthListener() {
   supabaseAuthListenerBound = true;
 }
 
-async function apiCall(url, method = 'GET', body = null) {
-  if (/^(auth|data)\.php/i.test(url)) {
-    if (!isSupabaseConfigured()) return { success: false, error: 'Supabase is not configured. Add your project URL and anon key to supabase-config.js.' };
-    bindSupabaseAuthListener();
-    const action = apiAction(url);
-    return url.startsWith('auth.php')
-      ? handleAuthAction(action, method, body || {})
-      : handleDataAction(action, method, body || {});
+async function authRequest(action, method = 'GET', body = {}) {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: 'Supabase is not configured. Add your project URL and anon key to supabase-config.js.' };
   }
-  const opts = { method, credentials: 'include', headers: {} };
-  if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
-  const token = localStorage.getItem('ie_auth_token');
-  if (token) opts.headers['Authorization'] = 'Bearer ' + token;
-  const r = await fetch(url, opts);
-  return r.json();
+  bindSupabaseAuthListener();
+  return handleAuthAction(action, method, body);
 }
+
+async function dataRequest(action, method = 'GET', body = {}) {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: 'Supabase is not configured. Add your project URL and anon key to supabase-config.js.' };
+  }
+  bindSupabaseAuthListener();
+  return handleDataAction(action, method, body);
+}
+
 
 // ── Auth overlay helpers ──────────────────────────────────────────────────────
 function showAuthTab(mode) {
@@ -6587,7 +6570,7 @@ async function checkAuth() {
     return;
   }
   try {
-    const d = await apiCall('auth.php?action=me');
+    const d = await authRequest('me');
     if (d.success) {
       currentUser = d.user;
       if (d.token) localStorage.setItem('ie_auth_token', d.token);
@@ -6607,7 +6590,7 @@ async function doLogin() {
   clearAuthError();
   setAuthLoading(true);
   try {
-    const d = await apiCall('auth.php?action=login', 'POST', { email });
+    const d = await authRequest('login', 'POST', { email });
     if (d.success) {
       setRememberPreference(remember);
       setPendingOtp({ mode: 'login', email, remember });
@@ -6635,7 +6618,7 @@ async function doRegister() {
   clearAuthError();
   setAuthLoading(true);
   try {
-    const d = await apiCall('auth.php?action=register', 'POST', { name, email, username, age });
+    const d = await authRequest('register', 'POST', { name, email, username, age });
     if (d.success) {
       setRememberPreference(remember);
       setPendingOtp({ mode: 'register', email, name, username, age, remember });
@@ -6713,7 +6696,7 @@ async function resendOtpCode() {
   setAuthLoading(true);
   try {
     const action = pendingOtp.mode === 'register' ? 'register' : 'login';
-    const d = await apiCall('auth.php?action=' + action, 'POST', {
+    const d = await authRequest(action, 'POST', {
       email: pendingOtp.email,
       name: pendingOtp.name,
       username: pendingOtp.username,
@@ -6732,7 +6715,7 @@ async function resendOtpCode() {
 
 // ── Logout ────────────────────────────────────────────────────────────────────
 async function doLogout() {
-  try { await apiCall('auth.php?action=logout', 'POST'); } catch(e) {}
+  try { await authRequest('logout', 'POST'); } catch(e) {}
   localStorage.removeItem('ie_auth_token');
   pendingOtp              = null;
   currentUser            = null;
@@ -6820,7 +6803,7 @@ async function syncAfterLogin() {
 
 async function loadSettingsFromDB() {
   try {
-    const d = await apiCall('data.php?action=settings');
+    const d = await dataRequest('settings');
     if (d.success && d.settings) {
       // Merge into localStorage so existing helpers keep working
       const merged = Object.assign(loadSettings(), d.settings);
@@ -6831,7 +6814,7 @@ async function loadSettingsFromDB() {
 
 async function loadWatchlistFromDB() {
   try {
-    const d = await apiCall('data.php?action=watchlist');
+    const d = await dataRequest('watchlist');
     if (d.success) {
       watchlistSet = new Set(d.watchlist.map(w => w.ticker));
     }
@@ -6840,7 +6823,7 @@ async function loadWatchlistFromDB() {
 
 async function loadPortfolioFromDB() {
   try {
-    const d = await apiCall('data.php?action=portfolio');
+    const d = await dataRequest('portfolio');
     if (d.success) dbPortfolio = d.portfolio;
   } catch(e) {}
 }
@@ -6848,7 +6831,7 @@ async function loadPortfolioFromDB() {
 // ── Settings DB save (called by saveSettings in background) ──────────────────
 function saveSettingsToDB(updates) {
   if (!currentUser) return;
-  apiCall('data.php?action=settings', 'POST', updates).catch(() => {});
+  dataRequest('settings', 'POST', updates).catch(() => {});
 }
 
 // ── Learn progress DB sync ────────────────────────────────────────────────────
@@ -6857,13 +6840,13 @@ function saveLearnProgressToDB() {
   if (!currentUser) return;
   clearTimeout(_learnSaveTimer);
   _learnSaveTimer = setTimeout(() => {
-    apiCall('data.php?action=learn_progress', 'POST', { state: learnState }).catch(() => {});
+    dataRequest('learn_progress', 'POST', { state: learnState }).catch(() => {});
   }, 1500);
 }
 
 async function loadLearnProgressFromDB() {
   try {
-    const d = await apiCall('data.php?action=learn_progress');
+    const d = await dataRequest('learn_progress');
     if (!d.success) return;
     const remote = d.state;
     if (remote && Object.keys(remote).length > 0) {
@@ -6903,7 +6886,7 @@ async function loadLearnProgressFromDB() {
 async function saveProfileToDB(name, email, username) {
   if (!currentUser) return true;
   try {
-    const d = await apiCall('auth.php?action=update-profile', 'POST', { name, email, username });
+    const d = await authRequest('update-profile', 'POST', { name, email, username });
     if (d.success) { currentUser = Object.assign(currentUser, d.user); return true; }
     return d.error || 'Failed to update profile.';
   } catch(e) { return 'Connection error.'; }
@@ -6914,10 +6897,10 @@ async function toggleWatchlist(ticker, name) {
   if (!currentUser) return;
   if (watchlistSet.has(ticker)) {
     watchlistSet.delete(ticker);
-    apiCall('data.php?action=watchlist', 'DELETE', { ticker }).catch(() => {});
+    dataRequest('watchlist', 'DELETE', { ticker }).catch(() => {});
   } else {
     watchlistSet.add(ticker);
-    apiCall('data.php?action=watchlist', 'POST', { ticker, name }).catch(() => {});
+    dataRequest('watchlist', 'POST', { ticker, name }).catch(() => {});
   }
   renderMarkets(currentMarketsFilter);
 }
@@ -7022,7 +7005,7 @@ async function saveHolding() {
   }
 
   try {
-    const d = await apiCall('data.php?action=portfolio', 'POST', { ticker, name, shares, avg_cost: avgCost });
+    const d = await dataRequest('portfolio', 'POST', { ticker, name, shares, avg_cost: avgCost });
     if (d.success) {
       await loadPortfolioFromDB();
       closeAddHoldingModal();
@@ -7040,7 +7023,7 @@ async function saveHolding() {
 async function removeHolding(ticker) {
   if (!confirm('Remove ' + ticker + ' from your portfolio?')) return;
   try {
-    await apiCall('data.php?action=portfolio', 'DELETE', { ticker });
+    await dataRequest('portfolio', 'DELETE', { ticker });
     await loadPortfolioFromDB();
     renderPortfolio();
   } catch(e) {}
