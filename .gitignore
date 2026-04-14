@@ -1,31 +1,29 @@
-# ── Sensitive files (NEVER commit these) ─────────────────────
+# Sensitive local files
 api.php
 db.php
 .env
 supabase/.temp/
+legacy/php-cpanel/api.php
+legacy/php-cpanel/db.php
 
-# ── Docker ────────────────────────────────────────────────────
-# Commit: Dockerfile, docker-compose.yml
-# Do NOT commit: .env (has passwords)
-
-# ── OS files ─────────────────────────────────────────────────
+# OS files
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# ── Editor files ─────────────────────────────────────────────
+# Editor files
 *.swp
 *.swo
 *~
 .vscode/
 .idea/
 
-# ── cPanel files ─────────────────────────────────────────────
+# Hosting leftovers
 .cpanel/
 .htpasswd
 error_log
 
-# ── Node / Playwright ─────────────────────────────────────────
+# Node / Playwright
 node_modules/
 package-lock.json
 test-results/

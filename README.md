@@ -105,9 +105,12 @@ Handles:
 
 ## Legacy Files
 
-The repo still contains old PHP files such as `auth.php`, `data.php`, `prices.php`, and `api.example.php` from the earlier cPanel version.
+Older deployment artifacts are now grouped under:
 
-They are now legacy reference files and are not part of the active GitHub Pages + Supabase production path.
+- `legacy/php-cpanel/`
+- `legacy/docker-local/`
+
+These files are kept only for historical reference and are not part of the active GitHub Pages + Supabase production path.
 
 ## Testing
 
