@@ -432,6 +432,8 @@ button{cursor:pointer}
 .import-port-btn{font-size:11px;font-weight:700;color:var(--green);background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:2px 0;flex-shrink:0}
 .user-chip{position:relative;cursor:pointer;border-radius:10px;padding:4px 6px;transition:background .15s}.user-chip:hover{background:var(--border)}
 .user-dropdown{position:absolute;top:calc(100% + 10px);right:0;min-width:220px;background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.3);z-index:2000;overflow:hidden;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .2s ease,transform .2s ease}
+.user-chip.open{background:var(--border)}
+.user-chip.open .user-dropdown{opacity:1;transform:translateY(0);pointer-events:auto}
 .user-chip:hover .user-dropdown,.user-chip:focus-within .user-dropdown{opacity:1;transform:translateY(0);pointer-events:auto}
 .user-dd-header{padding:14px 16px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,#0f172a,#1e293b)}
 .user-dd-name{font-size:13px;font-weight:800;color:#fff}.user-dd-email{font-size:11px;color:#64748b;margin-top:2px}
@@ -739,6 +741,8 @@ button{cursor:pointer}
   /* Header: show brand logo, less padding */
   .header{padding:0 14px;min-height:60px}
   .header-brand{display:flex}
+  .user-chip:hover .user-dropdown,.user-chip:focus-within .user-dropdown{opacity:0;transform:translateY(-8px);pointer-events:none}
+  .user-chip.open .user-dropdown{opacity:1;transform:translateY(0);pointer-events:auto}
 
   /* Stock detail: compress timeframe buttons */
   .sd-header{padding:14px 14px 10px;align-items:flex-start;gap:12px}
@@ -956,6 +960,45 @@ button{cursor:pointer}
   .nav button{padding:9px 0 6px;gap:2px;min-height:54px;justify-content:center}
   .nav button span{display:none}
   .nav button svg{width:21px;height:21px}
+  .nav button[data-tab="settings"]{display:none!important}
+  .nav button[data-tab="finbot"]{
+    position:fixed;
+    left:50%;
+    bottom:calc(env(safe-area-inset-bottom, 0px) + 66px);
+    transform:translateX(-50%);
+    width:62px;
+    height:62px;
+    min-height:62px;
+    max-width:62px;
+    border-radius:999px;
+    background:linear-gradient(135deg,#10b981,#0f766e);
+    box-shadow:0 18px 40px rgba(16,185,129,.28);
+    border:3px solid #f8f5ee;
+    padding:0;
+    z-index:1200;
+    flex:none;
+  }
+  .nav button[data-tab="finbot"] svg{width:24px;height:24px;stroke:#fff}
+  .nav button[data-tab="finbot"].active{
+    background:linear-gradient(135deg,#10b981,#0f766e);
+    border-top-color:#f8f5ee;
+    border-left-color:#f8f5ee;
+  }
+  .nav button[data-tab="finbot"]::after{
+    content:'';
+    position:absolute;
+    inset:-6px;
+    border-radius:999px;
+    border:1px solid rgba(16,185,129,.18);
+  }
+  .user-dropdown{
+    position:fixed;
+    top:68px;
+    right:10px;
+    left:auto;
+    min-width:220px;
+    max-width:min(260px,calc(100vw - 20px));
+  }
 
   .section-title{flex-direction:column;align-items:flex-start;gap:8px}
   .section-title h2{font-size:17px}
@@ -1028,6 +1071,7 @@ button{cursor:pointer}
   .header-brand-name{font-size:13px}
   .header-right{gap:6px}
   .user-chip{padding:0}
+  .nav button[data-tab="finbot"]{width:58px;height:58px;min-height:58px;max-width:58px;bottom:calc(env(safe-area-inset-bottom, 0px) + 64px)}
   .finbot-chat-categories{grid-template-columns:1fr}
   .market-grid{grid-template-columns:1fr 1fr}
 }
