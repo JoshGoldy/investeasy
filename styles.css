@@ -92,6 +92,9 @@ button{cursor:pointer}
 .section-title{padding:10px 0 18px}
 .section-title h2{font-size:22px;font-weight:800;color:var(--text)}
 .section-title p{margin-top:6px;font-size:14px;color:var(--muted)}
+.section-title-inline{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.section-title-inline > div:first-child{min-width:0}
+.news-head-actions{flex-shrink:0}
 .ui-icon{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;color:currentColor}
 .ui-icon svg{width:1em;height:1em;display:block}
 .inline-icon{margin-right:6px}
@@ -183,6 +186,9 @@ button{cursor:pointer}
 .market-tile .name{font-weight:700;font-size:13px;color:var(--text);margin:2px 0 1px}
 .market-tile .price{font-family:var(--mono);font-weight:500;font-size:14px;color:var(--text)}
 .market-tile .bottom{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.market-star-btn{background:none;border:none;cursor:pointer;font-size:18px;line-height:1;padding:2px;color:#c9b78f;transition:transform .15s,color .15s}
+.market-star-btn.active{color:#f59e0b}
+.market-star-btn:hover{transform:scale(1.08)}
 .mini-chart{width:64px;height:32px}
 
 /* ── STOCK DETAIL ─────────────────────────────────────────────── */
@@ -1005,6 +1011,8 @@ button{cursor:pointer}
   }
 
   .section-title{flex-direction:column;align-items:flex-start;gap:8px}
+  .section-title-inline{flex-direction:row;align-items:flex-start}
+  .news-head-actions{justify-content:flex-end;align-self:flex-start}
   .section-title h2{font-size:17px}
   .section-title p{font-size:12px}
   .filter-row,.time-range-row{padding-bottom:6px}
@@ -1053,10 +1061,10 @@ button{cursor:pointer}
   .edit-profile-btn{width:100%}
   .profile-name,.profile-email{white-space:normal;overflow:visible;text-overflow:unset}
   .settings-group{border-radius:16px}
-  .settings-row{flex-direction:column;align-items:flex-start}
-  .settings-row-left{width:100%}
-  .settings-select,.settings-value{width:100%;max-width:none;text-align:left}
-  .toggle{align-self:flex-end}
+  .settings-row{flex-direction:row;align-items:center;gap:12px}
+  .settings-row-left{width:auto;flex:1;min-width:0}
+  .settings-select,.settings-value{width:auto;max-width:150px;text-align:right;flex-shrink:0}
+  .toggle{align-self:center;flex-shrink:0}
 
   .modal-sheet{padding:18px 16px 30px;max-height:92vh}
   .holding-form-row{grid-template-columns:1fr}

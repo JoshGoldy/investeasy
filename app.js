@@ -977,9 +977,9 @@ function renderNews(filter, search) {
   const alertCount = newsAlertMatches.size;
 
   el.innerHTML = `
-    <div class="section-title" style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div class="section-title section-title-inline" style="display:flex;justify-content:space-between;align-items:flex-start">
       <div><h2>News Feed</h2><p>Live market insights & analysis</p></div>
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+      <div class="news-head-actions" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
         <button onclick="openNewsAlertsModal()" title="Manage alerts"
           style="position:relative;display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--radius-xs);
                  background:${alertCount>0?'#ef444418':'var(--border)'};color:${alertCount>0?'var(--red)':'var(--muted)'};
@@ -1802,8 +1802,9 @@ function renderMarkets(filter) {
 
         const starBtn = currentUser && !compareMode
           ? `<button onclick="event.stopPropagation();toggleWatchlist('${m.ticker}','${m.name.replace(/'/g,"\\'")}')"
-               style="position:absolute;top:8px;right:8px;background:none;font-size:15px;line-height:1;padding:2px"
-               title="${starred?'Remove from watchlist':'Add to watchlist'}">${iconMarkup('star')}</button>`
+               class="market-star-btn ${starred ? 'active' : ''}"
+               style="position:absolute;top:8px;right:8px"
+               title="${starred?'Remove from watchlist':'Add to watchlist'}">${starred ? '★' : '☆'}</button>`
           : '';
         const bellBtn = currentUser && !compareMode
           ? `<button class="alert-bell${hasAlert?' active':''}" onclick="event.stopPropagation();openAlertModal('${m.ticker}','${m.name.replace(/'/g,"\\'")}',${m.val})"
