@@ -741,9 +741,13 @@ button{cursor:pointer}
   .header-brand{display:flex}
 
   /* Stock detail: compress timeframe buttons */
+  .sd-header{padding:14px 14px 10px;align-items:flex-start;gap:12px}
+  .sd-header>div:first-child{min-width:0;flex:1}
+  .sd-header>div:last-child{flex-shrink:0}
   .sd-timeframes{gap:5px;padding:10px 12px}
   .tf-btn{padding:6px 12px;font-size:11px}
   .sd-stats{padding:6px 12px 4px}
+  .whatif-box{margin:0 12px 16px}
 
   /* Glossary: stack term above definition */
   .glossary-item{grid-template-columns:1fr;gap:2px}
@@ -764,6 +768,12 @@ button{cursor:pointer}
   /* Auth popup: full width on small screens */
   .auth-overlay{padding:12px}
   .auth-popup{border-radius:18px;padding:20px 16px 16px}
+
+  /* Settings: let rows wrap instead of squeezing */
+  .profile-card{padding:16px}
+  .settings-row{align-items:flex-start}
+  .settings-row-left{min-width:0}
+  .settings-select{max-width:150px}
 }
 
 /* ── SECTOR BAR ───────────────────────────────────────────────── */
@@ -931,7 +941,73 @@ button{cursor:pointer}
 .finbot-chat-thinking span:nth-child(2){animation-delay:.15s}
 .finbot-chat-thinking span:nth-child(3){animation-delay:.3s}
 @media (max-width: 640px){
+  .header{padding:0 10px}
+  .header-brand-name{font-size:14px}
+  .header-right{gap:8px}
+  .nav{padding:4px 2px calc(env(safe-area-inset-bottom, 0px) + 8px)}
+  .nav button{padding:8px 2px 5px}
+  .nav button span{font-size:9px}
+
+  .section-title{flex-direction:column;align-items:flex-start;gap:8px}
+  .section-title h2{font-size:17px}
+  .section-title p{font-size:12px}
+  .filter-row,.time-range-row{padding-bottom:6px}
+
+  .featured-grid{grid-template-columns:1fr}
+  .market-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .market-tile{padding:12px 12px 10px}
+  .market-tile .name{font-size:12px}
+  .market-tile .price{font-size:13px}
+
+  .stock-detail{padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 10px)}
+  .sd-header{flex-direction:column;align-items:flex-start}
+  .sd-header>div:last-child{text-align:left;width:100%}
+  .sd-chart{height:240px}
+  .sd-timeframes{justify-content:flex-start;overflow-x:auto;scrollbar-width:none}
+  .sd-timeframes::-webkit-scrollbar{display:none}
+  .sd-stats{grid-template-columns:1fr 1fr}
+  .stat-box{padding:10px 8px}
+  .stat-box .val{font-size:12px}
+  .whatif-row{flex-direction:column;align-items:stretch}
+  .whatif-btn{width:100%}
+
+  .auth-overlay{padding:8px}
+  .auth-popup{max-height:calc(100vh - 16px);padding:18px 14px 14px}
+  .auth-card{padding:16px}
+  .auth-tabs{margin-bottom:14px}
+  .auth-tab{font-size:11px;padding:8px 6px}
+  .auth-otp-box{font-size:19px;letter-spacing:.28em;padding:14px 12px}
+
   .finbot-chat-head{flex-direction:column}
   .finbot-chat-credit{align-self:flex-start}
   .finbot-chat-starters{grid-template-columns:1fr}
+  .finbot-chat-card{padding:14px}
+  .finbot-chat-categories{margin-bottom:8px}
+  .finbot-chat-body{max-height:280px}
+  .finbot-chat-msg{gap:8px}
+  .finbot-chat-avatar{width:28px;height:28px;border-radius:10px}
+  .finbot-chat-bubble{max-width:100%;padding:10px 12px;font-size:12px}
+  .finbot-chat-actions{flex-direction:column;align-items:stretch}
+  .finbot-chat-send{width:100%}
+  .finbot-chat-credits-left{text-align:center}
+
+  .profile-card{flex-direction:column;align-items:flex-start}
+  .edit-profile-btn{width:100%}
+  .profile-name,.profile-email{white-space:normal;overflow:visible;text-overflow:unset}
+  .settings-group{border-radius:16px}
+  .settings-row{flex-direction:column;align-items:flex-start}
+  .settings-row-left{width:100%}
+  .settings-select,.settings-value{width:100%;max-width:none;text-align:left}
+  .toggle{align-self:flex-end}
+
+  .modal-sheet{padding:18px 16px 30px;max-height:92vh}
+  .holding-form-row{grid-template-columns:1fr}
+  .modal-save-btn,.modal-cancel,.danger-btn{padding:14px}
+
+  .dashboard-panel,.port-hero,.alloc-card,.holding-card,.port-perf-card,.pnl-bars-card{padding:16px}
+  .dashboard-panel-header{flex-direction:column;align-items:flex-start}
+  .portfolio-bars{height:190px;gap:10px}
+  .portfolio-bar-track{height:145px}
+  .learn-grid{grid-template-columns:1fr}
+  .learn-nav-btns{flex-direction:column}
 }
