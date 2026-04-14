@@ -43,9 +43,10 @@ Market data calls go through `supabase.functions.invoke('market-data')`.
 
 ### Abuse protection
 
-This repo now includes a Supabase migration for shared function throttling:
+This repo now includes Supabase migrations for shared function throttling and event logs:
 
-- [20260415_function_rate_limits.sql](C:/Users/joshu/Desktop/investeasy/supabase/migrations/20260415_function_rate_limits.sql)
+- [202604150001_function_rate_limits.sql](C:/Users/joshu/Desktop/investeasy/supabase/migrations/202604150001_function_rate_limits.sql)
+- [202604150002_function_event_logs.sql](C:/Users/joshu/Desktop/investeasy/supabase/migrations/202604150002_function_event_logs.sql)
 
 Apply it before deploying or redeploying the functions:
 
@@ -58,6 +59,20 @@ Current protections:
 - `finbot`: authenticated user-based limits by request type
 - `market-data`: IP-based limits by action
 - `article` extraction: restricted to supported finance/news domains
+- structured server-side event logs for throttles, upstream errors, and request failures
+
+### Server-side logs
+
+Function events are written to:
+
+- `public.function_event_logs`
+
+That gives you a simple place to inspect:
+
+- rate-limited requests
+- upstream API failures
+- invalid payload attempts
+- FinBot credit/auth problems
 
 ### Token budgets by mode
 

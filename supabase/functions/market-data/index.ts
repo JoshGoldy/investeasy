@@ -208,6 +208,29 @@ async function consumeRateLimit(action: string, subject: string) {
   return null;
 }
 
+async function logFunctionEvent(
+  service: string,
+  level: string,
+  subject: string | null,
+  event: string,
+  detail?: string,
+  meta: Record<string, unknown> = {},
+) {
+  try {
+    const adminClient = await createAdminClient();
+    await adminClient.rpc("log_function_event", {
+      p_service: service,
+      p_level: level,
+      p_subject: subject,
+      p_event: event,
+      p_detail: detail ?? null,
+      p_meta: meta,
+    });
+  } catch (_) {
+    // Logging should stay best-effort.
+  }
+}
+
 async function fetchJson(url: string, init?: RequestInit) {
   const resp = await fetch(url, init);
   if (!resp.ok) throw new Error(`Upstream request failed with ${resp.status}`);
@@ -576,8 +599,15 @@ Deno.serve(async (req) => {
     const payload = await req.json();
     const action = String(payload?.action || "").trim();
     const ip = getClientIp(req);
-    const throttleResponse = await consumeRateLimit(action, `${ip}:${action}`);
-    if (throttleResponse) return throttleResponse;
+    const throttleResponse = await consumeRateLimit(action, `${ip}:${action}`).catch(async (error) => {
+      const message = error instanceof Error ? error.message : "Rate limit check failed.";
+      await logFunctionEvent("market-data", "error", ip, "rate_limit_check_failed", message, { action });
+      throw error;
+    });
+    if (throttleResponse) {
+      await logFunctionEvent("market-data", "warn", ip, "rate_limited", "Public market-data rate limit reached", { action });
+      return throttleResponse;
+    }
 
     if (action === "quotes") return await handleQuotes(payload?.tickers);
     if (action === "chart") return await handleChart(String(payload?.ticker || "").trim(), String(payload?.tf || "1M"));
@@ -589,8 +619,11 @@ Deno.serve(async (req) => {
       return await handleCalendar(from, to);
     }
 
+    await logFunctionEvent("market-data", "warn", ip, "unknown_action", "Unknown market-data action requested", { action });
     return json({ error: "Unknown action." }, 400);
   } catch (error) {
-    return json({ error: error instanceof Error ? error.message : "Unexpected server error." }, 500);
+    const message = error instanceof Error ? error.message : "Unexpected server error.";
+    await logFunctionEvent("market-data", "error", getClientIp(req), "request_failed", message);
+    return json({ error: message }, 500);
   }
 });

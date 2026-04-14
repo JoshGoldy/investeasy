@@ -74,6 +74,29 @@ async function consumeRateLimit(
   }
 }
 
+async function logFunctionEvent(
+  adminClient: ReturnType<typeof createClient>,
+  service: string,
+  level: string,
+  subject: string | null,
+  event: string,
+  detail?: string,
+  meta: Record<string, unknown> = {},
+) {
+  try {
+    await adminClient.rpc("log_function_event", {
+      p_service: service,
+      p_level: level,
+      p_subject: subject,
+      p_event: event,
+      p_detail: detail ?? null,
+      p_meta: meta,
+    });
+  } catch (_) {
+    // Logging should never block a user-facing response.
+  }
+}
+
 function getPromptBody(payload: Record<string, unknown>) {
   if (payload.request_type === "chat") {
     const latest = trimText(payload.prompt || payload.user || payload.message || "", 1800);
@@ -142,6 +165,7 @@ Deno.serve(async (req) => {
 
     const { data: authData, error: authError } = await userClient.auth.getUser();
     if (authError || !authData.user) {
+      await logFunctionEvent(adminClient, "finbot", "warn", null, "auth_failed", authError?.message || "Missing authenticated user");
       return json({ error: "Please sign in to use FinBot." }, 401);
     }
 
@@ -154,12 +178,15 @@ Deno.serve(async (req) => {
     const maxTokens = MODE_TOKEN_LIMITS[mode] ?? MODE_TOKEN_LIMITS[requestType] ?? 2600;
     const lastMessage = prompt.messages?.[prompt.messages.length - 1]?.content || "";
     if (!lastMessage) {
+      await logFunctionEvent(adminClient, "finbot", "warn", authData.user.id, "invalid_request", "Missing prompt", { requestType, mode });
       return json({ error: "No prompt was provided." }, 400);
     }
     if (lastMessage.length < 8) {
+      await logFunctionEvent(adminClient, "finbot", "warn", authData.user.id, "invalid_request", "Prompt too short", { requestType, mode });
       return json({ error: "Please provide a bit more detail so FinBot can help." }, 400);
     }
     if (Array.isArray(payload.history) && payload.history.length > 20) {
+      await logFunctionEvent(adminClient, "finbot", "warn", authData.user.id, "invalid_request", "History too long", { historyLength: payload.history.length, requestType, mode });
       return json({ error: "Chat history is too long. Start a fresh conversation and try again." }, 400);
     }
 
@@ -170,11 +197,13 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (profileError) {
+      await logFunctionEvent(adminClient, "finbot", "error", authData.user.id, "profile_lookup_failed", profileError.message);
       return json({ error: profileError.message }, 500);
     }
 
     const tier = String(currentProfile?.tier || "free");
     if (tier === "free") {
+      await logFunctionEvent(adminClient, "finbot", "info", authData.user.id, "upgrade_required", "Free tier attempted FinBot access", { requestType, mode });
       return json({
         error: "FinBot requires a Pro or Enterprise plan.",
         code: "upgrade_required",
@@ -193,11 +222,13 @@ Deno.serve(async (req) => {
         .update({ finbot_credits: creditsRemaining, credits_reset_at: creditsResetAt })
         .eq("id", authData.user.id);
       if (resetError) {
+        await logFunctionEvent(adminClient, "finbot", "error", authData.user.id, "credit_reset_failed", resetError.message);
         return json({ error: resetError.message }, 500);
       }
     }
 
     if (creditsRemaining < cost) {
+      await logFunctionEvent(adminClient, "finbot", "info", authData.user.id, "insufficient_credits", "Request blocked due to insufficient credits", { creditsRemaining, cost, requestType, mode });
       return json({
         error: "Insufficient credits. Please upgrade your plan or contact support.",
         code: "no_credits",
@@ -211,7 +242,11 @@ Deno.serve(async (req) => {
       authData.user.id,
       rateLimit.limit,
       rateLimit.windowSeconds,
-    );
+    ).catch(async (error) => {
+      const message = error instanceof Error ? error.message : "Rate limit reached.";
+      await logFunctionEvent(adminClient, "finbot", "warn", authData.user.id, "rate_limited", message, { requestType, mode });
+      throw error;
+    });
 
     const anthropicResp = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -231,6 +266,11 @@ Deno.serve(async (req) => {
     const anthropicData = await anthropicResp.json();
     if (!anthropicResp.ok) {
       const apiError = anthropicData?.error?.message || anthropicData?.error || "Anthropic request failed.";
+      await logFunctionEvent(adminClient, "finbot", "error", authData.user.id, "anthropic_error", String(apiError), {
+        requestType,
+        mode,
+        status: anthropicResp.status,
+      });
       return json({ error: String(apiError) }, 502);
     }
 
@@ -243,6 +283,7 @@ Deno.serve(async (req) => {
       : "";
 
     if (!text) {
+      await logFunctionEvent(adminClient, "finbot", "error", authData.user.id, "empty_response", "Anthropic returned no text", { requestType, mode });
       return json({ error: "FinBot returned an empty response." }, 502);
     }
 
@@ -253,8 +294,16 @@ Deno.serve(async (req) => {
       .eq("id", authData.user.id);
 
     if (debitError) {
+      await logFunctionEvent(adminClient, "finbot", "error", authData.user.id, "credit_debit_failed", debitError.message, { requestType, mode });
       return json({ error: debitError.message }, 500);
     }
+
+    await logFunctionEvent(adminClient, "finbot", "info", authData.user.id, "request_succeeded", `Processed ${requestType}`, {
+      requestType,
+      mode,
+      cost,
+      creditsRemaining,
+    });
 
     return json({
       success: true,

@@ -105,6 +105,7 @@ Handles:
 - article extraction
 - calendar events
 - IP-based rate limiting and safer article source allowlisting
+- server-side event logging for failures and throttles
 
 ## Legacy Files
 
