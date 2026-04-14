@@ -121,8 +121,8 @@ const NAME_MAP: Record<string, string> = {
   CAT: "Caterpillar",
 };
 
-const CHART_CONFIG: Record<string, { interval: string; range: string }> = {
-  "1D": { interval: "5m", range: "1d" },
+const CHART_CONFIG: Record<string, { interval: string; range: string; trailingSeconds?: number }> = {
+  "1D": { interval: "15m", range: "5d", trailingSeconds: 24 * 60 * 60 },
   "1W": { interval: "60m", range: "5d" },
   "1M": { interval: "1d", range: "1mo" },
   "3M": { interval: "1d", range: "3mo" },
@@ -226,6 +226,12 @@ async function handleChart(ticker: string, tf: string) {
   for (let i = 0; i < Math.min(closes.length, timestamps.length); i++) {
     if (closes[i] == null) continue;
     points.push({ time: Number(timestamps[i]), value: Number(Number(closes[i]).toFixed(4)) });
+  }
+  if (cfg.trailingSeconds && points.length) {
+    const latest = Number(points[points.length - 1].time || 0);
+    const cutoff = latest - cfg.trailingSeconds;
+    const trimmed = points.filter((point) => Number(point.time || 0) >= cutoff);
+    if (trimmed.length > 1) points.splice(0, points.length, ...trimmed);
   }
   return json({ success: true, points });
 }
