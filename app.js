@@ -6152,9 +6152,59 @@ async function doChangePassword() {
 }
 
 function promptSectors() {
+  ensurePreferredSectorsModal();
   const s = loadSettings();
-  const val = prompt('Enter preferred sectors (e.g. Tech, Finance, Healthcare):', s.defaultSectors);
-  if (val !== null) saveSettings({ defaultSectors: val.trim() });
+  const input = document.getElementById('preferred-sectors-input');
+  if (input) input.value = s.defaultSectors || '';
+  document.getElementById('preferred-sectors-modal')?.classList.remove('hidden');
+  setTimeout(() => input?.focus(), 30);
+}
+
+function ensurePreferredSectorsModal() {
+  if (document.getElementById('preferred-sectors-modal')) return;
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = `
+    <div id="preferred-sectors-modal" class="modal-overlay hidden" onclick="if(event.target===this)closePreferredSectorsModal()">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <p class="modal-title">Preferred Sectors</p>
+        <div class="modal-field">
+          <label class="form-label">Tell FinBot what you like to focus on</label>
+          <textarea id="preferred-sectors-input" class="form-textarea" rows="4"
+            placeholder="Tech, Finance, Healthcare"
+            onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter')savePreferredSectors()"></textarea>
+          <p class="form-hint">Use commas to separate sectors. Example: Tech, Finance, Healthcare</p>
+        </div>
+        <div id="preferred-sectors-error" class="auth-error"></div>
+        <button class="modal-save-btn" onclick="savePreferredSectors()">Save Sectors</button>
+        <button class="modal-cancel" onclick="closePreferredSectorsModal()">Cancel</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrapper.firstElementChild);
+}
+
+function closePreferredSectorsModal() {
+  document.getElementById('preferred-sectors-modal')?.classList.add('hidden');
+}
+
+function savePreferredSectors() {
+  const input = document.getElementById('preferred-sectors-input');
+  const errorEl = document.getElementById('preferred-sectors-error');
+  const value = (input?.value || '').trim();
+  if (value.length > 160) {
+    if (errorEl) {
+      errorEl.textContent = 'Please keep preferred sectors under 160 characters.';
+      errorEl.classList.add('show');
+    }
+    return;
+  }
+  if (errorEl) {
+    errorEl.textContent = '';
+    errorEl.classList.remove('show');
+  }
+  saveSettings({ defaultSectors: value });
+  closePreferredSectorsModal();
 }
 
 function resetAllSettings() {

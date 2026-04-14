@@ -944,6 +944,11 @@ button{cursor:pointer}
   .header{padding:0 10px}
   .header-brand-name{font-size:14px}
   .header-right{gap:8px}
+  .header-right > *{min-width:0}
+  .user-chip{padding:2px 4px}
+  #header-username-text{font-size:12px}
+  #header-tier-badge{font-size:9px!important;padding:2px 6px!important;margin-left:2px!important}
+  #header-credits{font-size:10px!important;padding:5px 8px!important}
   .nav{padding:4px 2px calc(env(safe-area-inset-bottom, 0px) + 8px)}
   .nav button{padding:8px 2px 5px}
   .nav button span{font-size:9px}
@@ -980,6 +985,8 @@ button{cursor:pointer}
 
   .finbot-chat-head{flex-direction:column}
   .finbot-chat-credit{align-self:flex-start}
+  .finbot-chat-categories{display:grid;grid-template-columns:1fr 1fr;overflow:visible}
+  .finbot-chat-category{min-width:0;text-align:center}
   .finbot-chat-starters{grid-template-columns:1fr}
   .finbot-chat-card{padding:14px}
   .finbot-chat-categories{margin-bottom:8px}
@@ -1010,4 +1017,12 @@ button{cursor:pointer}
   .portfolio-bar-track{height:145px}
   .learn-grid{grid-template-columns:1fr}
   .learn-nav-btns{flex-direction:column}
+}
+
+@media (max-width: 420px){
+  .header{padding:0 8px}
+  .header-brand-name{font-size:13px}
+  #header-credits{font-size:9px!important;padding:4px 7px!important}
+  .finbot-chat-categories{grid-template-columns:1fr}
+  .market-grid{grid-template-columns:1fr 1fr}
 }
