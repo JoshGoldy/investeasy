@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "test:smoke": "playwright test tests/e2e/smoke.spec.js",
+    "test:smoke:headed": "playwright test tests/e2e/smoke.spec.js --headed"
+  },
   "devDependencies": {
     "@playwright/test": "^1.56.0"
   }

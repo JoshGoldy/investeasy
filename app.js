@@ -16,6 +16,11 @@ let compareChart  = null;          // LW chart instance for compare overlay
 let activeIndicators = new Set();  // 'rsi' | 'macd' | 'boll'
 let indicatorCharts  = {};         // { rsi: chart, macd: chart }
 let alertDirection = 'above';      // current alert modal direction
+let newsLoadState = 'idle';
+let newsLoadError = '';
+let marketsLoadError = '';
+let calendarLoadError = '';
+let transientErrorNotices = {};
 let portSort   = 'value';          // 'value' | 'pnl_pct' | 'ticker'
 let portFilter = 'all';            // 'all' | 'gainers' | 'losers'
 const TAB_PAGE_MAP = {
@@ -802,8 +807,10 @@ async function fetchNewsClientSide() {
 async function fetchLiveNews(force = false) {
   const now = Date.now();
   if (!force && liveNews.length && (now - newsLastFetched) < 5 * 60 * 1000) return;
+  newsLoadState = 'loading';
+  newsLoadError = '';
 
-  // 1. Try server-side PHP (works when server has outbound internet access)
+  // 1. Try Supabase market-data function
   try {
     const d = await fetchMarketData('news', { count: 30 });
     if (d.success && d.articles && d.articles.length) {
@@ -811,6 +818,7 @@ async function fetchLiveNews(force = false) {
       liveNews = d.articles.filter(a => (a.pubTime || 0) >= cutoff72h).slice(0, 30);
       newsLastFetched = now;
       newsFetchedAt = new Date();
+      newsLoadState = 'ready';
       checkNewsAlertsForArticles(liveNews);
       renderNewsContent();
       return;
@@ -824,10 +832,15 @@ async function fetchLiveNews(force = false) {
       liveNews = articles;
       newsLastFetched = now;
       newsFetchedAt = new Date();
+      newsLoadState = 'ready';
       checkNewsAlertsForArticles(liveNews);
+      renderNewsContent();
+      return;
     }
   } catch(e) {}
 
+  newsLoadState = 'error';
+  newsLoadError = 'Live news is temporarily unavailable. Please try refreshing in a moment.';
   renderNewsContent();
 }
 
@@ -907,6 +920,15 @@ function showNewsSkeletons() {
 function renderNewsContent() {
   const c = document.getElementById('news-articles-container');
   if (!c) return;
+  if (!liveNews.length && newsLoadState === 'error' && !newsShowBookmarks) {
+    c.innerHTML = `
+      <div class="error-box" style="margin-top:8px">
+        <p style="font-weight:700;font-size:14px;color:#dc2626">News Unavailable</p>
+        <p style="margin:6px 0 12px;font-size:13px;color:#b91c1c;line-height:1.5">${escHtml(newsLoadError)}</p>
+        <button onclick="refreshNews()" style="background:var(--dark);color:#fff;border-radius:10px;padding:10px 18px;font-weight:700;font-size:13px">Retry News Feed</button>
+      </div>`;
+    return;
+  }
   if (!liveNews.length && !newsShowBookmarks) {
     c.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--faint);font-size:13px">Loading latest news…</div>';
     return;
@@ -1359,11 +1381,12 @@ Keep the tone professional but accessible. Use Markdown formatting. End with exa
     finbotNewsState.result = text;
     renderFinBotNewsResult(idx, text, articleLink, n);
   } catch (e) {
+    const message = describeAppError(e, 'Please try again.');
     content.innerHTML = `
       <div style="padding:20px">
         <div class="error-box">
           <p style="font-weight:700;font-size:14px;color:#dc2626">Analysis Failed</p>
-          <p style="margin:6px 0 12px;font-size:13px;color:#b91c1c;line-height:1.5">${escHtml(e.message || 'Please try again.')}</p>
+          <p style="margin:6px 0 12px;font-size:13px;color:#b91c1c;line-height:1.5">${escHtml(message)}</p>
           <button onclick="analyzeArticleWithFinBot(${idx})"
             style="background:var(--dark);color:#fff;border-radius:10px;padding:10px 20px;font-weight:700;font-size:13px">
             Retry
@@ -1562,6 +1585,13 @@ function renderMarkets(filter) {
       </button>
     </div>
 
+    ${marketsLoadError ? `
+      <div class="error-box" style="margin-bottom:12px;background:#f59e0b12;border-color:#f59e0b44">
+        <p style="font-weight:700;font-size:14px;color:#f59e0b">Live Market Data Delayed</p>
+        <p style="margin:6px 0 0;font-size:13px;color:#fbbf24;line-height:1.5">${escHtml(marketsLoadError)}</p>
+      </div>
+    ` : ''}
+
     <!-- Sector Performance Bar -->
     <div class="sector-bar">
       ${sectorPerf.map(({sector, avg}) => {
@@ -1724,7 +1754,8 @@ async function fetchLivePrices() {
   const tickers = MARKETS.map(m => m.ticker).join(',');
   try {
     const d = await fetchMarketData('quotes', { tickers });
-    if (!d.success) return;
+    if (!d.success) throw new Error(d.error || 'Live quotes are unavailable right now.');
+    marketsLoadError = '';
     let updated = false;
     MARKETS.forEach(m => {
       const q = d.quotes[m.ticker];
@@ -1741,12 +1772,18 @@ async function fetchLivePrices() {
       }
     });
     if (updated) {
+      marketsLoadError = '';
       const tab = document.getElementById('tab-markets');
       if (tab && tab.classList.contains('active')) renderMarkets();
       checkAlerts();
     }
     renderNavPulse();
-  } catch(e) { /* keep generated data on error */ }
+  } catch(e) {
+    marketsLoadError = 'Live prices are temporarily unavailable. Showing the last known market snapshot.';
+    const tab = document.getElementById('tab-markets');
+    if (tab && tab.classList.contains('active')) renderMarkets();
+    showTransientErrorNotice('market-prices', describeAppError(e, marketsLoadError));
+  }
 }
 
 async function fetchLiveChart(ticker, tf, callback) {
@@ -1926,6 +1963,7 @@ function openStockDetail(idx) {
       if (detailChart) detailChart.remove();
       detailChart = createFullChart(el, convertChartData(stock.charts['1D']), color, 300);
     }
+    syncStockDetailSummary(stock, stock.charts['1D']);
     // Replace with live data as soon as it arrives
     fetchLiveChart(stock.ticker, '1D', points => {
       // Sanity-check against the known initial price (not stock.val which may itself be wrong).
@@ -3147,7 +3185,7 @@ async function runFinBot(modeId) {
     }
     finbotState.result = data.text ?? '';
   } catch (e) {
-    finbotState.error = e.message || 'Analysis failed. Please try again.';
+    finbotState.error = describeAppError(e, 'Analysis failed. Please try again.');
   }
 
   finbotState.loading = false;
@@ -3697,7 +3735,13 @@ function renderFinBot() {
           ${pillsHtml('techPos', [{k:'none',l:'No Position'},{k:'Long',e:'📈',l:'Currently Long'},{k:'Short',e:'📉',l:'Currently Short'}])}</div>
         <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
         <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!finbotForm.techTicker.trim()?'disabled':''} onclick="confirmAndRunFinBot('technical')">Run Technical Analysis →</button>
-      </div>`;
+      </div>
+      ${!isLive && calendarLoadError ? `
+        <div class="error-box" style="margin-bottom:14px;background:#f59e0b12;border-color:#f59e0b44">
+          <p style="font-weight:700;font-size:14px;color:#f59e0b">Calendar Data Delayed</p>
+          <p style="margin:6px 0 0;font-size:13px;color:#fbbf24;line-height:1.5">${escHtml(calendarLoadError)}</p>
+        </div>
+      ` : ''}`;
   }
   scheduleUiIconRefresh(el);
 }
@@ -5987,7 +6031,7 @@ async function invokeFinBotFunction(payload) {
     if (lowered.includes('404') || lowered.includes('failed to send a request')) {
       throw new Error('FinBot is not deployed yet. Deploy the Supabase "finbot" Edge Function first.');
     }
-    throw new Error(rawMessage || 'FinBot is unavailable right now.');
+    throw new Error(describeAppError(rawMessage, 'FinBot is unavailable right now.'));
   }
   if (!data || typeof data !== 'object') {
     throw new Error('FinBot returned an invalid response.');
@@ -6014,7 +6058,7 @@ async function invokeMarketDataFunction(payload) {
         }
       } catch (_) {}
     }
-    throw new Error([error.message, contextMessage].filter(Boolean).join(' ').trim() || 'Market data is unavailable right now.');
+    throw new Error(describeAppError([error.message, contextMessage].filter(Boolean).join(' ').trim(), 'Market data is unavailable right now.'));
   }
   return data;
 }
@@ -6136,6 +6180,63 @@ function settingsToDb(updates = {}) {
   if ('defaultHorizon' in updates) mapped.default_horizon = updates.defaultHorizon;
   if ('defaultSectors' in updates) mapped.default_sectors = updates.defaultSectors;
   return mapped;
+}
+
+function describeAppError(error, fallback = 'Something went wrong. Please try again.') {
+  const raw = typeof error === 'string' ? error : (error?.message || '');
+  if (!raw) return fallback;
+  const msg = raw.trim();
+  const lower = msg.toLowerCase();
+
+  if (lower.includes('failed to fetch') || lower.includes('networkerror')) {
+    return 'Network connection issue. Please check your internet connection and try again.';
+  }
+  if (lower.includes('invalid jwt') || lower.includes('jwt')) {
+    return 'Your session has expired. Please sign in again and retry.';
+  }
+  if (lower.includes('not configured')) {
+    return 'This feature is not configured correctly yet. Please try again later.';
+  }
+  if (lower.includes('rate limit')) {
+    return 'That request is being rate limited right now. Please wait a moment and try again.';
+  }
+  return msg || fallback;
+}
+
+function showTransientErrorNotice(key, message, cooldownMs = 120000) {
+  const now = Date.now();
+  if ((transientErrorNotices[key] || 0) + cooldownMs > now) return;
+  transientErrorNotices[key] = now;
+  showToast(message, 3200);
+}
+
+const DIAGNOSTICS_KEY = 'fs_diagnostics';
+
+function getDiagnosticsLog() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(DIAGNOSTICS_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function logAppIssue(service, error, severity = 'error') {
+  const message = describeAppError(error);
+  const entry = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    service,
+    severity,
+    message,
+    at: Date.now(),
+  };
+  const next = [entry, ...getDiagnosticsLog()].slice(0, 20);
+  try { localStorage.setItem(DIAGNOSTICS_KEY, JSON.stringify(next)); } catch (_) {}
+}
+
+function clearDiagnosticsLog() {
+  localStorage.removeItem(DIAGNOSTICS_KEY);
+  if (document.getElementById('tab-settings')?.classList.contains('active')) renderSettings();
 }
 
 async function handleAuthAction(action, method, body) {
@@ -6539,11 +6640,20 @@ function getRememberChoice(mode = 'login') {
   const el = document.getElementById(id);
   return el ? !!el.checked : true;
 }
-function setAuthLoading(loading) {
+function setAuthLoading(loading, activeAction = 'all') {
   ensureOtpAuthUi();
-  ['login-btn', 'register-btn', 'otp-btn', 'otp-resend-btn'].forEach(id => {
+  const buttonStates = {
+    'login-btn': ['Send Sign-In Code', 'Sending Code…'],
+    'register-btn': ['Send Sign-Up Code', 'Sending Code…'],
+    'otp-btn': ['Verify Code', 'Verifying…'],
+    'otp-resend-btn': ['Resend Code', 'Resending…'],
+  };
+  Object.entries(buttonStates).forEach(([id, [idleText, busyText]]) => {
     const el = document.getElementById(id);
-    if (el) el.disabled = loading;
+    if (!el) return;
+    const shouldShowBusy = loading && (activeAction === 'all' || activeAction === id);
+    el.disabled = loading;
+    el.textContent = shouldShowBusy ? busyText : idleText;
   });
 }
 function setPendingOtp(payload) {
@@ -6588,7 +6698,7 @@ async function doLogin() {
   const remember = getRememberChoice('login');
   if (!email) { showAuthError('Please enter your email address.'); return; }
   clearAuthError();
-  setAuthLoading(true);
+  setAuthLoading(true, 'login-btn');
   try {
     const d = await authRequest('login', 'POST', { email });
     if (d.success) {
@@ -6597,10 +6707,10 @@ async function doLogin() {
       showAuthTab('otp');
       showAuthSuccess(d.message || 'We sent your sign-in code.');
     } else {
-      showAuthError(d.error || 'Login failed. Please try again.');
+      showAuthError(describeAppError(d.error, 'Login failed. Please try again.'));
     }
   } catch(e) {
-    showAuthError('Connection error. Please try again.');
+    showAuthError(describeAppError(e, 'Connection error. Please try again.'));
   }
   setAuthLoading(false);
 }
@@ -6616,7 +6726,7 @@ async function doRegister() {
   if (!name || !email || !username) { showAuthError('Name, email, and username are required.'); return; }
   if (age !== null && (isNaN(age) || age < 13 || age > 120)) { showAuthError('Please enter a valid age (13–120).'); return; }
   clearAuthError();
-  setAuthLoading(true);
+  setAuthLoading(true, 'register-btn');
   try {
     const d = await authRequest('register', 'POST', { name, email, username, age });
     if (d.success) {
@@ -6625,10 +6735,10 @@ async function doRegister() {
       showAuthTab('otp');
       showAuthSuccess(d.message || 'We sent your sign-up code.');
     } else {
-      showAuthError(d.error || 'Registration failed. Please try again.');
+      showAuthError(describeAppError(d.error, 'Registration failed. Please try again.'));
     }
   } catch(e) {
-    showAuthError('Connection error. Please try again.');
+    showAuthError(describeAppError(e, 'Connection error. Please try again.'));
   }
   setAuthLoading(false);
 }
@@ -6639,7 +6749,7 @@ async function verifyOtpCode() {
   if (!pendingOtp?.email) { showAuthError('Start by requesting a sign-in code first.'); return; }
   if (!/^\d{6}$/.test(code)) { showAuthError('Enter the full 6-digit code.'); return; }
   clearAuthError();
-  setAuthLoading(true);
+  setAuthLoading(true, 'otp-btn');
   try {
     const sb = getSupabase();
     const verifyTypes = pendingOtp.mode === 'register'
@@ -6663,7 +6773,7 @@ async function verifyOtpCode() {
     }
 
     if (error || !data?.user) {
-      showAuthError(error?.message || 'Verification failed. Please try again.');
+      showAuthError(describeAppError(error, 'Verification failed. Please try again.'));
       setAuthLoading(false);
       return;
     }
@@ -6685,7 +6795,7 @@ async function verifyOtpCode() {
     syncAfterLogin().catch(() => {});
     return;
   } catch(e) {
-    showAuthError('Connection error. Please try again.');
+    showAuthError(describeAppError(e, 'Connection error. Please try again.'));
   }
   setAuthLoading(false);
 }
@@ -6693,7 +6803,7 @@ async function verifyOtpCode() {
 async function resendOtpCode() {
   if (!pendingOtp?.email) { showAuthError('Start by requesting a code first.'); return; }
   clearAuthError();
-  setAuthLoading(true);
+  setAuthLoading(true, 'otp-resend-btn');
   try {
     const action = pendingOtp.mode === 'register' ? 'register' : 'login';
     const d = await authRequest(action, 'POST', {
@@ -6705,10 +6815,10 @@ async function resendOtpCode() {
     if (d.success) {
       showAuthSuccess(d.message || 'A fresh code is on the way.');
     } else {
-      showAuthError(d.error || 'Failed to resend the code.');
+      showAuthError(describeAppError(d.error, 'Failed to resend the code.'));
     }
   } catch(e) {
-    showAuthError('Connection error. Please try again.');
+    showAuthError(describeAppError(e, 'Connection error. Please try again.'));
   }
   setAuthLoading(false);
 }
@@ -8624,12 +8734,14 @@ function renderCalendar() {
         ...earningsToEvents(data.earnings || []),
         ...(data.economic || []),
       ].sort((a, b) => a.date.localeCompare(b.date));
+      calendarLoadError = '';
       _calCache   = { events, live: true };
       _calCacheTs = Date.now();
       buildUI(events, true, el._calFilter || 'all', _calView || 'list');
     })
-    .catch(() => {
+    .catch((error) => {
       // Fallback: show a notice but still render (empty) so the tab isn't broken
+      calendarLoadError = describeAppError(error, 'Calendar data is temporarily unavailable.');
       _calCache   = { events: [], live: false };
       _calCacheTs = Date.now();
       buildUI([], false, 'all', _calView || 'list');

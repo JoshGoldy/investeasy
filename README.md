@@ -125,6 +125,16 @@ Playwright is installed as a dev dependency. Before a wider launch, test:
 - FinBot quick chat
 - market detail charts and headline values
 
+Quick smoke run:
+
+```bash
+npm run test:smoke
+```
+
+Pre-launch checklist:
+
+- [docs/launch-checklist.md](C:/Users/joshu/Desktop/investeasy/docs/launch-checklist.md)
+
 ## License
 
 Proprietary. All rights reserved.
