@@ -8937,7 +8937,7 @@ function renderLearningPath() {
           const clickAction = unlocked ? `onclick="openTopic('${topicId}')"` : '';
           return `
             <div class="path-step" style="margin-bottom:${idx < LEARN_PATH_ORDER.length-1?'12':'0'}px">
-        <div class="path-node ${nodeClass}" ${unlocked ? `onclick="openTopic('${topicId}')"` : ''}>${done ? iconMarkup('award', 'path-node-icon') : iconMarkup(topic.icon, 'path-node-icon')}</div>
+        <div class="path-node ${nodeClass}" ${unlocked ? `onclick="openTopic('${topicId}')"` : ''}>${done ? iconMarkup('award', 'path-node-icon') : `<span class="path-node-emoji">${escHtml(topic.icon)}</span>`}</div>
               <div class="path-info ${infoClass}" ${clickAction}>
                 <div class="path-step-title">${idx + 1}. ${escHtml(topic.title)}</div>
                 <div class="path-step-sub">${topic.lessons.length} lessons · <span class="learn-difficulty diff-${topic.difficulty}" style="display:inline;padding:1px 6px">${topic.difficulty}</span></div>
@@ -9356,7 +9356,7 @@ function renderLearn() {
         return `
           <div class="learn-topic-card ${p.pct === 100 ? 'completed-card' : ''}" onclick="openTopic('${t.id}')">
             <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <div class="learn-topic-icon" style="background:${t.iconBg}">${iconMarkup(t.icon, 'learn-topic-icon-glyph')}</div>
+          <div class="learn-topic-icon" style="background:${t.iconBg}"><span class="learn-topic-emoji">${escHtml(t.icon)}</span></div>
               ${p.pct === 100 ? '<span style="font-size:16px">✅</span>' : ''}
             </div>
             <h3 style="margin-top:10px">${t.title}</h3>
@@ -9396,7 +9396,7 @@ function openTopic(topicId, lessonIdx = 0) {
     <div class="learn-detail">
       <button class="learn-back" onclick="renderLearn()">← Back to Topics</button>
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
-        ${iconMarkup(topic.icon, 'learn-detail-icon')}
+        <span class="learn-detail-emoji">${escHtml(topic.icon)}</span>
         <div>
           <h2 style="font-size:20px;font-weight:800;color:var(--text)">${topic.title}</h2>
           <p style="font-size:12px;color:var(--faint)">${p.lessonsRead} of ${p.total} lessons completed</p>

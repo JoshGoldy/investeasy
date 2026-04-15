@@ -101,6 +101,10 @@ button{cursor:pointer}
 .btn-icon{margin-right:6px}
 .mode-icon-glyph svg,.loading-icon-glyph svg,.pill-icon .ui-icon svg{width:1.15em;height:1.15em}
 .learn-topic-icon-glyph svg,.badge-icon-glyph svg,.path-node-icon svg,.learn-detail-icon svg,.modal-header-icon svg,.saved-card-icon-glyph svg,.saved-empty-icon-glyph svg,.saved-feature-icon svg,.finbot-analysis-icon svg,.settings-row-icon .ui-icon svg,.finbot-icon .ui-icon svg,.streak-flame .ui-icon svg,.news-bookmark-btn .ui-icon svg,.alert-bell .ui-icon svg,.saved-card-star .ui-icon svg{width:1.1em;height:1.1em}
+.learn-topic-emoji,.learn-detail-emoji,.path-node-emoji{display:inline-flex;align-items:center;justify-content:center;line-height:1}
+.learn-topic-emoji{font-size:26px}
+.learn-detail-emoji{font-size:28px}
+.path-node-emoji{font-size:18px}
 .filter-row{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:0 0 10px}
 .filter-btn,.news-filter-btn{flex-shrink:0;padding:8px 18px;border-radius:20px;font-size:12px;font-weight:500;
   background:var(--border);color:var(--muted);transition:all 0.2s}
