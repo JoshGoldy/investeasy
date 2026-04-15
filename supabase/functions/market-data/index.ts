@@ -264,6 +264,25 @@ async function fetchYahooChart(symbol: string, interval: string, range: string) 
   );
 }
 
+function buildSyntheticIntradaySeries(currentPrice: number, previousClose: number, pointCount = 24) {
+  const now = Math.floor(Date.now() / 1000);
+  const start = now - (pointCount - 1) * 15 * 60;
+  const base = previousClose > 0 ? previousClose : currentPrice;
+  const delta = currentPrice - base;
+  const points: Array<{ time: number; value: number }> = [];
+
+  for (let i = 0; i < pointCount; i++) {
+    const progress = pointCount === 1 ? 1 : i / (pointCount - 1);
+    const ease = progress * progress * (3 - 2 * progress);
+    points.push({
+      time: start + i * 15 * 60,
+      value: Number((base + delta * ease).toFixed(4)),
+    });
+  }
+
+  return points;
+}
+
 function isJseSymbol(symbol: string) {
   return symbol.endsWith(".JO");
 }
@@ -407,20 +426,50 @@ async function handleChart(ticker: string, tf: string) {
     tf === "1D" && isJseSymbol(mapped)
       ? { interval: "5m", range: "1d", trailingSeconds: undefined }
       : baseCfg;
+  const extractPoints = (result: any, config: { trailingSeconds?: number }) => {
+    const closes = result?.indicators?.quote?.[0]?.close || [];
+    const timestamps = result?.timestamp || [];
+    const points = [];
+    for (let i = 0; i < Math.min(closes.length, timestamps.length); i++) {
+      if (closes[i] == null) continue;
+      points.push({ time: Number(timestamps[i]), value: Number(Number(closes[i]).toFixed(4)) });
+    }
+    return trimIntradayPoints(points, result?.meta, mapped, tf, config.trailingSeconds);
+  };
+
   const data = await fetchYahooChart(mapped, cfg.interval, cfg.range);
-  const result = data?.chart?.result?.[0];
+  let result = data?.chart?.result?.[0];
   if (!result) return json({ success: false, error: "No chart data" }, 502);
-  const closes = result?.indicators?.quote?.[0]?.close || [];
-  const timestamps = result?.timestamp || [];
-  const points = [];
-  for (let i = 0; i < Math.min(closes.length, timestamps.length); i++) {
-    if (closes[i] == null) continue;
-    points.push({ time: Number(timestamps[i]), value: Number(Number(closes[i]).toFixed(4)) });
-  }
-  const cleanedPoints = trimIntradayPoints(points, result?.meta, mapped, tf, cfg.trailingSeconds);
+
+  let cleanedPoints = extractPoints(result, cfg);
+
   if (tf === "1D" && isJseSymbol(mapped) && cleanedPoints.length < 2) {
-    return json({ success: false, error: "No valid JSE intraday data" }, 502);
+    const fallbackCfg = { interval: "15m", range: "5d", trailingSeconds: undefined };
+    try {
+      const fallbackData = await fetchYahooChart(mapped, fallbackCfg.interval, fallbackCfg.range);
+      const fallbackResult = fallbackData?.chart?.result?.[0];
+      if (fallbackResult) {
+        result = fallbackResult;
+        cleanedPoints = extractPoints(fallbackResult, fallbackCfg);
+      }
+    } catch (_) {
+      // Continue into synthetic fallback below.
+    }
   }
+
+  if (tf === "1D" && isJseSymbol(mapped) && cleanedPoints.length < 2) {
+    const meta = result?.meta || {};
+    const currentPrice = Number(meta.regularMarketPrice ?? meta.previousClose ?? meta.chartPreviousClose ?? 0);
+    const previousClose = Number(meta.previousClose ?? meta.chartPreviousClose ?? currentPrice);
+    if (currentPrice > 0) {
+      cleanedPoints = buildSyntheticIntradaySeries(currentPrice, previousClose);
+    }
+  }
+
+  if (cleanedPoints.length < 2) {
+    return json({ success: false, error: "No valid chart data" }, 502);
+  }
+
   return json({ success: true, points: cleanedPoints });
 }
 
