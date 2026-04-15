@@ -755,6 +755,7 @@ button{cursor:pointer}
   .header{padding:0 14px;min-height:60px}
   .header-brand{display:flex}
   .header-brand-icon{display:none}
+  .header-brand-name{display:none}
   .user-chip:hover .user-dropdown,.user-chip:focus-within .user-dropdown{opacity:0;transform:translateY(-8px);pointer-events:none}
   .user-chip.open .user-dropdown{opacity:1;transform:translateY(0);pointer-events:auto}
 
