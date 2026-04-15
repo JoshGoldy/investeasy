@@ -9634,7 +9634,7 @@ function renderBadgesPage() {
       <div class="badges-grid">
         ${BADGES.map(b => `
           <div class="badge-item ${earned.has(b.id) ? 'earned' : 'locked'}">
-            <div class="badge-icon">${iconMarkup(b.icon, 'badge-icon-glyph')}</div>
+            <div class="badge-icon"><span class="badge-emoji">${escHtml(b.icon)}</span></div>
             <div class="badge-name">${escHtml(b.name)}</div>
             <div class="badge-desc">${escHtml(b.desc)}</div>
           </div>`).join('')}
