@@ -264,6 +264,65 @@ async function fetchYahooChart(symbol: string, interval: string, range: string) 
   );
 }
 
+function isJseSymbol(symbol: string) {
+  return symbol.endsWith(".JO");
+}
+
+function dropTerminalOutlier(points: Array<{ time: number; value: number }>, symbol: string, tf: string) {
+  if (tf !== "1D" || !isJseSymbol(symbol) || points.length < 3) return points;
+
+  const prevPrev = points[points.length - 3]?.value;
+  const prev = points[points.length - 2]?.value;
+  const last = points[points.length - 1]?.value;
+  if (!prevPrev || !prev || !last) return points;
+
+  const baselineMove = Math.abs((prev - prevPrev) / prevPrev);
+  const lastMove = Math.abs((last - prev) / prev);
+
+  // Yahoo occasionally appends a synthetic last point for JSE symbols long after
+  // the session is over. If that last point is dramatically larger than the
+  // recent bar-to-bar movement, drop it and keep the continuous intraday series.
+  if (lastMove > 0.05 && lastMove > Math.max(0.01, baselineMove * 4)) {
+    return points.slice(0, -1);
+  }
+
+  return points;
+}
+
+function trimIntradayPoints(
+  points: Array<{ time: number; value: number }>,
+  meta: Record<string, unknown> | undefined,
+  symbol: string,
+  tf: string,
+  trailingSeconds?: number,
+) {
+  if (!points.length) return points;
+
+  let trimmed = points;
+
+  if (tf === "1D" && isJseSymbol(symbol)) {
+    const regular = (meta?.currentTradingPeriod as Record<string, unknown> | undefined)?.regular as
+      | Record<string, unknown>
+      | undefined;
+    const sessionStart = Number(regular?.start || 0);
+    const sessionEnd = Number(regular?.end || 0);
+
+    if (sessionStart && sessionEnd) {
+      const sessionPoints = points.filter((point) => point.time >= sessionStart - 30 * 60 && point.time <= sessionEnd + 15 * 60);
+      if (sessionPoints.length > 1) trimmed = sessionPoints;
+    }
+  }
+
+  if (trailingSeconds && trimmed.length) {
+    const latest = Number(trimmed[trimmed.length - 1]?.time || 0);
+    const cutoff = latest - trailingSeconds;
+    const trailing = trimmed.filter((point) => Number(point.time || 0) >= cutoff);
+    if (trailing.length > 1) trimmed = trailing;
+  }
+
+  return dropTerminalOutlier(trimmed, symbol, tf);
+}
+
 async function handleQuotes(rawTickers: unknown) {
   const tickers = parseTickers(rawTickers);
   if (!tickers.length) return json({ success: false, error: "No tickers provided." }, 400);
@@ -279,7 +338,16 @@ async function handleQuotes(rawTickers: unknown) {
         const result = data?.chart?.result?.[0];
         const meta = result?.meta;
         if (!meta) return;
-        const price = meta.regularMarketPrice ?? null;
+        const closes = result?.indicators?.quote?.[0]?.close || [];
+        const timestamps = result?.timestamp || [];
+        const rawPoints: Array<{ time: number; value: number }> = [];
+        for (let i = 0; i < Math.min(closes.length, timestamps.length); i++) {
+          if (closes[i] == null) continue;
+          rawPoints.push({ time: Number(timestamps[i]), value: Number(Number(closes[i]).toFixed(4)) });
+        }
+        const cleanedPoints = trimIntradayPoints(rawPoints, meta, mapped, "1D", 24 * 60 * 60);
+        const latestPoint = cleanedPoints[cleanedPoints.length - 1]?.value;
+        const price = latestPoint ?? meta.regularMarketPrice ?? null;
         const prevClose = meta.previousClose ?? meta.chartPreviousClose ?? null;
         const chg =
           price && prevClose && prevClose > 0
@@ -314,13 +382,8 @@ async function handleChart(ticker: string, tf: string) {
     if (closes[i] == null) continue;
     points.push({ time: Number(timestamps[i]), value: Number(Number(closes[i]).toFixed(4)) });
   }
-  if (cfg.trailingSeconds && points.length) {
-    const latest = Number(points[points.length - 1].time || 0);
-    const cutoff = latest - cfg.trailingSeconds;
-    const trimmed = points.filter((point) => Number(point.time || 0) >= cutoff);
-    if (trimmed.length > 1) points.splice(0, points.length, ...trimmed);
-  }
-  return json({ success: true, points });
+  const cleanedPoints = trimIntradayPoints(points, result?.meta, mapped, tf, cfg.trailingSeconds);
+  return json({ success: true, points: cleanedPoints });
 }
 
 function decodeHtml(html: string) {
