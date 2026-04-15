@@ -4769,10 +4769,10 @@ function renderPortfolioDemoDashboard() {
     ${portCurrencyBar()}
 
     <div class="dashboard-stats">
-      ${portfolioStatCard(`<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l-1 13H7L6 7Z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>`, fmtMoney(total), 'Portfolio value')}
-      ${portfolioStatCard(`<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg>`, HOLDINGS.length, 'Active holdings')}
-      ${portfolioStatCard(`<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><path d="M7 7h10"/><path d="M7 17h10"/></svg>`, `${up?'+':''}${pnlP}%`, 'Total return')}
-      ${portfolioStatCard(`<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 10h16"/><path d="M10 4v16"/></svg>`, HOLDINGS.length, 'Tracked assets')}
+      ${portfolioStatCard(`${iconMarkup('wallet', 'portfolio-stat-icon')}`, fmtMoney(total), 'Portfolio value')}
+      ${portfolioStatCard(`${iconMarkup('briefcase', 'portfolio-stat-icon')}`, HOLDINGS.length, 'Active holdings')}
+      ${portfolioStatCard(`${iconMarkup(up ? 'trend-up' : 'trend-down', 'portfolio-stat-icon')}`, `${up?'+':''}${pnlP}%`, 'Total return')}
+      ${portfolioStatCard(`${iconMarkup('grid', 'portfolio-stat-icon')}`, HOLDINGS.length, 'Tracked assets')}
     </div>
 
     <div class="dashboard-grid">
@@ -5285,10 +5285,10 @@ function renderDBPortfolio() {
     ${portCurrencyBar()}
 
     <div class="dashboard-stats">
-      ${portfolioStatCard(`<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l-1 13H7L6 7Z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>`, fmtMoney(total), 'Portfolio value')}
-      ${portfolioStatCard(`<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg>`, holdings.length, 'Active holdings')}
-      ${portfolioStatCard(`<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><path d="M7 7h10"/><path d="M7 17h10"/></svg>`, `${up?'+':''}${totalPnlP}%`, 'Portfolio return')}
-      ${portfolioStatCard(`<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 10h16"/><path d="M10 4v16"/></svg>`, sectors.size, 'Sectors covered')}
+      ${portfolioStatCard(`${iconMarkup('wallet', 'portfolio-stat-icon')}`, fmtMoney(total), 'Portfolio value')}
+      ${portfolioStatCard(`${iconMarkup('briefcase', 'portfolio-stat-icon')}`, holdings.length, 'Active holdings')}
+      ${portfolioStatCard(`${iconMarkup(up ? 'trend-up' : 'trend-down', 'portfolio-stat-icon')}`, `${up?'+':''}${totalPnlP}%`, 'Portfolio return')}
+      ${portfolioStatCard(`${iconMarkup('grid', 'portfolio-stat-icon')}`, sectors.size, 'Sectors covered')}
     </div>
 
     <div class="dashboard-grid">
