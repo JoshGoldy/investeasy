@@ -52,6 +52,7 @@ This repo now includes Supabase migrations for shared function throttling and ev
 
 - [202604150001_function_rate_limits.sql](C:/Users/joshu/Desktop/investeasy/supabase/migrations/202604150001_function_rate_limits.sql)
 - [202604150002_function_event_logs.sql](C:/Users/joshu/Desktop/investeasy/supabase/migrations/202604150002_function_event_logs.sql)
+- [202604150003_ops_retention.sql](C:/Users/joshu/Desktop/investeasy/supabase/migrations/202604150003_ops_retention.sql)
 
 Apply it before deploying or redeploying the functions:
 
@@ -71,6 +72,7 @@ Current protections:
 Function events are written to:
 
 - `public.function_event_logs`
+- `public.function_rate_limits`
 
 That gives you a simple place to inspect:
 
@@ -78,6 +80,23 @@ That gives you a simple place to inspect:
 - upstream API failures
 - invalid payload attempts
 - FinBot credit/auth problems
+
+### Retention cleanup
+
+To keep the ops tables from growing forever, this repo now includes:
+
+- `public.cleanup_ops_tables(rate_limit_hours, event_log_days)`
+
+Example manual cleanup:
+
+```sql
+select * from public.cleanup_ops_tables(48, 14);
+```
+
+Recommended defaults:
+
+- rate-limit rows: keep `48` hours
+- function event logs: keep `14` days
 
 ### Token budgets by mode
 

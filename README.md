@@ -108,6 +108,7 @@ Handles:
 - calendar events
 - IP-based rate limiting and safer article source allowlisting
 - server-side event logging for failures and throttles
+- retention-friendly ops tables via `cleanup_ops_tables(...)`
 
 ### `ops-status`
 
@@ -116,6 +117,19 @@ Handles:
 - enterprise admin health snapshots
 - recent server-side function events
 - plan/credit summary metrics for internal monitoring
+
+## Ops Retention
+
+The repo now includes a cleanup helper for backend ops tables:
+
+```sql
+select * from public.cleanup_ops_tables(48, 14);
+```
+
+Default guidance:
+
+- keep rate-limit rows for `48` hours
+- keep function event logs for `14` days
 
 ## Legacy Files
 
