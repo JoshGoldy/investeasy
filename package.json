@@ -3,7 +3,13 @@
     "test:smoke": "playwright test tests/e2e/smoke.spec.js",
     "test:smoke:headed": "playwright test tests/e2e/smoke.spec.js --headed",
     "test:smoke:auth": "playwright test tests/e2e/authenticated.spec.js",
-    "test:smoke:auth:headed": "playwright test tests/e2e/authenticated.spec.js --headed"
+    "test:smoke:auth:headed": "playwright test tests/e2e/authenticated.spec.js --headed",
+    "test:smoke:crud": "playwright test tests/e2e/authenticated-crud.spec.js",
+    "test:smoke:crud:headed": "playwright test tests/e2e/authenticated-crud.spec.js --headed",
+    "test:smoke:finbot": "playwright test tests/e2e/authenticated-finbot.spec.js",
+    "test:smoke:finbot:headed": "playwright test tests/e2e/authenticated-finbot.spec.js --headed",
+    "test:rc": "playwright test tests/e2e/smoke.spec.js tests/e2e/authenticated.spec.js tests/e2e/authenticated-crud.spec.js tests/e2e/authenticated-finbot.spec.js",
+    "test:rc:headed": "playwright test tests/e2e/smoke.spec.js tests/e2e/authenticated.spec.js tests/e2e/authenticated-crud.spec.js tests/e2e/authenticated-finbot.spec.js --headed"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.0"

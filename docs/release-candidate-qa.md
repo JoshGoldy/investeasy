@@ -12,6 +12,26 @@ Use this pass when you feel “close enough to launch” and want to validate th
   - `ops-status`
 - Browser cache has been hard refreshed before testing
 
+## Automated Baseline
+
+Run these before the manual pass when you have a password-enabled test account:
+
+- `npm run test:smoke`
+- `npm run test:smoke:auth`
+- `npm run test:smoke:crud`
+- `npm run test:smoke:finbot`
+- `npm run test:rc`
+
+The authenticated suites require:
+
+- `TEST_USER_EMAIL`
+- `TEST_USER_PASSWORD`
+
+Note:
+
+- `test:smoke:finbot` uses real FinBot credits because it runs one live analysis and saves a report.
+- `test:rc` is the one-command release gate for the full automated baseline.
+
 ## Test Accounts
 
 Prepare these before the pass:
@@ -90,6 +110,7 @@ Expected:
 - values and counts update immediately
 - no duplicate holdings unless intentionally allowed
 - summary cards and lists remain visually stable
+- authenticated CRUD smoke should pass for add/remove holding
 
 ## Watchlist + Alerts Pass
 
@@ -103,6 +124,7 @@ Expected:
 
 - watchlist star and stored state stay in sync
 - alerts save without UI drift or stale state
+- authenticated CRUD smoke should pass for watchlist add/remove persistence
 
 ## Saved Reports Pass
 
@@ -136,6 +158,7 @@ Expected:
 - long reports are not visibly truncated
 - credits decrement by the expected amount
 - saved report flow works afterward
+- automated FinBot smoke should pass for one analysis + save/delete lifecycle
 
 ### Quick Chat
 
@@ -203,6 +226,10 @@ Expected:
 2. Update risk / horizon / preferred sectors
 3. Toggle notifications
 4. Refresh and confirm persistence
+
+Expected:
+
+- authenticated CRUD smoke should pass for settings persistence
 
 ### Ops/Admin User
 
