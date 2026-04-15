@@ -1910,6 +1910,10 @@ async function fetchLiveChart(ticker, tf, callback) {
   } catch(e) { /* silent fallback */ }
 }
 
+function shouldUseLiveDetailCharts(stock) {
+  return stock?.exchange !== 'JSE';
+}
+
 function sanitizeLiveChartPoints(ticker, tf, points) {
   if (!Array.isArray(points) || points.length < 3 || tf !== '1D') return points;
   const market = MARKETS.find(m => m.ticker === ticker);
@@ -2136,16 +2140,18 @@ function openStockDetail(idx) {
     }
     syncStockDetailSummary(stock, stock.charts['1D']);
     // Replace with live data as soon as it arrives
-    fetchLiveChart(stock.ticker, '1D', points => {
-      // Sanity-check against the known initial price (not stock.val which may itself be wrong).
-      const last = points[points.length - 1]?.value;
-      const ratio = last / stock._initVal;
-      if (!last || !stock._initVal || ratio < 0.02 || ratio > 50) return;
-      stock.charts['1D'] = points;
-      syncStockDetailSummary(stock, points);
-      const el2 = document.getElementById('sd-chart-canvas');
-      if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, convertChartData(points), color, 300); }
-    });
+    if (shouldUseLiveDetailCharts(stock)) {
+      fetchLiveChart(stock.ticker, '1D', points => {
+        // Sanity-check against the known initial price (not stock.val which may itself be wrong).
+        const last = points[points.length - 1]?.value;
+        const ratio = last / stock._initVal;
+        if (!last || !stock._initVal || ratio < 0.02 || ratio > 50) return;
+        stock.charts['1D'] = points;
+        syncStockDetailSummary(stock, points);
+        const el2 = document.getElementById('sd-chart-canvas');
+        if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, convertChartData(points), color, 300); }
+      });
+    }
   });
 }
 
@@ -2204,15 +2210,17 @@ function switchDetailTF(idx, tf) {
       if (detailChart) detailChart.remove();
       detailChart = createFullChart(el, convertChartData(stock.charts[tf]), color, 300);
     }
-    fetchLiveChart(stock.ticker, tf, points => {
-      const last = points[points.length - 1]?.value;
-      const ratio = last / stock._initVal;
-      if (!last || !stock._initVal || ratio < 0.02 || ratio > 50) return;
-      stock.charts[tf] = points;
-      if (tf === '1D') syncStockDetailSummary(stock, points);
-      const el2 = document.getElementById('sd-chart-canvas');
-      if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, convertChartData(points), color, 300); }
-    });
+    if (shouldUseLiveDetailCharts(stock)) {
+      fetchLiveChart(stock.ticker, tf, points => {
+        const last = points[points.length - 1]?.value;
+        const ratio = last / stock._initVal;
+        if (!last || !stock._initVal || ratio < 0.02 || ratio > 50) return;
+        stock.charts[tf] = points;
+        if (tf === '1D') syncStockDetailSummary(stock, points);
+        const el2 = document.getElementById('sd-chart-canvas');
+        if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, convertChartData(points), color, 300); }
+      });
+    }
   });
 }
 
