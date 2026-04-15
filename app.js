@@ -738,7 +738,7 @@ function setupMobileChrome() {
     bubble.className = 'mobile-finbot-bubble';
     bubble.setAttribute('aria-label', 'Open FinBot');
     bubble.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4M2 13h2M20 13h2"/></svg>
+      <span class="mobile-finbot-bubble-emoji">🤖</span>
       <span class="mobile-finbot-bubble-label">FinBot</span>
     `;
     bubble.addEventListener('click', () => switchTab('finbot'));
@@ -4177,7 +4177,7 @@ function renderSaved(filter) {
   const _srSel = _srSearchFocused ? [document.activeElement.selectionStart, document.activeElement.selectionEnd] : null;
 
   el.innerHTML = `
-    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+    <div class="section-title section-title-inline" style="display:flex;justify-content:space-between;align-items:center">
       <div>
         <h2>Saved Reports</h2>
         <p style="font-size:12px;color:var(--faint);margin-top:4px">${allReports.length} report${allReports.length !== 1 ? 's' : ''} saved to your account</p>

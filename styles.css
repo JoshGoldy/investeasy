@@ -751,6 +751,7 @@ button{cursor:pointer}
   /* Header: show brand logo, less padding */
   .header{padding:0 14px;min-height:60px}
   .header-brand{display:flex}
+  .header-brand-icon{display:none}
   .user-chip:hover .user-dropdown,.user-chip:focus-within .user-dropdown{opacity:0;transform:translateY(-8px);pointer-events:none}
   .user-chip.open .user-dropdown{opacity:1;transform:translateY(0);pointer-events:auto}
 
@@ -1170,21 +1171,21 @@ button{cursor:pointer}
     width:60px;
     height:60px;
     border-radius:999px;
-    background:linear-gradient(135deg,#10b981,#0f766e);
+    background:linear-gradient(135deg,#8b5cf6,#7c3aed);
     border:3px solid #f8f5ee;
-    box-shadow:0 18px 40px rgba(16,185,129,.3);
+    box-shadow:0 18px 40px rgba(124,58,237,.28);
     display:flex;
     align-items:center;
     justify-content:center;
     z-index:1250;
   }
-  .mobile-finbot-bubble svg{width:25px;height:25px;stroke:#fff}
+  .mobile-finbot-bubble-emoji{font-size:24px;line-height:1}
   .mobile-finbot-bubble-label{
     position:absolute;
     left:72px;
     top:50%;
     transform:translateY(-50%);
-    background:#173126;
+    background:#7c3aed;
     color:#fff;
     font-size:11px;
     font-weight:700;
