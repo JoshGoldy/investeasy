@@ -741,7 +741,12 @@ function setupMobileChrome() {
       <span class="mobile-finbot-bubble-emoji">🤖</span>
       <span class="mobile-finbot-bubble-label">FinBot</span>
     `;
-    bubble.addEventListener('click', () => switchTab('finbot'));
+    bubble.addEventListener('click', () => {
+      bubble.classList.remove('pulse');
+      void bubble.offsetWidth;
+      bubble.classList.add('pulse');
+      setTimeout(() => switchTab('finbot'), 120);
+    });
     document.body.appendChild(bubble);
   }
 
@@ -6976,6 +6981,16 @@ function setAuthLoginMethod(method = 'otp') {
   if (passwordInput && authLoginMethod !== 'password') passwordInput.value = '';
 }
 
+function toggleLoginPasswordVisibility() {
+  const input = document.getElementById('login-password');
+  const toggle = document.getElementById('login-password-toggle');
+  if (!input || !toggle) return;
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  toggle.textContent = showing ? 'Show' : 'Hide';
+  toggle.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+}
+
 function showAuthTab(mode) {
   ensureOtpAuthUi();
   ['remember-login', 'remember-register'].forEach(id => {
@@ -7044,8 +7059,11 @@ function ensureOtpAuthUi() {
     passwordField.style.display = 'none';
     passwordField.innerHTML = `
       <label class="form-label">Password</label>
-      <input id="login-password" class="form-input" type="password" placeholder="Enter your password" autocomplete="current-password"
-        onkeydown="if(event.key==='Enter')doLogin()">
+      <div class="auth-password-wrap">
+        <input id="login-password" class="form-input" type="password" placeholder="Enter your password" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter')doLogin()">
+        <button type="button" id="login-password-toggle" class="auth-password-toggle" onclick="toggleLoginPasswordVisibility()" aria-label="Show password">Show</button>
+      </div>
     `;
     loginInput.parentElement.insertAdjacentElement('afterend', passwordField);
   }
