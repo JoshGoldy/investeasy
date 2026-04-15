@@ -1139,7 +1139,13 @@ button{cursor:pointer}
   .nav button span{display:block;font-size:13px}
   .nav button svg{width:20px;height:20px}
   .nav button[data-tab="finbot"]{display:none!important}
-  .nav button[data-tab="settings"]{display:flex!important;margin-top:auto}
+  #nav-pulse{
+    display:block!important;
+    margin:12px 0 4px!important;
+    order:98;
+    flex-shrink:0;
+  }
+  .nav button[data-tab="settings"]{display:flex!important;margin-top:0;order:99}
   .mobile-nav-toggle{
     display:inline-flex;
     width:38px;
