@@ -1906,8 +1906,32 @@ async function fetchLivePrices() {
 async function fetchLiveChart(ticker, tf, callback) {
   try {
     const d = await fetchMarketData('chart', { ticker, tf });
-    if (d.success && d.points && d.points.length > 1) callback(d.points);
+    if (d.success && d.points && d.points.length > 1) callback(sanitizeLiveChartPoints(ticker, tf, d.points));
   } catch(e) { /* silent fallback */ }
+}
+
+function sanitizeLiveChartPoints(ticker, tf, points) {
+  if (!Array.isArray(points) || points.length < 3 || tf !== '1D') return points;
+  const market = MARKETS.find(m => m.ticker === ticker);
+  if (!market || market.exchange !== 'JSE') return points;
+
+  const cleaned = points.slice();
+  while (cleaned.length >= 3) {
+    const last = cleaned[cleaned.length - 1];
+    const prev = cleaned[cleaned.length - 2];
+    const prevPrev = cleaned[cleaned.length - 3];
+    if (!last?.value || !prev?.value || !prevPrev?.value) break;
+
+    const baselineMove = Math.abs((prev.value - prevPrev.value) / prevPrev.value);
+    const lastMove = Math.abs((last.value - prev.value) / prev.value);
+
+    if (lastMove > 0.035 && lastMove > Math.max(0.01, baselineMove * 4)) {
+      cleaned.pop();
+      continue;
+    }
+    break;
+  }
+  return cleaned;
 }
 
 function renderNavPulse() {
