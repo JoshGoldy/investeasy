@@ -13,19 +13,29 @@ async function loginWithPassword(page) {
   await page.locator('button:has-text("Log in")').first().click();
   await expect(page.locator('#auth-overlay:not(.hidden)')).toBeVisible();
 
-  const passwordMethodBtn = page.locator('[data-auth-method="password"]').first();
-  if (await passwordMethodBtn.count()) {
-    await passwordMethodBtn.click();
-  } else {
-    await page.locator('button:has-text("Password")').first().click();
-  }
+  const passwordMethodBtn = page.locator('#auth-login-method-password');
+  await expect(passwordMethodBtn).toBeVisible({ timeout: 5000 });
+  await passwordMethodBtn.click();
 
   await page.locator('#login-email').fill(EMAIL);
   await page.locator('#login-password').fill(PASSWORD);
   await page.locator('#auth-submit').click();
+  const authOverlay = page.locator('#auth-overlay');
+  const headerUser = page.locator('#header-user');
+  const authError = page.locator('#auth-error');
 
-  await expect(page.locator('#auth-overlay.hidden')).toBeVisible({ timeout: 15000 });
-  await expect(page.locator('#header-user')).toBeVisible({ timeout: 15000 });
+  await Promise.race([
+    expect(headerUser).toBeVisible({ timeout: 15000 }),
+    expect(authError).toContainText(/\S+/, { timeout: 15000 }),
+  ]);
+
+  if (await authError.isVisible()) {
+    const message = (await authError.textContent())?.trim() || 'Unknown login error';
+    throw new Error(`Password login failed: ${message}`);
+  }
+
+  await expect(authOverlay).toHaveClass(/hidden/, { timeout: 15000 });
+  await expect(headerUser).toBeVisible({ timeout: 15000 });
 }
 
 test.describe('FinScope authenticated smoke suite', () => {

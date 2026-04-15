@@ -280,6 +280,11 @@ This covers:
 - authenticated settings shell
 - authenticated FinBot shell
 
+Note:
+
+- the authenticated smoke suite expects a user that already has a valid Supabase password set
+- OTP-only accounts will fail this test until a password is created for that account
+
 ## Ship Decision
 
 Only ship when:
