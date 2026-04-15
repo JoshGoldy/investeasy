@@ -19,7 +19,9 @@ async function loginWithPassword(page) {
 
   await page.locator('#login-email').fill(EMAIL);
   await page.locator('#login-password').fill(PASSWORD);
-  await page.locator('#auth-submit').click();
+  const loginBtn = page.locator('#login-btn');
+  await expect(loginBtn).toBeVisible({ timeout: 5000 });
+  await loginBtn.click();
   const authOverlay = page.locator('#auth-overlay');
   const headerUser = page.locator('#header-user');
   const authError = page.locator('#auth-error');
