@@ -402,7 +402,11 @@ async function handleQuotes(rawTickers: unknown) {
 async function handleChart(ticker: string, tf: string) {
   const mapped = TICKER_MAP[ticker];
   if (!mapped) return json({ success: false, error: "Unknown ticker" }, 400);
-  const cfg = CHART_CONFIG[tf] || CHART_CONFIG["1M"];
+  const baseCfg = CHART_CONFIG[tf] || CHART_CONFIG["1M"];
+  const cfg =
+    tf === "1D" && isJseSymbol(mapped)
+      ? { interval: "5m", range: "1d", trailingSeconds: undefined }
+      : baseCfg;
   const data = await fetchYahooChart(mapped, cfg.interval, cfg.range);
   const result = data?.chart?.result?.[0];
   if (!result) return json({ success: false, error: "No chart data" }, 502);
@@ -414,6 +418,9 @@ async function handleChart(ticker: string, tf: string) {
     points.push({ time: Number(timestamps[i]), value: Number(Number(closes[i]).toFixed(4)) });
   }
   const cleanedPoints = trimIntradayPoints(points, result?.meta, mapped, tf, cfg.trailingSeconds);
+  if (tf === "1D" && isJseSymbol(mapped) && cleanedPoints.length < 2) {
+    return json({ success: false, error: "No valid JSE intraday data" }, 502);
+  }
   return json({ success: true, points: cleanedPoints });
 }
 
