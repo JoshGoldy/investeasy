@@ -1915,7 +1915,37 @@ function sanitizeLiveChartPoints(ticker, tf, points) {
   const market = MARKETS.find(m => m.ticker === ticker);
   if (!market || market.exchange !== 'JSE') return points;
 
-  const cleaned = points.slice();
+  const getSaInfo = (unixTime) => {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Africa/Johannesburg',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      weekday: 'short',
+      hour12: false
+    }).formatToParts(new Date(unixTime * 1000));
+    const map = Object.fromEntries(parts.filter(p => p.type !== 'literal').map(p => [p.type, p.value]));
+    return {
+      dateKey: `${map.year}-${map.month}-${map.day}`,
+      weekday: map.weekday,
+      minutes: Number(map.hour || 0) * 60 + Number(map.minute || 0)
+    };
+  };
+
+  const grouped = new Map();
+  points.forEach(point => {
+    const info = getSaInfo(point.time);
+    if (!['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].includes(info.weekday)) return;
+    if (info.minutes < 9 * 60 || info.minutes > 17 * 60 + 10) return;
+    if (!grouped.has(info.dateKey)) grouped.set(info.dateKey, []);
+    grouped.get(info.dateKey).push(point);
+  });
+
+  const latestDate = [...grouped.keys()].sort().pop();
+  const cleaned = latestDate && grouped.get(latestDate)?.length > 1 ? grouped.get(latestDate).slice() : points.slice();
+
   while (cleaned.length >= 3) {
     const last = cleaned[cleaned.length - 1];
     const prev = cleaned[cleaned.length - 2];

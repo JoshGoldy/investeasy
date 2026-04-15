@@ -268,6 +268,46 @@ function isJseSymbol(symbol: string) {
   return symbol.endsWith(".JO");
 }
 
+function getJohannesburgParts(unixTime: number) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Johannesburg",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    weekday: "short",
+    hour12: false,
+  }).formatToParts(new Date(unixTime * 1000));
+
+  const map = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+  const hour = Number(map.hour || 0);
+  const minute = Number(map.minute || 0);
+  return {
+    dateKey: `${map.year}-${map.month}-${map.day}`,
+    weekday: String(map.weekday || ""),
+    minutes: hour * 60 + minute,
+  };
+}
+
+function keepLatestJseSession(points: Array<{ time: number; value: number }>) {
+  if (points.length < 2) return points;
+
+  const byDate = new Map<string, Array<{ time: number; value: number }>>();
+  for (const point of points) {
+    const info = getJohannesburgParts(point.time);
+    if (!["Mon", "Tue", "Wed", "Thu", "Fri"].includes(info.weekday)) continue;
+    if (info.minutes < 9 * 60 || info.minutes > 17 * 60 + 10) continue;
+    if (!byDate.has(info.dateKey)) byDate.set(info.dateKey, []);
+    byDate.get(info.dateKey)?.push(point);
+  }
+
+  const latestDate = [...byDate.keys()].sort().pop();
+  if (!latestDate) return points;
+  const sessionPoints = byDate.get(latestDate) || [];
+  return sessionPoints.length > 1 ? sessionPoints : points;
+}
+
 function dropTerminalOutlier(points: Array<{ time: number; value: number }>, symbol: string, tf: string) {
   if (tf !== "1D" || !isJseSymbol(symbol) || points.length < 3) return points;
 
@@ -301,16 +341,7 @@ function trimIntradayPoints(
   let trimmed = points;
 
   if (tf === "1D" && isJseSymbol(symbol)) {
-    const regular = (meta?.currentTradingPeriod as Record<string, unknown> | undefined)?.regular as
-      | Record<string, unknown>
-      | undefined;
-    const sessionStart = Number(regular?.start || 0);
-    const sessionEnd = Number(regular?.end || 0);
-
-    if (sessionStart && sessionEnd) {
-      const sessionPoints = points.filter((point) => point.time >= sessionStart - 30 * 60 && point.time <= sessionEnd + 15 * 60);
-      if (sessionPoints.length > 1) trimmed = sessionPoints;
-    }
+    trimmed = keepLatestJseSession(points);
   }
 
   if (trailingSeconds && trimmed.length) {
