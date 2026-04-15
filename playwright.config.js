@@ -16,7 +16,7 @@ module.exports = defineConfig({
     },
   },
   webServer: {
-    command: 'php -S 127.0.0.1:8787 -t .',
+    command: 'py -m http.server 8787 --bind 127.0.0.1',
     url: 'http://127.0.0.1:8787',
     reuseExistingServer: true,
     timeout: 10000,

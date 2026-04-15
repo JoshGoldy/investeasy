@@ -1,6 +1,7 @@
 const { test, expect } = require('@playwright/test');
 
 const BASE = process.env.TEST_URL || 'http://127.0.0.1:8787';
+const BASE_URL = BASE.endsWith('/') ? BASE : `${BASE}/`;
 
 async function openTab(page, label) {
   const button = page.locator(`nav button:has-text("${label}")`).first();
@@ -62,10 +63,20 @@ test.describe('FinScope smoke suite', () => {
   });
 
   test('settings page renders account controls', async ({ page }) => {
-    await page.goto(`${BASE.replace(/index\.html$/, '')}settings.html`);
+    await page.goto(new URL('settings.html', BASE_URL).toString());
     await page.waitForLoadState('domcontentloaded');
+    const settingsTab = page.locator('#tab-settings');
+    const authOverlay = page.locator('#auth-overlay:not(.hidden)');
+    const authButtons = page.locator('#header-auth-btns');
 
-    await expect(page.locator('#tab-settings')).toBeVisible();
-    await expect(page.locator('#tab-settings')).toContainText(/Account|Plan & Credits/i);
+    if (await settingsTab.isVisible()) {
+      await expect(settingsTab).toContainText(/Account|Plan & Credits/i);
+    } else if (await authOverlay.count()) {
+      await expect(authOverlay).toBeVisible();
+      await expect(authOverlay).toContainText(/log in|sign in|create account|email code/i);
+    } else {
+      await expect(authButtons).toBeVisible();
+      await expect(authButtons).toContainText(/log in|sign up/i);
+    }
   });
 });

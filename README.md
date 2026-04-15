@@ -162,6 +162,7 @@ npm run test:smoke
 Pre-launch checklist:
 
 - [docs/launch-checklist.md](C:/Users/joshu/Desktop/investeasy/docs/launch-checklist.md)
+- [docs/release-candidate-qa.md](C:/Users/joshu/Desktop/investeasy/docs/release-candidate-qa.md)
 
 ## License
 

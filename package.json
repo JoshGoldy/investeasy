@@ -1,7 +1,9 @@
 {
   "scripts": {
     "test:smoke": "playwright test tests/e2e/smoke.spec.js",
-    "test:smoke:headed": "playwright test tests/e2e/smoke.spec.js --headed"
+    "test:smoke:headed": "playwright test tests/e2e/smoke.spec.js --headed",
+    "test:smoke:auth": "playwright test tests/e2e/authenticated.spec.js",
+    "test:smoke:auth:headed": "playwright test tests/e2e/authenticated.spec.js --headed"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.0"
