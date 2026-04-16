@@ -160,6 +160,7 @@ const CHART_CONFIG: Record<string, { interval: string; range: string; trailingSe
   "1M": { interval: "1d", range: "1mo" },
   "3M": { interval: "1d", range: "3mo" },
   "1Y": { interval: "1wk", range: "1y" },
+  "ALL": { interval: "1mo", range: "max" },
 };
 
 const NEWS_FEEDS = [
@@ -245,7 +246,7 @@ function getCacheTtl(action: string, context: Record<string, unknown> = {}) {
   if (action === "chart") {
     const tf = String(context.tf || "").toUpperCase();
     if (tf === "1D") return 60;
-    if (["1W", "1M", "3M", "1Y"].includes(tf)) return 300;
+    if (["1W", "1M", "3M", "1Y", "ALL"].includes(tf)) return 300;
   }
   return CACHE_TTLS[action] ?? 0;
 }

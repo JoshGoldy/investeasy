@@ -198,10 +198,11 @@ const TF_CONFIG = {
   '1M': { pts: 30,  lbl: monthLabels },
   '3M': { pts: 90,  lbl: monthLabels },
   '1Y': { pts: 12,  lbl: () => yearLabels() },
+  'ALL': { pts: 120, lbl: () => yearLabels() },
 };
 // Seconds between each generated data point per timeframe
-const TF_STEP = { '1D': 300, '1W': 3600, '1M': 86400, '3M': 86400, '1Y': 2592000 };
-const TIMEFRAMES = ['1D','1W','1M','3M','1Y'];
+const TF_STEP = { '1D': 300, '1W': 3600, '1M': 86400, '3M': 86400, '1Y': 2592000, 'ALL': 2592000 };
+const TIMEFRAMES = ['1D','1W','1M','3M','1Y','ALL'];
 
 const MARKETS = RAW_MARKETS.map(m => {
   const charts = {};
