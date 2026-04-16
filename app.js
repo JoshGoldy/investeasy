@@ -6022,7 +6022,8 @@ function renderSettings() {
   }
 
   document.getElementById('tab-settings').innerHTML = `
-    <div class="section-title"><h2>Settings</h2><p>Manage your profile & preferences</p></div>
+    <div class="settings-page">
+    <div class="section-title"><h2>Settings</h2><p>Manage your profile, plan, preferences, and diagnostics.</p></div>
 
     <!-- Profile Card -->
     <div class="profile-card">
@@ -6144,7 +6145,7 @@ function renderSettings() {
     ${currentUser ? `
     <div class="settings-section">
       <p class="settings-section-label">Plan &amp; Credits</p>
-      <div class="settings-group" style="overflow:hidden">
+      <div class="settings-group settings-group-pad settings-group-stack settings-billing-group" style="overflow:hidden">
         <div class="settings-row">
           <div class="settings-row-left">
             <div class="settings-row-icon" style="background:${tierInfo.iconBg}">${tierInfo.icon}</div>
@@ -6153,7 +6154,7 @@ function renderSettings() {
               <p class="settings-row-sub">${tierInfo.sub}</p>
             </div>
           </div>
-          <span style="font-size:11px;font-weight:800;padding:4px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${tierInfo.chipBg};color:${tierInfo.chipColor}">${tierInfo.label}</span>
+          <span class="settings-plan-chip" style="background:${tierInfo.chipBg};color:${tierInfo.chipColor}">${tierInfo.label}</span>
         </div>
         <div class="settings-row">
           <div class="settings-row-left">
@@ -6163,10 +6164,10 @@ function renderSettings() {
               <p class="settings-row-sub">Resets monthly · 5 per analysis, 2 per news AI</p>
             </div>
           </div>
-          <span style="font-size:13px;font-weight:800;color:#10b981">${currentUser.finbot_credits??0}</span>
+          <span class="settings-credit-pill">${currentUser.finbot_credits??0}</span>
         </div>
         <div style="padding:14px 16px 16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:12px">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+          <div class="settings-toolbar">
             <div>
               <p style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">Upgrade or manage your plan</p>
               <p style="font-size:12px;color:var(--muted);line-height:1.55">Basic is ideal for lighter monthly use, while Pro and Enterprise give you more FinBot credits every month.</p>
@@ -6175,7 +6176,7 @@ function renderSettings() {
           </div>
           ${renderBillingPlanCards(currentUser.tier || 'free')}
           ${currentUser.billing_status ? `
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:12px 14px">
+            <div class="settings-note-card" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
               <div>
                 <p style="font-size:12px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:0.05em">Billing Status</p>
                 <p style="font-size:12px;color:var(--muted);margin-top:3px">${escHtml(currentUser.billing_status)}</p>
@@ -6191,45 +6192,45 @@ function renderSettings() {
     <!-- System Status -->
     <div class="settings-section">
       <p class="settings-section-label">System Status</p>
-      <div class="settings-group" style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+      <div class="settings-group settings-group-pad settings-group-stack settings-status-group">
+        <div class="settings-status-grid">
           ${serviceStatus.map(item => `
-            <div style="background:#f8fafc;border:1px solid var(--border);border-radius:14px;padding:12px 13px">
-              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px">
-                <span style="font-size:12px;font-weight:800;color:var(--text)">${item.label}</span>
-                <span style="font-size:10px;font-weight:800;padding:4px 8px;border-radius:999px;background:${item.tone}18;color:${item.tone};text-transform:uppercase;letter-spacing:0.05em">${item.state}</span>
+            <div class="settings-status-card">
+              <div class="settings-status-head">
+                <span class="settings-status-title">${item.label}</span>
+                <span class="settings-status-pill" style="background:${item.tone}18;color:${item.tone}">${item.state}</span>
               </div>
-              <p style="font-size:12px;line-height:1.45;color:var(--muted)">${escHtml(item.sub)}</p>
+              <p class="settings-status-sub">${escHtml(item.sub)}</p>
             </div>
           `).join('')}
         </div>
 
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="settings-toolbar">
           <div>
-            <p style="font-size:13px;font-weight:800;color:var(--text)">Recent diagnostics</p>
-            <p style="font-size:12px;color:var(--muted);margin-top:2px">Last 5 captured runtime issues from auth, FinBot, markets, news, and calendar.</p>
+            <p class="settings-panel-title">Recent diagnostics</p>
+            <p class="settings-panel-sub">Last 5 captured runtime issues from auth, FinBot, markets, news, and calendar.</p>
           </div>
           <button class="settings-select" onclick="clearDiagnosticsLog()" style="cursor:pointer;min-width:140px">Clear Diagnostics</button>
         </div>
 
         ${recentIssues.length ? `
-          <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="settings-log-list">
             ${recentIssues.map(issue => `
-              <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:11px 12px">
-                <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap">
-                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                    <span style="font-size:11px;font-weight:800;padding:4px 8px;border-radius:999px;background:${issue.severity === 'error' ? '#ef444418' : '#f59e0b18'};color:${issue.severity === 'error' ? '#ef4444' : '#f59e0b'};text-transform:uppercase;letter-spacing:0.05em">${issue.severity}</span>
-                    <span style="font-size:12px;font-weight:700;color:var(--text)">${escHtml(issue.service)}</span>
+              <div class="settings-log-card">
+                <div class="settings-log-head">
+                  <div class="settings-log-meta">
+                    <span class="settings-status-pill" style="background:${issue.severity === 'error' ? '#ef444418' : '#f59e0b18'};color:${issue.severity === 'error' ? '#ef4444' : '#f59e0b'}">${issue.severity}</span>
+                    <span class="settings-log-service">${escHtml(issue.service)}</span>
                   </div>
-                  <span style="font-size:11px;color:var(--muted)">${formatDiagnosticsTime(issue.at)}</span>
+                  <span class="settings-log-time">${formatDiagnosticsTime(issue.at)}</span>
                 </div>
-                <p style="margin-top:8px;font-size:12px;line-height:1.5;color:var(--text)">${escHtml(issue.message)}</p>
+                <p class="settings-log-body">${escHtml(issue.message)}</p>
               </div>
             `).join('')}
           </div>
         ` : `
-          <div style="background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:12px 14px">
-            <p style="font-size:12px;color:var(--muted)">No runtime issues have been captured recently. Once the app hits a real auth, function, or market-data problem, it will appear here.</p>
+          <div class="settings-note-card">
+            <p class="settings-note-sub">No runtime issues have been captured recently. Once the app hits a real auth, function, or market-data problem, it will appear here.</p>
           </div>
         `}
       </div>
@@ -6238,18 +6239,18 @@ function renderSettings() {
     ${canViewOps ? `
     <div class="settings-section">
       <p class="settings-section-label">Server Health</p>
-      <div class="settings-group" style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <div class="settings-group settings-group-pad settings-group-stack settings-ops-group">
+        <div class="settings-toolbar">
           <div>
-            <p style="font-size:13px;font-weight:800;color:var(--text)">Supabase function activity</p>
-            <p style="font-size:12px;color:var(--muted);margin-top:2px">Recent backend signals from FinBot and market-data.</p>
+            <p class="settings-panel-title">Supabase function activity</p>
+            <p class="settings-panel-sub">Recent backend signals from FinBot and market-data.</p>
           </div>
           <button class="settings-select" onclick="loadOpsStatus(true)" style="cursor:pointer;min-width:140px">${opsStatusState.loading ? 'Refreshing…' : 'Refresh Health'}</button>
         </div>
 
         ${opsStatusState.loading && !opsData ? `
-          <div style="background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:12px 14px">
-            <p style="font-size:12px;color:var(--muted)">Loading server-side health data…</p>
+          <div class="settings-note-card">
+            <p class="settings-note-sub">Loading server-side health data…</p>
           </div>
         ` : ''}
 
@@ -6261,54 +6262,54 @@ function renderSettings() {
         ` : ''}
 
         ${opsData ? `
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+          <div class="settings-status-grid">
             ${Object.entries(opsData.plan_counts || {}).map(([plan, count]) => `
-              <div style="background:#f8fafc;border:1px solid var(--border);border-radius:14px;padding:12px 13px">
-                <p style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">${escHtml(plan)} users</p>
-                <p style="font-size:22px;font-weight:800;color:var(--text);margin-top:6px">${Number(count || 0)}</p>
+              <div class="settings-status-card">
+                <p class="settings-status-label">${escHtml(plan)} users</p>
+                <p class="settings-metric-value">${Number(count || 0)}</p>
               </div>
             `).join('')}
-            <div style="background:#f8fafc;border:1px solid var(--border);border-radius:14px;padding:12px 13px">
-              <p style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">Low credits</p>
-              <p style="font-size:22px;font-weight:800;color:${Number(opsData.low_credit_users || 0) > 0 ? '#f59e0b' : 'var(--text)'};margin-top:6px">${Number(opsData.low_credit_users || 0)}</p>
+            <div class="settings-status-card">
+              <p class="settings-status-label">Low credits</p>
+              <p class="settings-metric-value" style="color:${Number(opsData.low_credit_users || 0) > 0 ? '#f59e0b' : 'var(--text)'}">${Number(opsData.low_credit_users || 0)}</p>
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
+          <div class="settings-status-grid settings-status-grid-wide">
             ${Object.entries(opsData.service_summary || {}).map(([service, info]) => `
-              <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px 13px">
-                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-                  <span style="font-size:12px;font-weight:800;color:var(--text)">${escHtml(service)}</span>
-                  <span style="font-size:11px;color:var(--muted)">${formatDiagnosticsTime(info.lastAt)}</span>
+              <div class="settings-status-card">
+                <div class="settings-status-head">
+                  <span class="settings-status-title">${escHtml(service)}</span>
+                  <span class="settings-log-time">${formatDiagnosticsTime(info.lastAt)}</span>
                 </div>
-                <p style="margin-top:8px;font-size:12px;color:var(--muted)">Last event: ${escHtml(info.lastEvent || 'none')}</p>
-                <div style="display:flex;gap:8px;margin-top:10px">
-                  <span style="font-size:11px;font-weight:800;padding:4px 8px;border-radius:999px;background:#ef444418;color:#ef4444">Errors ${Number(info.errors || 0)}</span>
-                  <span style="font-size:11px;font-weight:800;padding:4px 8px;border-radius:999px;background:#f59e0b18;color:#f59e0b">Warns ${Number(info.warns || 0)}</span>
+                <p class="settings-status-sub">Last event: ${escHtml(info.lastEvent || 'none')}</p>
+                <div class="settings-chip-row">
+                  <span class="settings-status-pill" style="background:#ef444418;color:#ef4444">Errors ${Number(info.errors || 0)}</span>
+                  <span class="settings-status-pill" style="background:#f59e0b18;color:#f59e0b">Warns ${Number(info.warns || 0)}</span>
                 </div>
               </div>
             `).join('') || `
-              <div style="background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:12px 14px">
-                <p style="font-size:12px;color:var(--muted)">No server-side events captured in the last 24 hours.</p>
+              <div class="settings-note-card">
+                <p class="settings-note-sub">No server-side events captured in the last 24 hours.</p>
               </div>
             `}
           </div>
 
-          <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="settings-log-list">
             ${(opsData.recent_events || []).map(event => `
-              <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:11px 12px">
-                <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap">
-                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                    <span style="font-size:11px;font-weight:800;padding:4px 8px;border-radius:999px;background:${event.level === 'error' ? '#ef444418' : event.level === 'warn' ? '#f59e0b18' : '#10b98118'};color:${event.level === 'error' ? '#ef4444' : event.level === 'warn' ? '#f59e0b' : '#10b981'};text-transform:uppercase;letter-spacing:0.05em">${escHtml(event.level)}</span>
-                    <span style="font-size:12px;font-weight:700;color:var(--text)">${escHtml(event.service)} · ${escHtml(event.event)}</span>
+              <div class="settings-log-card">
+                <div class="settings-log-head">
+                  <div class="settings-log-meta">
+                    <span class="settings-status-pill" style="background:${event.level === 'error' ? '#ef444418' : event.level === 'warn' ? '#f59e0b18' : '#10b98118'};color:${event.level === 'error' ? '#ef4444' : event.level === 'warn' ? '#f59e0b' : '#10b981'}">${escHtml(event.level)}</span>
+                    <span class="settings-log-service">${escHtml(event.service)} · ${escHtml(event.event)}</span>
                   </div>
-                  <span style="font-size:11px;color:var(--muted)">${formatDiagnosticsTime(event.created_at)}</span>
+                  <span class="settings-log-time">${formatDiagnosticsTime(event.created_at)}</span>
                 </div>
-                ${event.detail ? `<p style="margin-top:8px;font-size:12px;line-height:1.5;color:var(--text)">${escHtml(event.detail)}</p>` : ''}
+                ${event.detail ? `<p class="settings-log-body">${escHtml(event.detail)}</p>` : ''}
               </div>
             `).join('') || `
-              <div style="background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:12px 14px">
-                <p style="font-size:12px;color:var(--muted)">No recent server-side events yet.</p>
+              <div class="settings-note-card">
+                <p class="settings-note-sub">No recent server-side events yet.</p>
               </div>
             `}
           </div>
@@ -6321,7 +6322,7 @@ function renderSettings() {
     <!-- Account -->
     <div class="settings-section">
       <p class="settings-section-label">Account</p>
-      <div class="settings-group" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+      <div class="settings-group settings-group-pad settings-group-stack settings-account-group">
         ${currentUser ? `
           <button class="modal-save-btn" style="background:#3b82f6" onclick="manageSignInEmail()">Manage Sign-In Email</button>
           <button class="modal-save-btn" style="background:#1e293b" onclick="doLogout()">Sign Out</button>
@@ -6331,6 +6332,7 @@ function renderSettings() {
     </div>
 
     <div style="height:8px"></div>
+    </div>
   `;
   scheduleUiIconRefresh(document.getElementById('tab-settings'));
 }
