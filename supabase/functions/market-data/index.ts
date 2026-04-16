@@ -14,6 +14,13 @@ const RATE_LIMITS: Record<string, { limit: number; windowSeconds: number }> = {
   calendar: { limit: 20, windowSeconds: 10 * 60 },
 };
 
+const CACHE_TTLS: Record<string, number> = {
+  quotes: 60,
+  chart: 300,
+  news: 300,
+  calendar: 900,
+};
+
 const ALLOWED_ARTICLE_HOSTS = new Set([
   "www.cnbc.com",
   "cnbc.com",
@@ -231,6 +238,78 @@ async function logFunctionEvent(
   }
 }
 
+function getCacheTtl(action: string, context: Record<string, unknown> = {}) {
+  if (action === "quotes") {
+    return 60;
+  }
+  if (action === "chart") {
+    const tf = String(context.tf || "").toUpperCase();
+    if (tf === "1D") return 60;
+    if (["1W", "1M", "3M", "1Y"].includes(tf)) return 300;
+  }
+  return CACHE_TTLS[action] ?? 0;
+}
+
+async function getCachedPayload(cacheKey: string) {
+  const client = await createAdminClient();
+  const { data, error } = await client
+    .from("market_cache")
+    .select("payload, expires_at")
+    .eq("cache_key", cacheKey)
+    .maybeSingle();
+
+  if (error) throw new Error(`Cache lookup failed: ${error.message}`);
+  if (!data?.payload || !data.expires_at) return null;
+  if (new Date(data.expires_at).getTime() <= Date.now()) return null;
+  return data.payload;
+}
+
+async function setCachedPayload(cacheKey: string, payload: Record<string, unknown>, ttlSeconds: number) {
+  if (!ttlSeconds) return;
+  const client = await createAdminClient();
+  const expiresAt = new Date(Date.now() + ttlSeconds * 1000).toISOString();
+  const { error } = await client
+    .from("market_cache")
+    .upsert({
+      cache_key: cacheKey,
+      payload,
+      updated_at: new Date().toISOString(),
+      expires_at: expiresAt,
+    });
+  if (error) throw new Error(`Cache write failed: ${error.message}`);
+}
+
+function sanitizeCacheKeyPart(value: string) {
+  return value.replace(/[^a-zA-Z0-9:_.,-]/g, "_").slice(0, 180);
+}
+
+async function withMarketCache(
+  action: string,
+  cacheKey: string,
+  context: Record<string, unknown>,
+  builder: () => Promise<Record<string, unknown>>,
+) {
+  const ttlSeconds = getCacheTtl(action, context);
+  if (ttlSeconds > 0) {
+    try {
+      const cached = await getCachedPayload(cacheKey);
+      if (cached) return json(cached as Record<string, unknown>);
+    } catch (error) {
+      await logFunctionEvent("market-data", "warn", cacheKey, "cache_read_failed", error instanceof Error ? error.message : "Unknown cache read failure", { action });
+    }
+  }
+
+  const payload = await builder();
+  if (ttlSeconds > 0) {
+    try {
+      await setCachedPayload(cacheKey, payload, ttlSeconds);
+    } catch (error) {
+      await logFunctionEvent("market-data", "warn", cacheKey, "cache_write_failed", error instanceof Error ? error.message : "Unknown cache write failure", { action });
+    }
+  }
+  return json(payload);
+}
+
 async function fetchJson(url: string, init?: RequestInit) {
   const resp = await fetch(url, init);
   if (!resp.ok) throw new Error(`Upstream request failed with ${resp.status}`);
@@ -377,100 +456,108 @@ async function handleQuotes(rawTickers: unknown) {
   const tickers = parseTickers(rawTickers);
   if (!tickers.length) return json({ success: false, error: "No tickers provided." }, 400);
   if (tickers.length > 80) return json({ success: false, error: "Too many tickers requested at once." }, 400);
-  const quotes: Record<string, unknown> = {};
+  const normalized = [...new Set(tickers.map((ticker) => ticker.toUpperCase()))].sort();
+  const cacheKey = `quotes:${sanitizeCacheKeyPart(normalized.join(","))}`;
 
-  await Promise.all(
-    tickers.map(async (ticker) => {
-      const mapped = TICKER_MAP[ticker];
-      if (!mapped) return;
-      try {
-        const data = await fetchYahooChart(mapped, "1d", "5d");
-        const result = data?.chart?.result?.[0];
-        const meta = result?.meta;
-        if (!meta) return;
-        const closes = result?.indicators?.quote?.[0]?.close || [];
-        const timestamps = result?.timestamp || [];
-        const rawPoints: Array<{ time: number; value: number }> = [];
-        for (let i = 0; i < Math.min(closes.length, timestamps.length); i++) {
-          if (closes[i] == null) continue;
-          rawPoints.push({ time: Number(timestamps[i]), value: Number(Number(closes[i]).toFixed(4)) });
-        }
-        const cleanedPoints = trimIntradayPoints(rawPoints, meta, mapped, "1D", 24 * 60 * 60);
-        const latestPoint = cleanedPoints[cleanedPoints.length - 1]?.value;
-        const price = latestPoint ?? meta.regularMarketPrice ?? null;
-        const prevClose = meta.previousClose ?? meta.chartPreviousClose ?? null;
-        const chg =
-          price && prevClose && prevClose > 0
-            ? Number((((price - prevClose) / prevClose) * 100).toFixed(2))
-            : meta.regularMarketChangePercent != null
-              ? Number(Number(meta.regularMarketChangePercent).toFixed(2))
-              : null;
-        quotes[ticker] = {
-          price: price != null ? Number(Number(price).toFixed(4)) : null,
-          chg,
-          hi52: meta.fiftyTwoWeekHigh != null ? Number(Number(meta.fiftyTwoWeekHigh).toFixed(2)) : null,
-          lo52: meta.fiftyTwoWeekLow != null ? Number(Number(meta.fiftyTwoWeekLow).toFixed(2)) : null,
-        };
-      } catch (_) {}
-    }),
-  );
+  return withMarketCache("quotes", cacheKey, { tickers: normalized }, async () => {
+    const quotes: Record<string, unknown> = {};
 
-  return json({ success: true, quotes });
+    await Promise.all(
+      normalized.map(async (ticker) => {
+        const mapped = TICKER_MAP[ticker];
+        if (!mapped) return;
+        try {
+          const data = await fetchYahooChart(mapped, "1d", "5d");
+          const result = data?.chart?.result?.[0];
+          const meta = result?.meta;
+          if (!meta) return;
+          const closes = result?.indicators?.quote?.[0]?.close || [];
+          const timestamps = result?.timestamp || [];
+          const rawPoints: Array<{ time: number; value: number }> = [];
+          for (let i = 0; i < Math.min(closes.length, timestamps.length); i++) {
+            if (closes[i] == null) continue;
+            rawPoints.push({ time: Number(timestamps[i]), value: Number(Number(closes[i]).toFixed(4)) });
+          }
+          const cleanedPoints = trimIntradayPoints(rawPoints, meta, mapped, "1D", 24 * 60 * 60);
+          const latestPoint = cleanedPoints[cleanedPoints.length - 1]?.value;
+          const price = latestPoint ?? meta.regularMarketPrice ?? null;
+          const prevClose = meta.previousClose ?? meta.chartPreviousClose ?? null;
+          const chg =
+            price && prevClose && prevClose > 0
+              ? Number((((price - prevClose) / prevClose) * 100).toFixed(2))
+              : meta.regularMarketChangePercent != null
+                ? Number(Number(meta.regularMarketChangePercent).toFixed(2))
+                : null;
+          quotes[ticker] = {
+            price: price != null ? Number(Number(price).toFixed(4)) : null,
+            chg,
+            hi52: meta.fiftyTwoWeekHigh != null ? Number(Number(meta.fiftyTwoWeekHigh).toFixed(2)) : null,
+            lo52: meta.fiftyTwoWeekLow != null ? Number(Number(meta.fiftyTwoWeekLow).toFixed(2)) : null,
+          };
+        } catch (_) {}
+      }),
+    );
+
+    return { success: true, quotes };
+  });
 }
 
 async function handleChart(ticker: string, tf: string) {
   const mapped = TICKER_MAP[ticker];
   if (!mapped) return json({ success: false, error: "Unknown ticker" }, 400);
-  const baseCfg = CHART_CONFIG[tf] || CHART_CONFIG["1M"];
-  const cfg =
-    tf === "1D" && isJseSymbol(mapped)
-      ? { interval: "5m", range: "1d", trailingSeconds: undefined }
-      : baseCfg;
-  const extractPoints = (result: any, config: { trailingSeconds?: number }) => {
-    const closes = result?.indicators?.quote?.[0]?.close || [];
-    const timestamps = result?.timestamp || [];
-    const points = [];
-    for (let i = 0; i < Math.min(closes.length, timestamps.length); i++) {
-      if (closes[i] == null) continue;
-      points.push({ time: Number(timestamps[i]), value: Number(Number(closes[i]).toFixed(4)) });
-    }
-    return trimIntradayPoints(points, result?.meta, mapped, tf, config.trailingSeconds);
-  };
-
-  const data = await fetchYahooChart(mapped, cfg.interval, cfg.range);
-  let result = data?.chart?.result?.[0];
-  if (!result) return json({ success: false, error: "No chart data" }, 502);
-
-  let cleanedPoints = extractPoints(result, cfg);
-
-  if (tf === "1D" && isJseSymbol(mapped) && cleanedPoints.length < 2) {
-    const fallbackCfg = { interval: "15m", range: "5d", trailingSeconds: undefined };
-    try {
-      const fallbackData = await fetchYahooChart(mapped, fallbackCfg.interval, fallbackCfg.range);
-      const fallbackResult = fallbackData?.chart?.result?.[0];
-      if (fallbackResult) {
-        result = fallbackResult;
-        cleanedPoints = extractPoints(fallbackResult, fallbackCfg);
+  const cacheKey = `chart:${sanitizeCacheKeyPart(`${ticker.toUpperCase()}:${tf}`)}`;
+  return withMarketCache("chart", cacheKey, { ticker, tf }, async () => {
+    const baseCfg = CHART_CONFIG[tf] || CHART_CONFIG["1M"];
+    const cfg =
+      tf === "1D" && isJseSymbol(mapped)
+        ? { interval: "5m", range: "1d", trailingSeconds: undefined }
+        : baseCfg;
+    const extractPoints = (result: any, config: { trailingSeconds?: number }) => {
+      const closes = result?.indicators?.quote?.[0]?.close || [];
+      const timestamps = result?.timestamp || [];
+      const points = [];
+      for (let i = 0; i < Math.min(closes.length, timestamps.length); i++) {
+        if (closes[i] == null) continue;
+        points.push({ time: Number(timestamps[i]), value: Number(Number(closes[i]).toFixed(4)) });
       }
-    } catch (_) {
-      // Continue into synthetic fallback below.
+      return trimIntradayPoints(points, result?.meta, mapped, tf, config.trailingSeconds);
+    };
+
+    const data = await fetchYahooChart(mapped, cfg.interval, cfg.range);
+    let result = data?.chart?.result?.[0];
+    if (!result) return { success: false, error: "No chart data" };
+
+    let cleanedPoints = extractPoints(result, cfg);
+
+    if (tf === "1D" && isJseSymbol(mapped) && cleanedPoints.length < 2) {
+      const fallbackCfg = { interval: "15m", range: "5d", trailingSeconds: undefined };
+      try {
+        const fallbackData = await fetchYahooChart(mapped, fallbackCfg.interval, fallbackCfg.range);
+        const fallbackResult = fallbackData?.chart?.result?.[0];
+        if (fallbackResult) {
+          result = fallbackResult;
+          cleanedPoints = extractPoints(fallbackResult, fallbackCfg);
+        }
+      } catch (_) {
+        // Continue into synthetic fallback below.
+      }
     }
-  }
 
-  if (tf === "1D" && isJseSymbol(mapped) && cleanedPoints.length < 2) {
-    const meta = result?.meta || {};
-    const currentPrice = Number(meta.regularMarketPrice ?? meta.previousClose ?? meta.chartPreviousClose ?? 0);
-    const previousClose = Number(meta.previousClose ?? meta.chartPreviousClose ?? currentPrice);
-    if (currentPrice > 0) {
-      cleanedPoints = buildSyntheticIntradaySeries(currentPrice, previousClose);
+    if (tf === "1D" && isJseSymbol(mapped) && cleanedPoints.length < 2) {
+      const meta = result?.meta || {};
+      const currentPrice = Number(meta.regularMarketPrice ?? meta.previousClose ?? meta.chartPreviousClose ?? 0);
+      const previousClose = Number(meta.previousClose ?? meta.chartPreviousClose ?? currentPrice);
+      if (currentPrice > 0) {
+        cleanedPoints = buildSyntheticIntradaySeries(currentPrice, previousClose);
+      }
     }
-  }
 
-  if (cleanedPoints.length < 2) {
-    return json({ success: false, error: "No valid chart data" }, 502);
-  }
+    if (cleanedPoints.length < 2) {
+      return { success: false, error: "No valid chart data" };
+    }
 
-  return json({ success: true, points: cleanedPoints });
+    return { success: true, points: cleanedPoints };
+  });
 }
 
 function decodeHtml(html: string) {
@@ -555,31 +642,33 @@ function parseRssItems(xmlText: string, defaultPublisher: string) {
 }
 
 async function handleNews() {
-  const seen = new Set<string>();
-  const combined: Array<Record<string, unknown>> = [];
+  return withMarketCache("news", "news:feed:top30", {}, async () => {
+    const seen = new Set<string>();
+    const combined: Array<Record<string, unknown>> = [];
 
-  await Promise.all(
-    NEWS_FEEDS.map(async ({ url, pub }) => {
-      try {
-        const xml = await fetchText(url, {
-          headers: {
-            "User-Agent": "Mozilla/5.0 (compatible; RSS reader/1.0)",
-            Accept: "application/rss+xml, application/xml, text/xml, */*",
-          },
-        });
-        const items = parseRssItems(xml, pub);
-        for (const item of items) {
-          const key = String(item.title || "").trim().toLowerCase();
-          if (!key || seen.has(key)) continue;
-          seen.add(key);
-          combined.push(item);
-        }
-      } catch (_) {}
-    }),
-  );
+    await Promise.all(
+      NEWS_FEEDS.map(async ({ url, pub }) => {
+        try {
+          const xml = await fetchText(url, {
+            headers: {
+              "User-Agent": "Mozilla/5.0 (compatible; RSS reader/1.0)",
+              Accept: "application/rss+xml, application/xml, text/xml, */*",
+            },
+          });
+          const items = parseRssItems(xml, pub);
+          for (const item of items) {
+            const key = String(item.title || "").trim().toLowerCase();
+            if (!key || seen.has(key)) continue;
+            seen.add(key);
+            combined.push(item);
+          }
+        } catch (_) {}
+      }),
+    );
 
-  combined.sort((a, b) => Number(b.pubTime || 0) - Number(a.pubTime || 0));
-  return json({ success: true, articles: combined.slice(0, 30), fetchedAt: Math.floor(Date.now() / 1000) });
+    combined.sort((a, b) => Number(b.pubTime || 0) - Number(a.pubTime || 0));
+    return { success: true, articles: combined.slice(0, 30), fetchedAt: Math.floor(Date.now() / 1000) };
+  });
 }
 
 async function fetchQuoteSummary(symbol: string) {
@@ -734,11 +823,14 @@ function generateEconomicEvents(from: string, to: string) {
 }
 
 async function handleCalendar(from: string, to: string) {
-  const [earnings, economic] = await Promise.all([
-    fetchEarningsCalendar(from, to),
-    Promise.resolve(generateEconomicEvents(from, to)),
-  ]);
-  return json({ success: true, earnings, economic });
+  const cacheKey = `calendar:${sanitizeCacheKeyPart(`${from}:${to}`)}`;
+  return withMarketCache("calendar", cacheKey, { from, to }, async () => {
+    const [earnings, economic] = await Promise.all([
+      fetchEarningsCalendar(from, to),
+      Promise.resolve(generateEconomicEvents(from, to)),
+    ]);
+    return { success: true, earnings, economic };
+  });
 }
 
 Deno.serve(async (req) => {

@@ -40,6 +40,36 @@ const TAB_PAGE_MAP = {
   settings: 'settings.html',
 };
 
+const BILLING_PLANS = {
+  basic: {
+    label: 'Basic',
+    priceZar: 99,
+    credits: 15,
+    tone: '#10b981',
+    badgeBg: '#10b98122',
+    desc: 'Starter AI access with monthly credits',
+  },
+  pro: {
+    label: 'Pro',
+    priceZar: 199,
+    credits: 50,
+    tone: '#7c3aed',
+    badgeBg: '#7c3aed22',
+    desc: 'Full FinBot access with a larger credit pool',
+  },
+  enterprise: {
+    label: 'Enterprise',
+    priceZar: 499,
+    credits: 200,
+    tone: '#d97706',
+    badgeBg: '#d9770622',
+    desc: 'Highest monthly credit pool and priority support',
+  },
+};
+
+const TIER_ORDER = ['free', 'basic', 'pro', 'enterprise'];
+let billingCheckoutInFlight = '';
+
 // ═══════════════════════════════════════════════════════════════════════════
 // DATA LAYER
 // ═══════════════════════════════════════════════════════════════════════════
@@ -3599,9 +3629,13 @@ function renderFinBot() {
         </div>
         <h2 style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px">Upgrade to Unlock FinBot</h2>
         <p style="font-size:13.5px;color:var(--muted);line-height:1.65;max-width:320px;margin-bottom:24px">
-          FinBot is available on <strong style="color:#7c3aed">Pro</strong> and <strong style="color:#d97706">Enterprise</strong> plans. Get AI-powered stock analysis, portfolio review, earnings breakdowns, and more.
+          FinBot is available on paid plans. Start with <strong style="color:#10b981">Basic</strong>, or move up to <strong style="color:#7c3aed">Pro</strong> and <strong style="color:#d97706">Enterprise</strong> for larger monthly credit pools.
         </p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:360px;margin-bottom:28px">
+        <div style="width:100%;max-width:720px;margin-bottom:20px">${renderBillingPlanCards(userTier)}</div>
+        <button onclick="openBillingSupport()" style="width:100%;max-width:360px;padding:13px 20px;border-radius:14px;background:var(--card);color:var(--text);font-size:13px;font-weight:800;border:1px solid var(--border);cursor:pointer;margin-bottom:8px">
+          Need help choosing a plan?
+        </button>
+        <div style="display:none;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:360px;margin-bottom:28px">
           <div style="padding:16px;border-radius:14px;background:linear-gradient(135deg,#7c3aed18,#6d28d918);border:1px solid #7c3aed44">
             <div style="font-size:20px;margin-bottom:6px">⚡</div>
             <p style="font-weight:800;font-size:13px;color:#a78bfa;margin-bottom:4px">Pro</p>
@@ -3613,7 +3647,7 @@ function renderFinBot() {
             <p style="font-size:11.5px;color:var(--faint);line-height:1.5">200 credits<br>News AI: 2 credits<br>Analysis: 5 credits</p>
           </div>
         </div>
-        <div style="width:100%;max-width:360px;padding:14px 16px;border-radius:14px;background:var(--card);border:1px solid var(--border);margin-bottom:8px">
+        <div style="display:none;width:100%;max-width:360px;padding:14px 16px;border-radius:14px;background:var(--card);border:1px solid var(--border);margin-bottom:8px">
           <p style="font-size:12px;color:var(--faint);line-height:1.6;text-align:center">
             Contact your administrator to upgrade your plan, or reach out at <strong style="color:var(--text)">support@investeasy.app</strong>
           </p>
@@ -3649,9 +3683,13 @@ function renderFinBot() {
         </div>
         <h2 style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px">Out of FinBot Credits</h2>
         <p style="font-size:13.5px;color:var(--muted);line-height:1.65;max-width:320px;margin-bottom:20px">
-          You've used all your FinBot credits. Contact support to top up your account and continue using AI analysis.
+          You've used all your monthly FinBot credits. Upgrade your plan or contact support if you need billing help.
         </p>
-        <div style="width:100%;max-width:360px;padding:14px 16px;border-radius:14px;background:var(--card);border:1px solid var(--border)">
+        <div style="width:100%;max-width:720px;margin-bottom:16px">${renderBillingPlanCards(userTier)}</div>
+        <button onclick="openBillingSupport()" style="width:100%;max-width:360px;padding:13px 20px;border-radius:14px;background:var(--card);color:var(--text);font-size:13px;font-weight:800;border:1px solid var(--border);cursor:pointer;margin-bottom:8px">
+          Contact Billing Support
+        </button>
+        <div style="display:none;width:100%;max-width:360px;padding:14px 16px;border-radius:14px;background:var(--card);border:1px solid var(--border)">
           <p style="font-size:12px;color:var(--faint);line-height:1.6;text-align:center">
             Contact <strong style="color:var(--text)">support@investeasy.app</strong> to top up your credits
           </p>
@@ -3672,7 +3710,7 @@ function renderFinBot() {
             <p style="font-size:11px;color:var(--faint)">Quick chat + 6 elite analysis modes</p>
           </div>
           <div style="display:flex;align-items:center;gap:6px">
-            <span style="font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${currentUser.tier==='enterprise'?'#d9770622':'#7c3aed22'};color:${currentUser.tier==='enterprise'?'#fbbf24':'#a78bfa'}">${currentUser.tier==='enterprise'?'Enterprise':'Pro'}</span>
+            <span style="font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${getTierPresentation(currentUser.tier).chipBg};color:${getTierPresentation(currentUser.tier).chipColor}">${getTierPresentation(currentUser.tier).label}</span>
             <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:#10b98122;color:#10b981">⚡ ${currentUser.finbot_credits??0} credits</span>
           </div>
         </div>
@@ -3750,13 +3788,14 @@ function renderFinBot() {
       ${finbotState.error === 'upgrade_required' ? `
         <div class="error-box" style="background:#7c3aed14;border-color:#7c3aed44">
           <p style="font-weight:700;font-size:14px;color:#a78bfa">Upgrade Required</p>
-          <p style="margin:6px 0 10px;font-size:13px;color:#c4b5fd;line-height:1.5">FinBot is only available on Pro and Enterprise plans.</p>
-          <button onclick="resetFinBot();switchTab('finbot')" style="background:#7c3aed;color:#fff;border-radius:10px;padding:10px 20px;font-weight:700;font-size:13px">View Plans</button>
+          <p style="margin:6px 0 16px;font-size:13px;color:#c4b5fd;line-height:1.5">FinBot is only available on paid plans. Choose Basic, Pro, or Enterprise to continue.</p>
+          ${renderBillingPlanCards(currentUser?.tier || 'free')}
         </div>
       ` : finbotState.error === 'no_credits' ? `
         <div class="error-box" style="background:#dc262614;border-color:#dc262644">
           <p style="font-weight:700;font-size:14px;color:#f87171">Out of Credits</p>
-          <p style="margin:6px 0 10px;font-size:13px;color:#fca5a5;line-height:1.5">You have no FinBot credits remaining. Contact support to top up.</p>
+          <p style="margin:6px 0 16px;font-size:13px;color:#fca5a5;line-height:1.5">You have no FinBot credits remaining. Upgrade your plan or contact support for billing help.</p>
+          ${renderBillingPlanCards(currentUser?.tier || 'free')}
         </div>
       ` : finbotState.error ? `
         <div class="error-box">
@@ -6125,6 +6164,25 @@ function renderSettings() {
           </div>
           <span style="font-size:13px;font-weight:800;color:#10b981">${currentUser.finbot_credits??0}</span>
         </div>
+        <div style="padding:14px 16px 16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+            <div>
+              <p style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">Upgrade or manage your plan</p>
+              <p style="font-size:12px;color:var(--muted);line-height:1.55">Basic is ideal for lighter monthly use, while Pro and Enterprise give you more FinBot credits every month.</p>
+            </div>
+            <button class="settings-select" onclick="openBillingSupport()" style="cursor:pointer;min-width:150px">Billing Support</button>
+          </div>
+          ${renderBillingPlanCards(currentUser.tier || 'free')}
+          ${currentUser.billing_status ? `
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:12px 14px">
+              <div>
+                <p style="font-size:12px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:0.05em">Billing Status</p>
+                <p style="font-size:12px;color:var(--muted);margin-top:3px">${escHtml(currentUser.billing_status)}</p>
+              </div>
+              ${currentUser.current_period_end ? `<span style="font-size:12px;color:var(--muted)">Renews ${new Date(currentUser.current_period_end).toLocaleDateString()}</span>` : ''}
+            </div>
+          ` : ''}
+        </div>
       </div>
     </div>
     ` : ''}
@@ -6518,6 +6576,93 @@ async function invokeOpsStatusFunction() {
   return data;
 }
 
+async function invokeBillingFunction(payload) {
+  const sb = getSupabase();
+  const { data: sessionData, error: sessionError } = await sb.auth.getSession();
+  if (sessionError) throw new Error(sessionError.message || 'Could not verify your session.');
+  const accessToken = sessionData?.session?.access_token;
+  if (!accessToken) throw new Error('Please sign in again to manage billing.');
+
+  const { data, error } = await sb.functions.invoke('paystack-billing', {
+    body: payload,
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (error) {
+    let contextMessage = '';
+    const ctx = error.context;
+    if (ctx && typeof ctx === 'object') {
+      try {
+        if (typeof ctx.clone === 'function') {
+          const cloned = ctx.clone();
+          const parsed = await cloned.json().catch(() => null);
+          if (parsed && typeof parsed === 'object') {
+            contextMessage = parsed.error || parsed.message || JSON.stringify(parsed);
+          } else if (typeof cloned.text === 'function') {
+            contextMessage = (await cloned.text()).trim();
+          }
+        }
+      } catch (_) {}
+    }
+    throw new Error(describeAppError([error.message, contextMessage].filter(Boolean).join(' ').trim(), 'Billing is unavailable right now.'));
+  }
+  return data;
+}
+
+function openBillingSupport() {
+  window.location.href = 'mailto:support@investeasy.app?subject=FinScope billing help';
+}
+
+async function startTierCheckout(targetTier) {
+  if (!currentUser) {
+    document.getElementById('auth-overlay')?.classList.remove('hidden');
+    showAuthTab('login');
+    return;
+  }
+  if (!BILLING_PLANS[targetTier]) {
+    showToast('That plan is not available right now.');
+    return;
+  }
+  billingCheckoutInFlight = targetTier;
+  if (document.getElementById('tab-settings')?.classList.contains('active')) renderSettings();
+  if (document.getElementById('tab-finbot')?.classList.contains('active')) renderFinBot();
+  try {
+    const data = await invokeBillingFunction({ action: 'create_checkout', tier: targetTier });
+    if (!data?.authorization_url) throw new Error('Paystack checkout did not return a redirect URL.');
+    window.location.href = data.authorization_url;
+  } catch (error) {
+    showToast(describeAppError(error, 'Could not start checkout right now.'));
+    billingCheckoutInFlight = '';
+    if (document.getElementById('tab-settings')?.classList.contains('active')) renderSettings();
+    if (document.getElementById('tab-finbot')?.classList.contains('active')) renderFinBot();
+  }
+}
+
+async function processBillingReturnState() {
+  const params = new URLSearchParams(window.location.search);
+  const reference = params.get('reference') || params.get('trxref');
+  if (!reference || !currentUser) return;
+  try {
+    const data = await invokeBillingFunction({ action: 'verify_checkout', reference });
+    if (data?.tier) {
+      await checkAuth();
+      const label = getTierPresentation(data.tier).label;
+      showToast(`${label} plan activated.`);
+    }
+  } catch (error) {
+    showToast(describeAppError(error, 'We could not confirm your payment yet.'));
+  } finally {
+    params.delete('reference');
+    params.delete('trxref');
+    params.delete('billing');
+    const query = params.toString();
+    const nextUrl = `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash || ''}`;
+    window.history.replaceState({}, '', nextUrl);
+    billingCheckoutInFlight = '';
+    if (document.getElementById('tab-settings')?.classList.contains('active')) renderSettings();
+    if (document.getElementById('tab-finbot')?.classList.contains('active')) renderFinBot();
+  }
+}
+
 async function loadOpsStatus(force = false) {
   if (!currentUser) return null;
   if (!force && opsStatusState.data && (Date.now() - opsStatusState.loadedAt) < 60 * 1000) {
@@ -6575,6 +6720,11 @@ function normalizeCurrentUser(authUser, profile = {}) {
     tier: profile.tier || 'free',
     finbot_credits: profile.finbot_credits ?? 0,
     credits_reset_at: profile.credits_reset_at ?? null,
+    billing_status: profile.billing_status || 'inactive',
+    current_period_end: profile.current_period_end ?? null,
+    billing_provider: profile.billing_provider || null,
+    billing_customer_code: profile.billing_customer_code || null,
+    billing_subscription_code: profile.billing_subscription_code || null,
     age: profile.age ?? meta.age ?? null,
     created_at: profile.created_at || authUser.created_at || null,
   };
@@ -6601,6 +6751,16 @@ function getTierPresentation(tier = 'free') {
       icon: iconMarkup('bolt')
     };
   }
+  if (tier === 'basic') {
+    return {
+      label: 'Basic',
+      sub: '15 credits/month Â· Starter AI access',
+      chipBg: '#10b98122',
+      chipColor: '#10b981',
+      iconBg: '#10b98114',
+      icon: iconMarkup('spark')
+    };
+  }
   return {
     label: 'Free',
     sub: '0 credits/month · Core access',
@@ -6609,6 +6769,44 @@ function getTierPresentation(tier = 'free') {
     iconBg: '#64748b14',
     icon: iconMarkup('spark')
   };
+}
+
+function tierRank(tier = 'free') {
+  const idx = TIER_ORDER.indexOf(String(tier || 'free').toLowerCase());
+  return idx >= 0 ? idx : 0;
+}
+
+function renderBillingPlanCards(currentTier = currentUser?.tier || 'free') {
+  return Object.entries(BILLING_PLANS).map(([tier, plan]) => {
+    const isCurrent = currentTier === tier;
+    const canUpgrade = tierRank(tier) > tierRank(currentTier);
+    const buttonLabel = isCurrent ? 'Current plan' : canUpgrade ? `Upgrade to ${plan.label}` : 'Contact support';
+    const buttonAction = isCurrent
+      ? ''
+      : canUpgrade
+        ? `onclick="startTierCheckout('${tier}')"`
+        : `onclick="openBillingSupport()"`;
+    const disabledAttr = isCurrent ? 'disabled' : '';
+    return `
+      <div style="padding:14px;border-radius:16px;border:1px solid ${plan.tone}33;background:linear-gradient(135deg,${plan.badgeBg},#ffffff);display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+          <div>
+            <p style="font-size:14px;font-weight:800;color:${plan.tone};margin-bottom:4px">${plan.label}</p>
+            <p style="font-size:12px;color:var(--muted);line-height:1.5">${plan.desc}</p>
+          </div>
+          <span style="font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;background:${plan.badgeBg};color:${plan.tone}">R${plan.priceZar}/mo</span>
+        </div>
+        <div style="font-size:12px;color:var(--text);line-height:1.6">
+          <strong>${plan.credits} credits/month</strong><br>
+          FinBot news uses 2 credits Â· Analysis uses 5 credits
+        </div>
+        <button ${buttonAction} ${disabledAttr}
+          style="padding:10px 12px;border-radius:12px;border:${isCurrent ? '1px solid var(--border)' : 'none'};background:${isCurrent ? 'var(--border)' : plan.tone};color:${isCurrent ? 'var(--muted)' : '#fff'};font-size:12px;font-weight:800;cursor:${isCurrent ? 'default' : 'pointer'};opacity:${billingCheckoutInFlight && billingCheckoutInFlight !== tier ? '.75' : '1'}">
+          ${billingCheckoutInFlight === tier ? 'Redirectingâ€¦' : buttonLabel}
+        </button>
+      </div>
+    `;
+  }).join('');
 }
 
 async function ensureProfileRow(authUser, patch = {}) {
@@ -7461,8 +7659,8 @@ function updateHeaderUser() {
     if (ddName)  ddName.textContent  = currentUser.name || currentUser.username;
     if (ddEmail) ddEmail.textContent = currentUser.email || ('@' + currentUser.username);
     // Tier badge
-    const tierColors = { free: '#64748b', pro: '#7c3aed', enterprise: '#d97706' };
-    const tierLabels = { free: 'Free', pro: 'Pro', enterprise: 'Enterprise' };
+    const tierColors = { free: '#64748b', basic: '#10b981', pro: '#7c3aed', enterprise: '#d97706' };
+    const tierLabels = { free: 'Free', basic: 'Basic', pro: 'Pro', enterprise: 'Enterprise' };
     const t = currentUser.tier || 'free';
     let tierBadge = document.getElementById('header-tier-badge');
     if (!tierBadge) {
@@ -9804,7 +10002,7 @@ setupMobileChrome();
 // Pre-render the default tab
 renderNews();
 // Check auth — shows login overlay if not logged in, syncs data if session exists
-checkAuth();
+checkAuth().then(() => processBillingReturnState()).catch(() => {});
 // Render sidebar pulse widget with generated data immediately, update after live fetch
 renderNavPulse();
 // Fetch live prices in background (updates Markets tab when ready)

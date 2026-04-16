@@ -8,6 +8,7 @@ const corsHeaders = {
 
 const DEFAULT_CREDITS: Record<string, number> = {
   free: 0,
+  basic: 15,
   pro: 50,
   enterprise: 200,
 };
@@ -205,7 +206,7 @@ Deno.serve(async (req) => {
     if (tier === "free") {
       await logFunctionEvent(adminClient, "finbot", "info", authData.user.id, "upgrade_required", "Free tier attempted FinBot access", { requestType, mode });
       return json({
-        error: "FinBot requires a Pro or Enterprise plan.",
+        error: "FinBot requires a paid plan.",
         code: "upgrade_required",
         credits_remaining: 0,
       }, 403);

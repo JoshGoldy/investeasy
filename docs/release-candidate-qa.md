@@ -18,6 +18,7 @@ Run these before the manual pass when you have a password-enabled test account:
 
 - `npm run test:smoke`
 - `npm run test:smoke:auth`
+- `npm run test:smoke:session`
 - `npm run test:smoke:crud`
 - `npm run test:smoke:finbot`
 - `npm run test:rc`
@@ -96,6 +97,10 @@ Expected:
 5. Sign out
 6. Confirm protected actions now require auth
 
+Expected:
+
+- authenticated session smoke should pass for reload and new-page persistence
+
 ## Portfolio Pass
 
 1. Add a new holding
@@ -125,6 +130,7 @@ Expected:
 - watchlist star and stored state stay in sync
 - alerts save without UI drift or stale state
 - authenticated CRUD smoke should pass for watchlist add/remove persistence
+- authenticated CRUD smoke should pass for price alert create/delete persistence
 
 ## Saved Reports Pass
 
@@ -133,13 +139,17 @@ Expected:
 3. Open it from Saved Reports
 4. Edit details
 5. Share/copy
-6. Delete it
+6. Download/print preview
+7. Delete it
 
 Expected:
 
 - metadata updates persist
+- share/copy shows a success state and copies the expected content
+- download opens a valid report print view
 - buttons align cleanly on mobile
 - deleting removes the report without a stale card remaining
+- automated FinBot smoke should pass for save, edit, share, download, and delete lifecycle
 
 ## FinBot Pass
 

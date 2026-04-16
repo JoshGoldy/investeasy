@@ -6,7 +6,8 @@ Last updated: 2026-04-16
 
 - Public smoke suite: `6/6` passing
 - Authenticated shell suite: `3/3` passing
-- Authenticated CRUD suite: `3/3` passing
+- Authenticated session suite: `1/1` passing
+- Authenticated CRUD suite: `4/4` passing
 - Authenticated FinBot save/delete suite: `1/1` passing
 
 ## Covered By Automation
@@ -17,22 +18,24 @@ Last updated: 2026-04-16
 - news shell
 - settings guest/auth state
 - password login
+- remember-me session persistence across reload/new page
 - authenticated portfolio shell
 - authenticated settings shell
 - authenticated FinBot shell
 - watchlist add/remove persistence
 - portfolio add/remove persistence
 - settings persistence
+- price alert create/delete persistence
 - one real FinBot analysis run
 - save report to Saved Reports
+- edit saved report metadata
+- share/copy saved report content
+- open saved report download/print view
 - delete saved report cleanly
 
 ## Still Primarily Manual
 
 - new-user OTP signup flow
-- remember-me session persistence across real browser restarts
-- price alerts creation and lifecycle
-- saved report edit/share/download controls
 - FinBot long-form modes beyond the automated single-run coverage
 - real-device mobile polish across iPhone and Android
 - live market sanity for edge cases like JSE
@@ -56,7 +59,5 @@ Ship when all of the following are true:
 ## Recommended Next Human Pass
 
 1. New-user OTP signup
-2. Remember-me login persistence
-3. Price alerts create/delete
-4. Saved report edit/share/download
-5. One real mobile pass on iPhone and Android
+2. One real mobile pass on iPhone and Android
+3. Ops/admin diagnostics review in Settings

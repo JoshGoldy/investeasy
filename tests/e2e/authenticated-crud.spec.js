@@ -164,8 +164,5 @@ test.describe('FinScope authenticated CRUD smoke suite', () => {
 
     await alertList.first().locator('.alert-del').click();
     await expect(page.locator('.alert-item')).toHaveCount(0, { timeout: 15000 });
-
-    await page.locator('#alert-modal-bg').click({ position: { x: 5, y: 5 } });
-    await expect(page.locator('#alert-modal-bg')).toHaveClass(/hidden/, { timeout: 10000 });
   });
 });

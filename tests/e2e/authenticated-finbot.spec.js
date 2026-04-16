@@ -50,6 +50,29 @@ test.describe('FinScope authenticated FinBot flow', () => {
 
   test('FinBot analysis can be saved and deleted from Saved Reports', async ({ page }) => {
     test.setTimeout(120000);
+    const editedTitle = 'Stock Screener QA Report';
+    const editedFolder = 'QA Checks';
+    const editedNote = 'Automated metadata persistence check';
+
+    await page.addInitScript(() => {
+      window.__copiedReportText = '';
+      try {
+        Object.defineProperty(navigator, 'share', {
+          configurable: true,
+          value: undefined,
+        });
+      } catch (_) {}
+      try {
+        Object.defineProperty(navigator, 'clipboard', {
+          configurable: true,
+          value: {
+            writeText: async (text) => {
+              window.__copiedReportText = String(text || '');
+            },
+          },
+        });
+      } catch (_) {}
+    });
 
     await loginWithPassword(page);
 
@@ -86,6 +109,36 @@ test.describe('FinScope authenticated FinBot flow', () => {
 
     const newestCard = page.locator('.saved-card').first();
     await expect(newestCard).toContainText(/Stock Screener/i);
+
+    await newestCard.locator('button:has-text("Edit Details")').click();
+    await expect(page.locator('#saved-edit-modal-bd')).toBeVisible({ timeout: 10000 });
+
+    await page.locator('#edit-name').fill(editedTitle);
+    await page.locator('#edit-folder').fill(editedFolder);
+    await page.locator('#edit-note').fill(editedNote);
+    await page.locator('#edit-starred').check();
+    await page.locator('#saved-edit-modal-bd button:has-text("Save Changes")').click();
+
+    await expect(page.locator('#saved-edit-modal-bd')).toHaveCount(0, { timeout: 10000 });
+    await expect(newestCard.locator('.saved-card-title')).toContainText(editedTitle, { timeout: 15000 });
+    await expect(newestCard.locator('.saved-card-folder')).toContainText(editedFolder, { timeout: 15000 });
+    await expect(newestCard.locator('.saved-card-note-preview')).toContainText(editedNote, { timeout: 15000 });
+    await expect(newestCard.locator('.saved-card-star')).toHaveClass(/starred/, { timeout: 10000 });
+
+    await newestCard.locator('button:has-text("Share / Copy")').click();
+    await expect(page.locator('#ie-toast')).toContainText('Copied to clipboard!', { timeout: 10000 });
+    await expect.poll(async () => {
+      return page.evaluate(() => window.__copiedReportText || '');
+    }, { timeout: 10000 }).toContain(editedTitle);
+
+    const popupPromise = page.waitForEvent('popup');
+    await newestCard.locator('button:has-text("Download PDF")').click();
+    const popup = await popupPromise;
+    await popup.waitForLoadState('domcontentloaded');
+    await expect.poll(async () => popup.title(), { timeout: 10000 }).toContain(editedTitle);
+    await expect(popup.locator('body')).toContainText(editedTitle, { timeout: 10000 });
+    await expect(popup.locator('body')).toContainText(/Stock Screener/i, { timeout: 10000 });
+    await popup.close();
 
     await newestCard.locator('button[title="Delete"]').click();
     await expect(savedCards).toHaveCount(initialCount, { timeout: 15000 });

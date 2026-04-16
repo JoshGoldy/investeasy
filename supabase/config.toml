@@ -6,3 +6,9 @@ verify_jwt = false
 
 [functions.ops-status]
 verify_jwt = false
+
+[functions.paystack-billing]
+verify_jwt = false
+
+[functions.paystack-webhook]
+verify_jwt = false
