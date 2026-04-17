@@ -74,13 +74,27 @@ let billingCheckoutInFlight = '';
 // DATA LAYER
 // ═══════════════════════════════════════════════════════════════════════════
 
-function genPrices(base, n, vol = 0.015, trend = 0.0002) {
-  const out = []; let p = base * (0.82 + Math.random() * 0.12);
+function genPrices(base, n, vol = 0.015, trend = 0.0002, targetPct = 0) {
+  if (!n || n < 2) return [parseFloat(base.toFixed(2))];
+  const safeBase = Math.max(Number(base) || 0, 0.0001);
+  const pct = Number.isFinite(targetPct) ? targetPct : 0;
+  const start = Math.max(safeBase / (1 + pct / 100), safeBase * 0.6);
+  const out = [];
+  let anchor = start;
+
   for (let i = 0; i < n; i++) {
-    p = Math.max(p + p * (trend + (Math.random() - 0.48) * vol), base * 0.5);
-    out.push(parseFloat(p.toFixed(2)));
+    const progress = i / (n - 1);
+    const expected = start + (safeBase - start) * progress;
+    const wobble = safeBase * vol * (Math.random() - 0.5) * (1 - progress * 0.65);
+    anchor += (expected - anchor) * 0.38 + wobble + safeBase * trend;
+    const floor = Math.min(start, safeBase) * 0.72;
+    out.push(parseFloat(Math.max(anchor, floor).toFixed(2)));
   }
-  out[out.length - 1] = base;
+
+  out[out.length - 1] = parseFloat(safeBase.toFixed(2));
+  if (out.length >= 3) {
+    out[out.length - 2] = parseFloat(((out[out.length - 3] * 0.45) + (safeBase * 0.55)).toFixed(2));
+  }
   return out;
 }
 
@@ -210,7 +224,7 @@ const MARKETS = RAW_MARKETS.map(m => {
   TIMEFRAMES.forEach(tf => {
     const c    = TF_CONFIG[tf];
     const step = TF_STEP[tf];
-    const prices = genPrices(m.val, c.pts, tf === '1D' ? 0.003 : 0.015);
+    const prices = genPrices(m.val, c.pts, tf === '1D' ? 0.0018 : 0.01, 0.0001, tf === '1D' ? m.chg : m.chg * 0.6);
     // Use real Unix timestamps so the chart time axis shows correct dates
     charts[tf] = prices.map((v, i) => ({
       time:  nowSec - (c.pts - 1 - i) * step,
