@@ -238,6 +238,7 @@ const MARKETS = RAW_MARKETS.map(m => {
 let liveNews = [];
 let newsLastFetched = 0;
 let newsFetchedAt = null;
+let newsSourceMode = 'live';
 let newsFilter = 'All';
 let newsSearch = '';
 let newsTimeRange = '72h';          // '1h' | 'today' | 'week' | '72h'
@@ -250,6 +251,96 @@ let bookmarkedArticles = JSON.parse(localStorage.getItem('ie_bookmarks') || '{}'
 let newsAlerts = JSON.parse(localStorage.getItem('ie_news_alerts') || '[]');
 // UUIDs of articles that matched an alert (unacknowledged)
 let newsAlertMatches = new Set(JSON.parse(localStorage.getItem('ie_alert_matches') || '[]'));
+
+function buildStaticFallbackNews() {
+  const now = Date.now();
+  const hoursAgo = (hours) => {
+    const date = new Date(now - hours * 60 * 60 * 1000);
+    const pubTime = Math.floor(date.getTime() / 1000);
+    return {
+      iso: date.toISOString(),
+      pubTime,
+      time: hours < 1 ? 'Just now' : hours < 24 ? `${Math.round(hours)}h ago` : `${Math.round(hours / 24)}d ago`,
+    };
+  };
+
+  return [
+    {
+      uuid: 'fallback-fed-rate-path',
+      title: 'Markets weigh the next rate path as inflation data cools',
+      publisher: 'FinScope Briefing',
+      link: '',
+      description: 'Investors are watching whether softer inflation is enough to support rate-cut expectations across equities, bonds, and growth stocks.',
+      tickers: ['SPX', 'QQQ', 'TLT'],
+      thumbnail: null,
+      cat: 'Economy',
+      hot: true,
+      ...hoursAgo(2),
+    },
+    {
+      uuid: 'fallback-ai-megacaps',
+      title: 'AI spending stays in focus as mega-cap earnings approach',
+      publisher: 'FinScope Briefing',
+      link: '',
+      description: 'Chip demand, cloud budgets, and margin guidance remain central themes for investors tracking large-cap tech leaders.',
+      tickers: ['NVDA', 'MSFT', 'GOOGL', 'AMZN'],
+      thumbnail: null,
+      cat: 'Tech',
+      hot: true,
+      ...hoursAgo(5),
+    },
+    {
+      uuid: 'fallback-oil-gold-dollar',
+      title: 'Oil, gold, and the dollar move as traders reassess growth signals',
+      publisher: 'FinScope Briefing',
+      link: '',
+      description: 'Commodities and currencies are reacting to shifting expectations around global demand, policy, and risk appetite.',
+      tickers: ['XAU', 'CL1', 'DXY'],
+      thumbnail: null,
+      cat: 'Commodities',
+      hot: false,
+      ...hoursAgo(9),
+    },
+    {
+      uuid: 'fallback-bank-earnings',
+      title: 'Bank earnings set the tone for credit quality and consumer resilience',
+      publisher: 'FinScope Briefing',
+      link: '',
+      description: 'Financials are being judged on loan growth, deposit trends, and whether consumer balance sheets are holding up.',
+      tickers: ['JPM', 'GS', 'BAC'],
+      thumbnail: null,
+      cat: 'Earnings',
+      hot: false,
+      ...hoursAgo(18),
+    },
+    {
+      uuid: 'fallback-bitcoin-risk',
+      title: 'Bitcoin volatility rises as traders rotate between risk and safety',
+      publisher: 'FinScope Briefing',
+      link: '',
+      description: 'Crypto remains sensitive to liquidity expectations, ETF flows, and broader appetite for speculative assets.',
+      tickers: ['BTC', 'ETH', 'COIN'],
+      thumbnail: null,
+      cat: 'Crypto',
+      hot: true,
+      ...hoursAgo(28),
+    },
+    {
+      uuid: 'fallback-housing-rates',
+      title: 'Housing and REIT sentiment remain tied to long-term yield moves',
+      publisher: 'FinScope Briefing',
+      link: '',
+      description: 'Real-estate investors continue to watch mortgage costs and financing conditions for signs of improving activity.',
+      tickers: ['VNQ', 'XLRE'],
+      thumbnail: null,
+      cat: 'Real Estate',
+      hot: false,
+      ...hoursAgo(42),
+    },
+  ];
+}
+
+const STATIC_FALLBACK_NEWS = buildStaticFallbackNews();
 
 const HOLDINGS = [
   { ticker:'AAPL', name:'Apple Inc.', shares:12, cost:178.40, cur:189.30, alloc:28 },
@@ -968,6 +1059,7 @@ async function fetchLiveNews(force = false) {
   if (!force && liveNews.length && (now - newsLastFetched) < 5 * 60 * 1000) return;
   newsLoadState = 'loading';
   newsLoadError = '';
+  newsSourceMode = 'live';
 
   // 1. Try Supabase market-data function
   try {
@@ -978,6 +1070,7 @@ async function fetchLiveNews(force = false) {
       newsLastFetched = now;
       newsFetchedAt = new Date();
       newsLoadState = 'ready';
+      newsSourceMode = 'live';
       checkNewsAlertsForArticles(liveNews);
       renderNewsContent();
       return;
@@ -992,15 +1085,21 @@ async function fetchLiveNews(force = false) {
       newsLastFetched = now;
       newsFetchedAt = new Date();
       newsLoadState = 'ready';
+      newsSourceMode = 'live';
       checkNewsAlertsForArticles(liveNews);
       renderNewsContent();
       return;
     }
   } catch(e) {}
 
-  newsLoadState = 'error';
-  newsLoadError = 'Live news is temporarily unavailable. Please try refreshing in a moment.';
+  liveNews = STATIC_FALLBACK_NEWS.slice();
+  newsLastFetched = now;
+  newsFetchedAt = new Date();
+  newsLoadState = 'ready';
+  newsSourceMode = 'fallback';
+  newsLoadError = 'Live news is temporarily unavailable. Showing a backup market briefing instead.';
   logAppIssue('news', newsLoadError, 'warn');
+  checkNewsAlertsForArticles(liveNews);
   renderNewsContent();
 }
 
@@ -1127,13 +1226,18 @@ function renderNewsContent() {
   const lastUpdatedStr = newsFetchedAt
     ? `Updated ${newsFetchedAt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`
     : 'Fetching…';
+  const sourceBadge = newsShowBookmarks ? '🔖' : (newsSourceMode === 'fallback' ? 'Backup feed' : 'LIVE');
+  const sourceNotice = newsSourceMode === 'fallback' && !newsShowBookmarks
+    ? `<div style="margin-bottom:12px;padding:12px 14px;border-radius:14px;background:#f59e0b12;border:1px solid #f59e0b33;color:#9a6700;font-size:12px;line-height:1.5">${escHtml(newsLoadError)}</div>`
+    : '';
 
   const list = source;
 
   c.innerHTML = `
+    ${sourceNotice}
     <div class="live-banner" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px">
-        <span class="badge">${newsShowBookmarks ? '🔖' : 'LIVE'}</span>
+        <span class="badge">${sourceBadge}</span>
         <span style="font-weight:500;font-size:13px">${liveNews.length ? list.length + ' articles' : 'Loading…'}</span>
       </div>
       <span style="font-size:11px;color:rgba(255,255,255,0.7)">${lastUpdatedStr}</span>
