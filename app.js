@@ -239,6 +239,7 @@ let liveNews = [];
 let newsLastFetched = 0;
 let newsFetchedAt = null;
 let newsSourceMode = 'live';
+let newsLoadDetail = '';
 let newsFilter = 'All';
 let newsSearch = '';
 let newsTimeRange = '72h';          // '1h' | 'today' | 'week' | '72h'
@@ -1054,12 +1055,42 @@ async function fetchNewsClientSide() {
   return all.filter(a => a.pubTime >= cutoff).slice(0, 30);
 }
 
+function formatNewsFailureReason(serverError, fallbackError, serverReturnedEmpty = false, fallbackReturnedEmpty = false) {
+  const serverMsg = serverError ? describeAppError(serverError, '') : '';
+  const fallbackMsg = fallbackError ? describeAppError(fallbackError, '') : '';
+
+  if (serverMsg && fallbackMsg) {
+    return `Supabase news fetch failed (${serverMsg}) and browser feed fallback failed (${fallbackMsg}).`;
+  }
+  if (serverMsg) {
+    return `Supabase news fetch failed (${serverMsg}).`;
+  }
+  if (fallbackMsg) {
+    return `Browser feed fallback failed (${fallbackMsg}).`;
+  }
+  if (serverReturnedEmpty && fallbackReturnedEmpty) {
+    return 'Both the Supabase news feed and browser fallback returned no recent articles.';
+  }
+  if (serverReturnedEmpty) {
+    return 'The Supabase news feed returned no recent articles.';
+  }
+  if (fallbackReturnedEmpty) {
+    return 'The browser fallback returned no recent articles.';
+  }
+  return 'The live news providers did not return usable articles.';
+}
+
 async function fetchLiveNews(force = false) {
   const now = Date.now();
   if (!force && liveNews.length && (now - newsLastFetched) < 5 * 60 * 1000) return;
   newsLoadState = 'loading';
   newsLoadError = '';
+  newsLoadDetail = '';
   newsSourceMode = 'live';
+  let serverError = null;
+  let fallbackError = null;
+  let serverReturnedEmpty = false;
+  let fallbackReturnedEmpty = false;
 
   // 1. Try Supabase market-data function
   try {
@@ -1071,11 +1102,15 @@ async function fetchLiveNews(force = false) {
       newsFetchedAt = new Date();
       newsLoadState = 'ready';
       newsSourceMode = 'live';
+      newsLoadDetail = '';
       checkNewsAlertsForArticles(liveNews);
       renderNewsContent();
       return;
     }
-  } catch(e) {}
+    serverReturnedEmpty = true;
+  } catch(e) {
+    serverError = e;
+  }
 
   // 2. Fall back to client-side RSS fetching (works regardless of server network)
   try {
@@ -1086,11 +1121,17 @@ async function fetchLiveNews(force = false) {
       newsFetchedAt = new Date();
       newsLoadState = 'ready';
       newsSourceMode = 'live';
+      newsLoadDetail = serverError || serverReturnedEmpty
+        ? formatNewsFailureReason(serverError, null, serverReturnedEmpty, false)
+        : '';
       checkNewsAlertsForArticles(liveNews);
       renderNewsContent();
       return;
     }
-  } catch(e) {}
+    fallbackReturnedEmpty = true;
+  } catch(e) {
+    fallbackError = e;
+  }
 
   liveNews = STATIC_FALLBACK_NEWS.slice();
   newsLastFetched = now;
@@ -1098,7 +1139,9 @@ async function fetchLiveNews(force = false) {
   newsLoadState = 'ready';
   newsSourceMode = 'fallback';
   newsLoadError = 'Live news is temporarily unavailable. Showing a backup market briefing instead.';
-  logAppIssue('news', newsLoadError, 'warn');
+  newsLoadDetail = formatNewsFailureReason(serverError, fallbackError, serverReturnedEmpty, fallbackReturnedEmpty);
+  logAppIssue('news', `${newsLoadError} ${newsLoadDetail}`.trim(), 'warn');
+  showTransientErrorNotice('news-feed', newsLoadDetail || newsLoadError, 45000);
   checkNewsAlertsForArticles(liveNews);
   renderNewsContent();
 }
@@ -1228,7 +1271,10 @@ function renderNewsContent() {
     : 'Fetching…';
   const sourceBadge = newsShowBookmarks ? '🔖' : (newsSourceMode === 'fallback' ? 'Backup feed' : 'LIVE');
   const sourceNotice = newsSourceMode === 'fallback' && !newsShowBookmarks
-    ? `<div style="margin-bottom:12px;padding:12px 14px;border-radius:14px;background:#f59e0b12;border:1px solid #f59e0b33;color:#9a6700;font-size:12px;line-height:1.5">${escHtml(newsLoadError)}</div>`
+    ? `<div style="margin-bottom:12px;padding:12px 14px;border-radius:14px;background:#f59e0b12;border:1px solid #f59e0b33;color:#9a6700;font-size:12px;line-height:1.5">
+        <div>${escHtml(newsLoadError)}</div>
+        ${newsLoadDetail ? `<div style="margin-top:6px;color:#8a5b00">Reason: ${escHtml(newsLoadDetail)}</div>` : ''}
+      </div>`
     : '';
 
   const list = source;
