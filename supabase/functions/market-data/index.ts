@@ -610,18 +610,27 @@ async function handleArticle(url: string) {
   return json({ success: true, paragraphs });
 }
 
+function stripCdata(value: string) {
+  return value.replace(/^<!\[CDATA\[/, "").replace(/\]\]>$/, "").trim();
+}
+
+function extractXmlTag(block: string, tagName: string) {
+  const escaped = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = block.match(new RegExp(`<${escaped}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${escaped}>`, "i"));
+  return match ? stripCdata(match[1]) : "";
+}
+
 function parseRssItems(xmlText: string, defaultPublisher: string) {
-  const doc = new DOMParser().parseFromString(xmlText, "application/xml");
-  const items = [...doc.querySelectorAll("item")];
+  const items = [...xmlText.matchAll(/<item\b[\s\S]*?>([\s\S]*?)<\/item>/gi)].map((match) => match[1]);
   const articles: Array<Record<string, unknown>> = [];
   for (const item of items) {
-    const title = item.querySelector("title")?.textContent?.trim() || "";
+    const title = decodeHtml(extractXmlTag(item, "title")).trim();
     if (!title) continue;
-    const link = item.querySelector("link")?.textContent?.trim() || "";
-    const rawDesc = item.querySelector("description")?.textContent || "";
+    const link = decodeHtml(extractXmlTag(item, "link")).trim();
+    const rawDesc = extractXmlTag(item, "description");
     const description = decodeHtml(rawDesc.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim()).slice(0, 800);
-    const publisher = item.querySelector("source")?.textContent?.trim() || defaultPublisher;
-    const pubDate = item.querySelector("pubDate")?.textContent?.trim() || "";
+    const publisher = decodeHtml(extractXmlTag(item, "source")).trim() || defaultPublisher;
+    const pubDate = extractXmlTag(item, "pubDate").trim();
     const pubTime = Math.floor(new Date(pubDate).getTime() / 1000) || Math.floor(Date.now() / 1000);
     const age = Math.max(0, Math.floor(Date.now() / 1000) - pubTime);
     const time = age < 3600 ? `${Math.max(1, Math.round(age / 60))}m ago` : age < 86400 ? `${Math.round(age / 3600)}h ago` : `${Math.round(age / 86400)}d ago`;
