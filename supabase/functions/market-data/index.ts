@@ -164,14 +164,14 @@ const CHART_CONFIG: Record<string, { interval: string; range: string; trailingSe
 };
 
 const NEWS_FEEDS = [
-  { url: "https://www.cnbc.com/id/100003114/device/rss/rss.html", pub: "CNBC" },
-  { url: "https://www.cnbc.com/id/10000664/device/rss/rss.html", pub: "CNBC" },
-  { url: "https://feeds.marketwatch.com/marketwatch/topstories/", pub: "MarketWatch" },
-  { url: "https://feeds.marketwatch.com/marketwatch/marketpulse/", pub: "MarketWatch" },
-  { url: "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml", pub: "New York Times" },
-  { url: "https://feeds.a.dj.com/rss/RSSMarketsMain.xml", pub: "Wall Street Journal" },
-  { url: "https://feeds.reuters.com/reuters/businessNews", pub: "Reuters" },
-];
+  { id: "cnbc-top", url: "https://www.cnbc.com/id/100003114/device/rss/rss.html", pub: "CNBC", kind: "rss" },
+  { id: "cnbc-finance", url: "https://www.cnbc.com/id/10000664/device/rss/rss.html", pub: "CNBC", kind: "rss" },
+  { id: "marketwatch-top", url: "https://feeds.marketwatch.com/marketwatch/topstories/", pub: "MarketWatch", kind: "rss" },
+  { id: "marketwatch-pulse", url: "https://feeds.marketwatch.com/marketwatch/marketpulse/", pub: "MarketWatch", kind: "rss" },
+  { id: "nyt-business", url: "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml", pub: "New York Times", kind: "rss" },
+  { id: "guardian-business", url: "https://content.guardianapis.com/business?api-key=test&show-fields=headline,trailText,thumbnail&page-size=20&order-by=newest", pub: "The Guardian", kind: "guardian" },
+  { id: "guardian-tech", url: "https://content.guardianapis.com/technology?api-key=test&show-fields=headline,trailText,thumbnail&page-size=20&order-by=newest", pub: "The Guardian", kind: "guardian" },
+] as const;
 
 function json(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -642,33 +642,112 @@ function parseRssItems(xmlText: string, defaultPublisher: string) {
   return articles;
 }
 
+function classifyNewsCategory(title: string) {
+  const t = title.toLowerCase();
+  if (/bitcoin|ethereum|crypto|blockchain|defi|solana|nft|dogecoin|ripple|altcoin/.test(t)) return "Crypto";
+  if (/\bfed\b|federal reserve|inflation|cpi|ppi|gdp|interest rate|recession|unemployment|tariff|trade war|central bank/.test(t)) return "Economy";
+  if (/apple|microsoft|google|alphabet|amazon|meta|nvidia|tesla|openai|\bai\b|artificial intelligence|chip|semiconductor|software|cloud|cyber/.test(t)) return "Tech";
+  if (/\bearnings\b|quarterly results|revenue|eps|\bebit\b|net income|beat estimates|miss estimates|q[1-4] results|profit warning|guidance/.test(t)) return "Earnings";
+  if (/\boil\b|crude|brent|gold|silver|copper|wheat|corn|soybean|\bnatural gas\b|commodity|commodities|wti|opec/.test(t)) return "Commodities";
+  if (/\bforex\b|exchange rate|dollar index|\bdxy\b|currency|yen|euro|pound sterling|gbp|eur\/usd|usd\/jpy|fx market|devaluation/.test(t)) return "Forex";
+  if (/real estate|housing market|reit|mortgage rate|home price|property market|construction|homebuilder|rental market/.test(t)) return "Real Estate";
+  return "Markets";
+}
+
+function isHotNewsTitle(title: string) {
+  return /surge|soar|crash|record|rally|plunge|breaking|alert|spike|all.time.high|ath|collapse|explode/i.test(title);
+}
+
+function formatRelativeNewsTime(pubTime: number) {
+  const age = Math.max(0, Math.floor(Date.now() / 1000) - pubTime);
+  return age < 3600
+    ? `${Math.max(1, Math.round(age / 60))}m ago`
+    : age < 86400
+      ? `${Math.round(age / 3600)}h ago`
+      : `${Math.round(age / 86400)}d ago`;
+}
+
+async function fetchGuardianItems(url: string, publisher: string) {
+  const payload = await fetchJson(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0",
+      Accept: "application/json",
+    },
+  });
+  if (payload?.response?.status !== "ok" || !Array.isArray(payload?.response?.results)) return [];
+  return payload.response.results.map((item: Record<string, unknown>) => {
+    const title = String((item.fields as Record<string, unknown> | undefined)?.headline || item.webTitle || "").trim();
+    const pubTime = Math.floor(new Date(String(item.webPublicationDate || "")).getTime() / 1000) || Math.floor(Date.now() / 1000);
+    const description = String((item.fields as Record<string, unknown> | undefined)?.trailText || "").replace(/<[^>]+>/g, "").trim().slice(0, 800);
+    return {
+      uuid: crypto.randomUUID().slice(0, 16),
+      title,
+      publisher,
+      link: String(item.webUrl || ""),
+      description,
+      time: formatRelativeNewsTime(pubTime),
+      pubTime,
+      tickers: [],
+      thumbnail: (item.fields as Record<string, unknown> | undefined)?.thumbnail || null,
+      cat: classifyNewsCategory(title),
+      hot: isHotNewsTitle(title),
+    };
+  }).filter((item: Record<string, unknown>) => String(item.title || ""));
+}
+
 async function handleNews() {
   return withMarketCache("news", "news:feed:top30", {}, async () => {
     const seen = new Set<string>();
     const combined: Array<Record<string, unknown>> = [];
+    const sourceDiagnostics: Array<Record<string, unknown>> = [];
+    const cutoff72h = Math.floor(Date.now() / 1000) - 72 * 60 * 60;
 
     await Promise.all(
-      NEWS_FEEDS.map(async ({ url, pub }) => {
+      NEWS_FEEDS.map(async ({ id, url, pub, kind }) => {
         try {
-          const xml = await fetchText(url, {
-            headers: {
-              "User-Agent": "Mozilla/5.0 (compatible; RSS reader/1.0)",
-              Accept: "application/rss+xml, application/xml, text/xml, */*",
-            },
-          });
-          const items = parseRssItems(xml, pub);
+          const items = kind === "guardian"
+            ? await fetchGuardianItems(url, pub)
+            : parseRssItems(await fetchText(url, {
+              headers: {
+                "User-Agent": "Mozilla/5.0 (compatible; RSS reader/1.0)",
+                Accept: "application/rss+xml, application/xml, text/xml, */*",
+              },
+            }), pub);
+          let accepted = 0;
           for (const item of items) {
             const key = String(item.title || "").trim().toLowerCase();
             if (!key || seen.has(key)) continue;
+            if (Number(item.pubTime || 0) < cutoff72h) continue;
             seen.add(key);
             combined.push(item);
+            accepted++;
           }
-        } catch (_) {}
+          sourceDiagnostics.push({ id, publisher: pub, kind, fetched: items.length, accepted, status: accepted > 0 ? "ok" : "empty" });
+        } catch (error) {
+          sourceDiagnostics.push({
+            id,
+            publisher: pub,
+            kind,
+            fetched: 0,
+            accepted: 0,
+            status: "error",
+            error: error instanceof Error ? error.message : "Unknown source failure",
+          });
+        }
       }),
     );
 
     combined.sort((a, b) => Number(b.pubTime || 0) - Number(a.pubTime || 0));
-    return { success: true, articles: combined.slice(0, 30), fetchedAt: Math.floor(Date.now() / 1000) };
+    return {
+      success: true,
+      articles: combined.slice(0, 30),
+      fetchedAt: Math.floor(Date.now() / 1000),
+      diagnostics: {
+        sourceCount: NEWS_FEEDS.length,
+        totalArticles: combined.length,
+        sources: sourceDiagnostics,
+      },
+    };
   });
 }
 

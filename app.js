@@ -1034,6 +1034,18 @@ async function fetchRss2JsonNews() {
   return articles;
 }
 
+function summarizeNewsDiagnostics(diagnostics = []) {
+  if (!Array.isArray(diagnostics) || !diagnostics.length) return '';
+  const parts = diagnostics.map(d => {
+    const label = d.label || d.publisher || d.id || 'source';
+    if (d.status === 'error') return `${label}: error${d.error ? ` (${d.error})` : ''}`;
+    if (d.status === 'empty') return `${label}: 0 recent articles`;
+    if (typeof d.accepted === 'number') return `${label}: ${d.accepted} recent`;
+    return `${label}: ok`;
+  });
+  return parts.join('; ');
+}
+
 async function fetchNewsClientSide() {
   // Run both sources in parallel; Guardian is primary, rss2json is fallback
   const [guardianResult, rssResult] = await Promise.allSettled([
@@ -1043,6 +1055,7 @@ async function fetchNewsClientSide() {
 
   const seen = new Set();
   const all = [];
+  const diagnostics = [];
   for (const result of [guardianResult, rssResult]) {
     if (result.status !== 'fulfilled') continue;
     for (const a of result.value) {
@@ -1050,34 +1063,56 @@ async function fetchNewsClientSide() {
       if (!seen.has(key)) { seen.add(key); all.push(a); }
     }
   }
+  diagnostics.push(
+    guardianResult.status === 'fulfilled'
+      ? { id: 'guardian-browser', label: 'Guardian browser fallback', status: resultStatusFromCount(resultRecentCount(guardianResult.value)), accepted: resultRecentCount(guardianResult.value) }
+      : { id: 'guardian-browser', label: 'Guardian browser fallback', status: 'error', error: describeAppError(guardianResult.reason, 'Request failed') }
+  );
+  diagnostics.push(
+    rssResult.status === 'fulfilled'
+      ? { id: 'rss2json-browser', label: 'rss2json browser fallback', status: resultStatusFromCount(resultRecentCount(rssResult.value)), accepted: resultRecentCount(rssResult.value) }
+      : { id: 'rss2json-browser', label: 'rss2json browser fallback', status: 'error', error: describeAppError(rssResult.reason, 'Request failed') }
+  );
   const cutoff = Math.floor(Date.now() / 1000) - 72 * 60 * 60;
   all.sort((a, b) => b.pubTime - a.pubTime);
-  return all.filter(a => a.pubTime >= cutoff).slice(0, 30);
+  return { articles: all.filter(a => a.pubTime >= cutoff).slice(0, 30), diagnostics };
 }
 
-function formatNewsFailureReason(serverError, fallbackError, serverReturnedEmpty = false, fallbackReturnedEmpty = false) {
+function resultRecentCount(items = []) {
+  if (!Array.isArray(items)) return 0;
+  const cutoff = Math.floor(Date.now() / 1000) - 72 * 60 * 60;
+  return items.filter(item => (item?.pubTime || 0) >= cutoff).length;
+}
+
+function resultStatusFromCount(count) {
+  return count > 0 ? 'ok' : 'empty';
+}
+
+function formatNewsFailureReason(serverError, fallbackError, serverReturnedEmpty = false, fallbackReturnedEmpty = false, serverDiagnostics = '', fallbackDiagnostics = '') {
   const serverMsg = serverError ? describeAppError(serverError, '') : '';
   const fallbackMsg = fallbackError ? describeAppError(fallbackError, '') : '';
+  const serverExtra = serverDiagnostics ? ` Sources: ${serverDiagnostics}` : '';
+  const fallbackExtra = fallbackDiagnostics ? ` Sources: ${fallbackDiagnostics}` : '';
 
   if (serverMsg && fallbackMsg) {
-    return `Supabase news fetch failed (${serverMsg}) and browser feed fallback failed (${fallbackMsg}).`;
+    return `Supabase news fetch failed (${serverMsg})${serverExtra} and browser feed fallback failed (${fallbackMsg})${fallbackExtra}.`;
   }
   if (serverMsg) {
-    return `Supabase news fetch failed (${serverMsg}).`;
+    return `Supabase news fetch failed (${serverMsg}).${serverExtra}`;
   }
   if (fallbackMsg) {
-    return `Browser feed fallback failed (${fallbackMsg}).`;
+    return `Browser feed fallback failed (${fallbackMsg}).${fallbackExtra}`;
   }
   if (serverReturnedEmpty && fallbackReturnedEmpty) {
-    return 'Both the Supabase news feed and browser fallback returned no recent articles.';
+    return `Both the Supabase news feed and browser fallback returned no recent articles.${serverExtra || fallbackExtra ? ` ${[serverExtra.trim(), fallbackExtra.trim()].filter(Boolean).join(' ')}` : ''}`.trim();
   }
   if (serverReturnedEmpty) {
-    return 'The Supabase news feed returned no recent articles.';
+    return `The Supabase news feed returned no recent articles.${serverExtra}`.trim();
   }
   if (fallbackReturnedEmpty) {
-    return 'The browser fallback returned no recent articles.';
+    return `The browser fallback returned no recent articles.${fallbackExtra}`.trim();
   }
-  return 'The live news providers did not return usable articles.';
+  return `The live news providers did not return usable articles.${[serverExtra.trim(), fallbackExtra.trim()].filter(Boolean).join(' ')}`.trim();
 }
 
 async function fetchLiveNews(force = false) {
@@ -1091,6 +1126,8 @@ async function fetchLiveNews(force = false) {
   let fallbackError = null;
   let serverReturnedEmpty = false;
   let fallbackReturnedEmpty = false;
+  let serverDiagnostics = '';
+  let fallbackDiagnostics = '';
 
   // 1. Try Supabase market-data function
   try {
@@ -1107,6 +1144,7 @@ async function fetchLiveNews(force = false) {
       renderNewsContent();
       return;
     }
+    serverDiagnostics = summarizeNewsDiagnostics(d?.diagnostics?.sources);
     serverReturnedEmpty = true;
   } catch(e) {
     serverError = e;
@@ -1114,7 +1152,9 @@ async function fetchLiveNews(force = false) {
 
   // 2. Fall back to client-side RSS fetching (works regardless of server network)
   try {
-    const articles = await fetchNewsClientSide();
+    const fallbackResult = await fetchNewsClientSide();
+    const articles = fallbackResult.articles || [];
+    fallbackDiagnostics = summarizeNewsDiagnostics(fallbackResult.diagnostics);
     if (articles.length) {
       liveNews = articles;
       newsLastFetched = now;
@@ -1122,7 +1162,7 @@ async function fetchLiveNews(force = false) {
       newsLoadState = 'ready';
       newsSourceMode = 'live';
       newsLoadDetail = serverError || serverReturnedEmpty
-        ? formatNewsFailureReason(serverError, null, serverReturnedEmpty, false)
+        ? formatNewsFailureReason(serverError, null, serverReturnedEmpty, false, serverDiagnostics, '')
         : '';
       checkNewsAlertsForArticles(liveNews);
       renderNewsContent();
@@ -1139,7 +1179,7 @@ async function fetchLiveNews(force = false) {
   newsLoadState = 'ready';
   newsSourceMode = 'fallback';
   newsLoadError = 'Live news is temporarily unavailable. Showing a backup market briefing instead.';
-  newsLoadDetail = formatNewsFailureReason(serverError, fallbackError, serverReturnedEmpty, fallbackReturnedEmpty);
+  newsLoadDetail = formatNewsFailureReason(serverError, fallbackError, serverReturnedEmpty, fallbackReturnedEmpty, serverDiagnostics, fallbackDiagnostics);
   logAppIssue('news', `${newsLoadError} ${newsLoadDetail}`.trim(), 'warn');
   showTransientErrorNotice('news-feed', newsLoadDetail || newsLoadError, 45000);
   checkNewsAlertsForArticles(liveNews);
