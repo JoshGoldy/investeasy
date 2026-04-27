@@ -6077,18 +6077,13 @@ const SETTINGS_DEFAULTS = {
 };
 
 const UI_MODES = {
-  basic: {
-    label: 'Basic',
-    level: 'Beginner',
-    sub: 'Simple layout with fewer market widgets and calmer cards.',
-  },
   standard: {
     label: 'Standard',
     level: 'Everyday',
     sub: 'The current FinScope experience with balanced tools and detail.',
   },
   terminal: {
-    label: 'Terminal',
+    label: 'Advanced',
     level: 'Advanced',
     sub: 'Dense professional workspace with a live market ticker tape.',
   },
@@ -6097,7 +6092,9 @@ const UI_MODES = {
 function loadSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem('ie_settings') || '{}');
-    return Object.assign({}, SETTINGS_DEFAULTS, saved);
+    const settings = Object.assign({}, SETTINGS_DEFAULTS, saved);
+    if (!UI_MODES[settings.uiMode]) settings.uiMode = SETTINGS_DEFAULTS.uiMode;
+    return settings;
   } catch(e) { return Object.assign({}, SETTINGS_DEFAULTS); }
 }
 
