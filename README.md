@@ -22,7 +22,7 @@ cd investeasy
 
 ### 2. Add your Supabase client config
 
-Create or update `supabase-config.js`:
+Create or update `assets/js/supabase-config.js`:
 
 ```js
 window.SUPABASE_CONFIG = {
@@ -31,7 +31,7 @@ window.SUPABASE_CONFIG = {
 };
 ```
 
-This file is loaded directly by the frontend.
+This file is loaded directly by the frontend. A template lives at `assets/js/supabase-config.example.js`.
 
 ### 3. Link the repo to your Supabase project
 

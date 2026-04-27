@@ -2126,6 +2126,7 @@ async function fetchLivePrices() {
       marketsLoadError = '';
       const tab = document.getElementById('tab-markets');
       if (tab && tab.classList.contains('active')) renderMarkets();
+      renderMarketTickerTape();
       checkAlerts();
     }
     renderNavPulse();
@@ -6071,7 +6072,26 @@ const SETTINGS_DEFAULTS = {
   name: '', email: '', username: '',
   notifications: true, priceAlerts: true, newsletter: false,
   currency: 'USD', hideBalances: false,
+  uiMode: 'standard',
   defaultRisk: 'Moderate', defaultHorizon: '1–5 years', defaultSectors: 'Tech, Finance',
+};
+
+const UI_MODES = {
+  basic: {
+    label: 'Basic',
+    level: 'Beginner',
+    sub: 'Simple layout with fewer market widgets and calmer cards.',
+  },
+  standard: {
+    label: 'Standard',
+    level: 'Everyday',
+    sub: 'The current FinScope experience with balanced tools and detail.',
+  },
+  terminal: {
+    label: 'Terminal',
+    level: 'Advanced',
+    sub: 'Dense professional workspace with a live market ticker tape.',
+  },
 };
 
 function loadSettings() {
@@ -6081,20 +6101,66 @@ function loadSettings() {
   } catch(e) { return Object.assign({}, SETTINGS_DEFAULTS); }
 }
 
+function applyUiMode(mode = loadSettings().uiMode) {
+  const nextMode = UI_MODES[mode] ? mode : SETTINGS_DEFAULTS.uiMode;
+  document.body.dataset.uiMode = nextMode;
+  document.documentElement.dataset.uiMode = nextMode;
+  renderMarketTickerTape();
+}
+
+function renderMarketTickerTape() {
+  const shell = document.querySelector('.shell');
+  if (!shell) return;
+
+  const mode = UI_MODES[loadSettings().uiMode] ? loadSettings().uiMode : SETTINGS_DEFAULTS.uiMode;
+  let tape = document.getElementById('market-ticker-tape');
+  if (mode !== 'terminal') {
+    if (tape) tape.remove();
+    return;
+  }
+
+  if (!tape) {
+    tape = document.createElement('div');
+    tape.id = 'market-ticker-tape';
+    tape.className = 'market-ticker-tape';
+    shell.prepend(tape);
+  }
+
+  const tickers = ['SPX','NDX','DJI','DAX','XAU','CL1','BTC','ETH','NVDA','AAPL','MSFT','TSLA','NPN','BHG'];
+  const items = tickers.map(t => MARKETS.find(m => m.ticker === t)).filter(Boolean);
+  const tapeItems = [...items, ...items].map(m => {
+    const up = m.chg >= 0;
+    return `<button class="ticker-tape-item" onclick="switchTab('markets');setTimeout(()=>openStockDetail(${MARKETS.indexOf(m)}),80)">
+      <span class="ticker-tape-symbol">${m.ticker}</span>
+      <span class="ticker-tape-price">${fmtUnitPrice(m.val)}</span>
+      <span class="ticker-tape-change ${up ? 'up' : 'dn'}">${up ? '+' : ''}${m.chg.toFixed(2)}%</span>
+    </button>`;
+  }).join('');
+
+  tape.innerHTML = `
+    <div class="ticker-tape-status"><span class="live-dot"></span>LIVE</div>
+    <div class="ticker-tape-track" aria-label="Live market ticker">
+      <div class="ticker-tape-loop">${tapeItems}</div>
+    </div>
+  `;
+}
+
 function saveSettings(updates) {
   const current = loadSettings();
   const next = Object.assign(current, updates);
   localStorage.setItem('ie_settings', JSON.stringify(next));
   saveSettingsToDB(updates);
+  if ('uiMode' in updates) applyUiMode(next.uiMode);
   renderSettings();
   // Re-render all price-displaying views when display-affecting settings change
-  if ('currency' in updates || 'hideBalances' in updates) {
+  if ('currency' in updates || 'hideBalances' in updates || 'uiMode' in updates) {
     const portTab = document.getElementById('tab-portfolio');
     if (portTab && portTab.classList.contains('active')) renderPortfolio();
     const mktTab = document.getElementById('tab-markets');
     if (mktTab && mktTab.classList.contains('active')) renderMarkets();
     if (currentDetailIdx !== null) openStockDetail(currentDetailIdx);
   }
+  if ('currency' in updates || 'hideBalances' in updates) renderMarketTickerTape();
 }
 
 function getInitials(name) {
@@ -6282,6 +6348,21 @@ function renderSettings() {
     <div class="settings-section">
       <p class="settings-section-label">Display</p>
       <div class="settings-group">
+        <div class="settings-row settings-row-stack">
+          <div class="settings-row-left">
+            <div class="settings-row-icon" style="background:#06b6d414">UI</div>
+            <div><p class="settings-row-title">Workspace Style</p><p class="settings-row-sub">Choose the experience level and visual density for the app.</p></div>
+          </div>
+          <div class="ui-mode-grid">
+            ${Object.entries(UI_MODES).map(([key, mode]) => `
+              <button class="ui-mode-card ${s.uiMode === key ? 'active' : ''}" onclick="saveSettings({uiMode:'${key}'})">
+                <span class="ui-mode-kicker">${escHtml(mode.level)}</span>
+                <span class="ui-mode-title">${escHtml(mode.label)}</span>
+                <span class="ui-mode-sub">${escHtml(mode.sub)}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
         <div class="settings-row">
           <div class="settings-row-left">
             <div class="settings-row-icon" style="background:#f59e0b14">💱</div>
@@ -10206,6 +10287,7 @@ function fcNav(dir) {
 
 hydrateStaticUiIcons();
 setupMobileChrome();
+applyUiMode();
 // Pre-render the default tab
 renderNews();
 // Check auth — shows login overlay if not logged in, syncs data if session exists

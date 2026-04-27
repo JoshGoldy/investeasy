@@ -15,7 +15,7 @@
 
 ## Supabase
 
-- Confirm `supabase-config.js` points to the correct project URL and publishable key
+- Confirm `assets/js/supabase-config.js` points to the correct project URL and publishable key
 - Confirm Email auth is enabled
 - Confirm Site URL and redirect URLs are correct
 - Confirm RLS is enabled on:
