@@ -5351,7 +5351,7 @@ function renderPortfolioDemoDashboard() {
         <div class="dashboard-panel-header">
           <div>
             <div class="dashboard-panel-title">Holdings over time</div>
-            <div class="dashboard-panel-subtitle">A simplified monthly activity view in the same spirit as your reference.</div>
+            <div class="dashboard-panel-subtitle">See how your portfolio has grown as you add more positions.</div>
           </div>
         </div>
         ${portfolioBars(monthBars)}
@@ -5360,7 +5360,7 @@ function renderPortfolioDemoDashboard() {
         <div class="dashboard-panel-header">
           <div>
             <div class="dashboard-panel-title">Top allocations</div>
-            <div class="dashboard-panel-subtitle">Where most of your demo capital is concentrated.</div>
+            <div class="dashboard-panel-subtitle">Shows which holdings take up the biggest share of your money.</div>
           </div>
         </div>
         ${portfolioCategoryRows(categories)}
@@ -5371,7 +5371,7 @@ function renderPortfolioDemoDashboard() {
       <div class="dashboard-panel-header">
         <div>
           <div class="dashboard-panel-title">Performance</div>
-          <div class="dashboard-panel-subtitle">Your value trend across the selected time window.</div>
+          <div class="dashboard-panel-subtitle">Track whether your portfolio value is moving up or down over time.</div>
         </div>
         <div class="perf-tabs">
           <button class="perf-tab" data-range="1m">1M</button>
@@ -5387,7 +5387,7 @@ function renderPortfolioDemoDashboard() {
       <div class="dashboard-panel-header">
         <div>
           <div class="dashboard-panel-title">Allocation</div>
-          <div class="dashboard-panel-subtitle">A cleaner breakdown by holding, value, and contribution.</div>
+          <div class="dashboard-panel-subtitle">See how your money is split across each holding.</div>
         </div>
         <div style="font-size:12px;color:${up?'var(--green)':'var(--red)'};font-weight:700">${up?'▲':'▼'} ${fmtMoney(Math.abs(pnl))}</div>
       </div>
@@ -5456,7 +5456,7 @@ function renderPortfolioDemoDashboard() {
       <div class="dashboard-panel-header">
         <div>
           <div class="dashboard-panel-title">P&amp;L by holding</div>
-          <div class="dashboard-panel-subtitle">A quick scan of which positions are strongest.</div>
+          <div class="dashboard-panel-subtitle">Compare which holdings are helping or hurting your return.</div>
         </div>
         <div style="font-size:12px;color:var(--muted)">Best performer: ${best.ticker}</div>
       </div>
@@ -5477,7 +5477,7 @@ function renderPortfolioDemoDashboard() {
     <div class="dashboard-panel-header">
       <div>
         <div class="dashboard-panel-title">Holdings</div>
-        <div class="dashboard-panel-subtitle">Each position with value, cost basis, and allocation.</div>
+        <div class="dashboard-panel-subtitle">Review each position, its value, and its share of your portfolio.</div>
       </div>
     </div>
     ${HOLDINGS.map(h => {
@@ -5867,7 +5867,7 @@ function renderDBPortfolio() {
         <div class="dashboard-panel-header">
           <div>
             <div class="dashboard-panel-title">Holdings over time</div>
-            <div class="dashboard-panel-subtitle">A soft monthly activity snapshot modeled on the clean admin layout you shared.</div>
+            <div class="dashboard-panel-subtitle">See how your portfolio has grown as you add more positions.</div>
           </div>
         </div>
         ${portfolioBars(monthBars)}
@@ -5876,7 +5876,7 @@ function renderDBPortfolio() {
         <div class="dashboard-panel-header">
           <div>
             <div class="dashboard-panel-title">Top categories</div>
-            <div class="dashboard-panel-subtitle">Where most of your current portfolio is concentrated.</div>
+            <div class="dashboard-panel-subtitle">Shows where the biggest parts of your money are invested.</div>
           </div>
         </div>
         ${portfolioCategoryRows(topCategories)}
@@ -5892,7 +5892,7 @@ function renderDBPortfolio() {
       <div class="dashboard-panel-header">
         <div>
           <div class="dashboard-panel-title">Performance</div>
-          <div class="dashboard-panel-subtitle">Your portfolio value over time with the same simplified dashboard treatment.</div>
+          <div class="dashboard-panel-subtitle">Track whether your portfolio value is moving up or down over time.</div>
         </div>
         <div class="perf-tabs">
           <button class="perf-tab" data-range="1m">1M</button>
@@ -5908,7 +5908,7 @@ function renderDBPortfolio() {
       <div class="dashboard-panel-header">
         <div>
           <div class="dashboard-panel-title">Portfolio metrics</div>
-          <div class="dashboard-panel-subtitle">Quick indicators for balance, winners, and risk concentration.</div>
+          <div class="dashboard-panel-subtitle">A quick health check of winners, losers, and diversification.</div>
         </div>
         <div style="font-size:12px;color:${up?'var(--green)':'var(--red)'};font-weight:700">${up?'▲':'▼'} ${fmtMoney(Math.abs(totalPnl))}</div>
       </div>
@@ -5963,7 +5963,7 @@ function renderDBPortfolio() {
         <div class="dashboard-panel-header">
           <div>
             <div class="dashboard-panel-title">Sector breakdown</div>
-            <div class="dashboard-panel-subtitle">How your holdings are distributed across sectors.</div>
+            <div class="dashboard-panel-subtitle">See which industries your money depends on most.</div>
           </div>
         </div>
         ${sectorList.map(s => {
@@ -5983,7 +5983,7 @@ function renderDBPortfolio() {
       <div class="dashboard-panel-header">
         <div>
           <div class="dashboard-panel-title">P&amp;L by holding</div>
-          <div class="dashboard-panel-subtitle">A quick read on which positions are driving the portfolio.</div>
+          <div class="dashboard-panel-subtitle">Compare which holdings are helping or hurting your return.</div>
         </div>
       </div>
       ${holdings.map(h => {
@@ -6002,7 +6002,7 @@ function renderDBPortfolio() {
     <div class="dashboard-panel-header">
       <div>
         <div class="dashboard-panel-title">Holdings</div>
-        <div class="dashboard-panel-subtitle">Filtered list of your real positions.</div>
+        <div class="dashboard-panel-subtitle">Review each position, its value, and its share of your portfolio.</div>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
         ${filterBtn('all', 'All')}
