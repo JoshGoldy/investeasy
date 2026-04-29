@@ -926,6 +926,7 @@ function convertChartData(data) {
 function createFullChart(container, data, color, height = 300) {
   if (!container || !data.length) return null;
   container.innerHTML = '';
+  const isMobileChart = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
   const chart = LightweightCharts.createChart(container, {
     width: container.clientWidth, height,
     layout: { background: { type: 'solid', color: '#0c1320' }, textColor: '#64748b', fontFamily: 'DM Mono, monospace' },
@@ -947,8 +948,8 @@ function createFullChart(container, data, color, height = 300) {
         return d.toLocaleDateString('en-GB', { month:'short', year:'2-digit' });
       },
     },
-    handleScroll: { mouseWheel: false, pressedMouseMove: true },
-    handleScale:  { mouseWheel: false, pinch: true },
+    handleScroll: { mouseWheel: false, pressedMouseMove: !isMobileChart },
+    handleScale:  { mouseWheel: false, pinch: !isMobileChart },
   });
   const cfg = curCfg();
   const series = chart.addAreaSeries({
@@ -2141,7 +2142,7 @@ function renderMarkets(filter) {
   }
 
   document.getElementById('tab-markets').innerHTML = `
-    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">
+    <div class="section-title markets-title">
       <div><h2>Markets</h2><p>Tap any asset for detailed charts & stats</p></div>
       <button class="compare-toggle-btn ${compareMode?'on':'off'}" onclick="toggleCompareMode()">
         ${compareMode ? '✕ Exit Compare' : '⇄ Compare'}
@@ -2263,7 +2264,7 @@ function renderMarkets(filter) {
                title="${hasAlert?'Manage alerts':'Set price alert'}">${hasAlert ? '🔔' : '🔕'}</button>`
           : '';
         const overlapBadge = overlapPct
-          ? `<div class="overlap-badge">In Portfolio · ${overlapPct}%</div>`
+          ? `<div class="overlap-badge" title="In Portfolio · ${overlapPct}%">Portfolio · ${overlapPct}%</div>`
           : '';
 
         return `
@@ -2455,7 +2456,9 @@ function openStockDetail(idx) {
   const up    = stock.chg >= 0;
   const color = up ? '#10b981' : '#ef4444';
   const overlay = document.getElementById('stock-detail');
+  document.body.classList.add('stock-detail-open');
   overlay.classList.remove('hidden');
+  overlay.scrollTop = 0;
 
   // Compute simulated timeframe returns from generated chart data
   function tfReturn(tf) {
@@ -2674,6 +2677,7 @@ function switchDetailTF(idx, tf) {
 
 function closeStockDetail() {
   document.getElementById('stock-detail').classList.add('hidden');
+  document.body.classList.remove('stock-detail-open');
   if (detailChart) { detailChart.remove(); detailChart = null; }
   Object.values(indicatorCharts).forEach(c => c && c.remove());
   indicatorCharts = {};
@@ -8346,23 +8350,47 @@ async function toggleWatchlist(ticker, name) {
 }
 
 // ── Add / Remove Portfolio Holdings ──────────────────────────────────────────
+const QUICK_HOLDING_PRICES = {
+  SPY: { name: 'SPDR S&P 500 ETF', val: 543.24 },
+  QQQ: { name: 'Invesco QQQ Trust', val: 463.11 },
+  VOO: { name: 'Vanguard S&P 500 ETF', val: 500.62 },
+  VTI: { name: 'Vanguard Total Stock Market ETF', val: 268.35 },
+  ARKK: { name: 'ARK Innovation ETF', val: 44.82 },
+  GLD: { name: 'SPDR Gold Shares', val: 214.18 },
+  SLV: { name: 'iShares Silver Trust', val: 25.06 },
+  USO: { name: 'United States Oil Fund', val: 78.34 },
+  PDBC: { name: 'Invesco Diversified Commodity Strategy', val: 13.72 },
+  PLTM: { name: 'GraniteShares Platinum Trust', val: 9.15 },
+};
+
+function getQuickHoldingAsset(ticker, name = '') {
+  const symbol = String(ticker || '').trim().toUpperCase();
+  const market = RAW_MARKETS.find(m => m.ticker === symbol);
+  const fallback = QUICK_HOLDING_PRICES[symbol];
+  return {
+    ticker: symbol,
+    name: name || market?.name || fallback?.name || symbol,
+    val: market?.val ?? fallback?.val ?? null,
+  };
+}
+
 function holdingQuickPick(ticker, name, chipEl) {
   // Decode HTML entities (e.g. &amp; → &) for display
   const txt = document.createElement('textarea');
   txt.innerHTML = name;
-  document.getElementById('holding-ticker').value = ticker;
-  document.getElementById('holding-name').value   = txt.value;
+  const asset = getQuickHoldingAsset(ticker, txt.value);
+  document.getElementById('holding-ticker').value = asset.ticker;
+  document.getElementById('holding-name').value   = asset.name;
 
   // Highlight selected chip, clear others
   document.querySelectorAll('.quick-chip').forEach(c => c.classList.remove('selected'));
   if (chipEl) chipEl.classList.add('selected');
 
   // Show current market price as a hint
-  const mkt      = RAW_MARKETS.find(m => m.ticker === ticker);
   const hintEl   = document.getElementById('holding-price-hint');
   if (hintEl) {
-    if (mkt) {
-      hintEl.textContent = 'Market price: ' + fmtUnitPrice(mkt.val);
+    if (asset.val !== null) {
+      hintEl.textContent = 'Market price: ' + fmtUnitPrice(asset.val);
       hintEl.style.display = 'block';
     } else {
       hintEl.textContent = '';
@@ -8371,7 +8399,7 @@ function holdingQuickPick(ticker, name, chipEl) {
 
   // Clear stale values and move focus to quantity
   document.getElementById('holding-shares').value = '';
-  document.getElementById('holding-cost').value   = '';
+  document.getElementById('holding-cost').value   = asset.val !== null ? Number(asset.val).toFixed(asset.val < 10 ? 4 : 2) : '';
   document.getElementById('holding-error').textContent = '';
   document.getElementById('holding-error').classList.remove('show');
   document.getElementById('holding-shares').focus();
@@ -8399,10 +8427,11 @@ function importPortfolioToFinBot(field, textareaId) {
 }
 
 function openAddHoldingModal(ticker = '', name = '') {
-  document.getElementById('holding-ticker').value = ticker;
-  document.getElementById('holding-name').value   = name;
+  const asset = getQuickHoldingAsset(ticker, name);
+  document.getElementById('holding-ticker').value = asset.ticker;
+  document.getElementById('holding-name').value   = asset.name;
   document.getElementById('holding-shares').value = '';
-  document.getElementById('holding-cost').value   = '';
+  document.getElementById('holding-cost').value   = asset.val !== null ? Number(asset.val).toFixed(asset.val < 10 ? 4 : 2) : '';
   const e = document.getElementById('holding-error');
   e.textContent = ''; e.classList.remove('show');
 
@@ -8417,9 +8446,8 @@ function openAddHoldingModal(ticker = '', name = '') {
   if (hint) hint.textContent = '';
 
   // If pre-filled from a quick-pick context (e.g. stock detail), show market price hint
-  if (ticker) {
-    const mkt = RAW_MARKETS.find(m => m.ticker === ticker);
-    if (mkt && hint) hint.textContent = 'Market price: ' + fmtUnitPrice(mkt.val);
+  if (asset.ticker && asset.val !== null && hint) {
+    hint.textContent = 'Market price: ' + fmtUnitPrice(asset.val);
   }
 
   document.getElementById('add-holding-modal').classList.remove('hidden');
