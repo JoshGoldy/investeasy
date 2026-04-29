@@ -2754,13 +2754,35 @@ function selectAlertDir(dir) {
   document.getElementById('alert-dir-below').className = 'alert-dir-btn' + (dir === 'below' ? ' selected red' : '');
 }
 
+function displayPriceToBasePrice(price) {
+  const rate = curCfg().rate || 1;
+  return Number(price) / rate;
+}
+
+function normalizedAlertTarget(alert, ticker) {
+  const rawTarget = Number(alert?.target);
+  if (!Number.isFinite(rawTarget) || rawTarget <= 0) return rawTarget;
+
+  const rate = curCfg().rate || 1;
+  const market = MARKETS.find(m => m.ticker === ticker);
+  if (rate === 1 || !market?.val) return rawTarget;
+
+  const converted = rawTarget / rate;
+  const looksLikeDisplayCurrency =
+    rawTarget > market.val * 5 &&
+    converted > market.val * 0.05 &&
+    converted < market.val * 20;
+
+  return looksLikeDisplayCurrency ? converted : rawTarget;
+}
+
 function renderAlertList(ticker) {
   const list = document.getElementById('alert-list');
   const alerts = alertsMap[ticker] || [];
   if (!alerts.length) { list.innerHTML = ''; return; }
   list.innerHTML = alerts.map(a => `
     <div class="alert-item">
-      <span class="alert-txt">${a.direction === 'above' ? '📈 Above' : '📉 Below'} ${fmtUnitPrice(a.target)}${a.triggered ? ' ✓' : ''}</span>
+      <span class="alert-txt">${a.direction === 'above' ? '📈 Above' : '📉 Below'} ${fmtUnitPrice(normalizedAlertTarget(a, ticker))}${a.triggered ? ' ✓' : ''}</span>
       <button class="alert-del" onclick="deleteAlert(${a.id},'${ticker}')" title="Delete">✕</button>
     </div>`).join('');
 }
@@ -2768,8 +2790,9 @@ function renderAlertList(ticker) {
 async function saveAlert() {
   const ticker = document.getElementById('alert-ticker').value;
   const name   = document.getElementById('alert-ticker-name').value;
-  const target = parseFloat(document.getElementById('alert-target').value);
-  if (!ticker || !target || isNaN(target)) { showToast('Enter a valid target price'); return; }
+  const displayTarget = parseFloat(document.getElementById('alert-target').value);
+  const target = displayPriceToBasePrice(displayTarget);
+  if (!ticker || !target || isNaN(target) || target <= 0) { showToast('Enter a valid target price'); return; }
   try {
     const d = await dataRequest('price_alerts', 'POST', { ticker, name, target, direction: alertDirection });
     if (d.success) {
@@ -2799,10 +2822,11 @@ function checkAlerts() {
     if (!alerts) return;
     alerts.forEach(a => {
       if (a.triggered) return;
-      const hit = (a.direction === 'above' && m.val >= a.target) || (a.direction === 'below' && m.val <= a.target);
+      const target = normalizedAlertTarget(a, m.ticker);
+      const hit = (a.direction === 'above' && m.val >= target) || (a.direction === 'below' && m.val <= target);
       if (hit) {
         a.triggered = true;
-        const alertText = `${m.ticker} ${a.direction === 'above' ? 'crossed above' : 'dropped below'} ${fmtUnitPrice(a.target)}!`;
+        const alertText = `${m.ticker} ${a.direction === 'above' ? 'crossed above' : 'dropped below'} ${fmtUnitPrice(target)}!`;
         showToast(alertText, 5000);
         addNotification({
           id: `price:${a.id}`,
