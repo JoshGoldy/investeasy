@@ -255,10 +255,32 @@ let newsAlertMatches = new Set(JSON.parse(localStorage.getItem('ie_alert_matches
 // Recent in-app notifications for missed ticker/news alerts.
 let notificationCenter = JSON.parse(localStorage.getItem('ie_notifications') || '[]');
 
+function notificationDedupeKey(note = {}) {
+  if (note.dedupeKey) return note.dedupeKey;
+  if (note.type === 'news') {
+    return `news:${String(note.title || '').toLowerCase().trim()}:${String(note.body || '').toLowerCase().replace(/\s+/g, ' ').trim()}`;
+  }
+  return note.id || `${note.type || 'alert'}:${note.ticker || ''}:${note.title || ''}:${note.body || ''}`;
+}
+
 function normalizeNotifications() {
   if (!Array.isArray(notificationCenter)) notificationCenter = [];
-  notificationCenter = notificationCenter
+  const seen = new Map();
+  notificationCenter
     .filter(n => n && n.id && n.title)
+    .forEach(n => {
+      const key = notificationDedupeKey(n);
+      const existing = seen.get(key);
+      if (!existing) {
+        seen.set(key, { ...n, dedupeKey: key });
+        return;
+      }
+      existing.at = Math.max(Number(existing.at || 0), Number(n.at || 0));
+      existing.read = !!(existing.read && n.read);
+      existing.articleUuid = existing.articleUuid || n.articleUuid || '';
+    });
+  notificationCenter = [...seen.values()]
+    .sort((a, b) => Number(b.at || 0) - Number(a.at || 0))
     .slice(0, 40);
 }
 
@@ -275,15 +297,19 @@ function unreadNotificationCount() {
 function addNotification(item = {}) {
   const id = item.id || `${item.type || 'alert'}:${item.key || Date.now()}`;
   normalizeNotifications();
-  const existing = notificationCenter.find(n => n.id === id);
+  const dedupeKey = item.dedupeKey || notificationDedupeKey({ ...item, id });
+  const existing = notificationCenter.find(n => n.id === id || notificationDedupeKey(n) === dedupeKey);
   if (existing) {
     if (item.forceUnread) existing.read = false;
     existing.at = Date.now();
     existing.title = item.title || existing.title;
     existing.body = item.body || existing.body;
+    existing.articleUuid = item.articleUuid || existing.articleUuid || '';
+    existing.dedupeKey = dedupeKey;
   } else {
     notificationCenter.unshift({
       id,
+      dedupeKey,
       type: item.type || 'alert',
       title: item.title || 'New alert',
       body: item.body || '',
@@ -1712,13 +1738,16 @@ function checkNewsAlertsForArticles(articles) {
     const text = (article.title + ' ' + (article.description || '')).toLowerCase();
     for (const alert of newsAlerts) {
       if (text.includes(alert.keyword.toLowerCase())) {
-        const noteId = `news:${alert.id}:${article.uuid}`;
-        if (!notificationCenter.some(n => n.id === noteId)) {
+        const articleTitle = cleanNewsText(article.title || 'A saved news alert matched a new article.');
+        const dedupeKey = `news:${alert.keyword.toLowerCase().trim()}:${articleTitle.toLowerCase()}`;
+        const noteId = `news:${alert.id}:${dedupeKey.replace(/[^a-z0-9]+/g, '-').slice(0, 80)}`;
+        if (!notificationCenter.some(n => n.id === noteId || notificationDedupeKey(n) === dedupeKey)) {
           addNotification({
             id: noteId,
+            dedupeKey,
             type: 'news',
             title: `News alert: ${alert.keyword}`,
-            body: article.title || 'A saved news alert matched a new article.',
+            body: articleTitle,
             articleUuid: article.uuid
           });
         }
