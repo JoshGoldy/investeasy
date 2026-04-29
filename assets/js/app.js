@@ -953,8 +953,11 @@ function createFullChart(container, data, color, height = 300) {
   if (!container || !data.length) return null;
   container.innerHTML = '';
   const isMobileChart = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+  const measuredHeight = Math.round(container.getBoundingClientRect().height || container.clientHeight || height);
+  const chartHeight = isMobileChart ? 240 : (measuredHeight || height);
+  container.style.height = `${chartHeight}px`;
   const chart = LightweightCharts.createChart(container, {
-    width: container.clientWidth, height,
+    width: container.clientWidth, height: chartHeight,
     layout: { background: { type: 'solid', color: '#0c1320' }, textColor: '#64748b', fontFamily: 'DM Mono, monospace' },
     grid: { vertLines: { color: '#ffffff08' }, horzLines: { color: '#ffffff08' } },
     crosshair: {
@@ -2527,8 +2530,8 @@ function openStockDetail(idx) {
     </div>
 
     <div class="sd-chart" id="sd-chart-canvas"></div>
-    <div class="sd-timeframes">
-      ${TIMEFRAMES.map(tf => `<button class="tf-btn ${tf==='1D'?(up?'active-up':'active-dn'):''}" onclick="switchDetailTF(${idx},'${tf}')">${tf}</button>`).join('')}
+    <div class="sd-timeframes" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;padding:10px;overflow:hidden">
+      ${TIMEFRAMES.map(tf => `<button class="tf-btn ${tf==='1D'?(up?'active-up':'active-dn'):''}" style="min-width:0;width:100%;padding:8px 4px;font-size:11px;border-radius:8px" onclick="switchDetailTF(${idx},'${tf}')">${tf}</button>`).join('')}
     </div>
 
     <!-- 52-week range bar -->
@@ -2682,6 +2685,11 @@ function switchDetailTF(idx, tf) {
 
   document.querySelectorAll('.tf-btn').forEach(b => {
     b.className = 'tf-btn' + (b.textContent === tf ? (up ? ' active-up' : ' active-dn') : '');
+    b.style.minWidth = '0';
+    b.style.width = '100%';
+    b.style.padding = '8px 4px';
+    b.style.fontSize = '11px';
+    b.style.borderRadius = '8px';
   });
 
   requestAnimationFrame(() => {
