@@ -3110,7 +3110,73 @@ function renderIndicators(idx) {
 // WHAT IF SIMULATOR
 // ═══════════════════════════════════════════════════════════════════════════
 
-function runWhatIf(ticker) {
+function getDisplayMoneyFormatter() {
+  const cfg = curCfg();
+  return (v) => {
+    if (loadSettings().hideBalances) return '••••••';
+    const abs = Math.abs(v);
+    const formatted = abs >= 1000
+      ? abs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      : abs.toFixed(2);
+    return `${v < 0 ? '-' : ''}${cfg.symbol}${formatted}`;
+  };
+}
+
+function getWhatIfPriceSeries(stock) {
+  const pts = (stock?.charts?.['1Y'] || [])
+    .filter(p => Number.isFinite(Number(p.value)) && Number(p.value) > 0)
+    .map(p => ({ time: Number(p.time) || 0, value: Number(p.value) }))
+    .sort((a, b) => a.time - b.time);
+
+  if (pts.length < 2) return null;
+
+  const latest = pts[pts.length - 1];
+  const targetStart = latest.time ? latest.time - (365 * 24 * 60 * 60) : null;
+  const start = targetStart
+    ? pts.reduce((best, p) => Math.abs(p.time - targetStart) < Math.abs(best.time - targetStart) ? p : best, pts[0])
+    : pts[0];
+  const days = start.time && latest.time ? Math.max(1, Math.round((latest.time - start.time) / 86400)) : 365;
+
+  if (!start?.value || !latest?.value || start.value <= 0 || latest.value <= 0 || start === latest) return null;
+  return { start, latest, days };
+}
+
+function isPlausibleWhatIfSeries(stock, points) {
+  if (!Array.isArray(points) || points.length < 2) return false;
+  const clean = points.filter(p => Number.isFinite(Number(p.value)) && Number(p.value) > 0);
+  if (clean.length < 2) return false;
+  const last = clean[clean.length - 1].value;
+  const anchor = stock?._initVal || stock?.val;
+  if (!anchor || !last) return true;
+  const ratio = last / anchor;
+  return ratio > 0.02 && ratio < 50;
+}
+
+async function loadBestWhatIfSeries(stock) {
+  let source = 'Modeled 1Y chart';
+
+  if (shouldUseLiveDetailCharts(stock) && isSupabaseConfigured()) {
+    try {
+      const d = await Promise.race([
+        fetchMarketData('chart', { ticker: stock.ticker, tf: '1Y' }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('chart timeout')), 3500))
+      ]);
+      if (d?.success && isPlausibleWhatIfSeries(stock, d.points)) {
+        const livePoints = sanitizeLiveChartPoints(stock.ticker, '1Y', d.points)
+          .map(p => ({ time: Number(p.time) || 0, value: Number(p.value) }));
+        stock.charts['1Y'] = livePoints;
+        source = 'Live 1Y chart';
+      }
+    } catch(e) {
+      source = 'Modeled 1Y chart';
+    }
+  }
+
+  const series = getWhatIfPriceSeries(stock);
+  return series ? { ...series, source } : null;
+}
+
+async function runWhatIf(ticker) {
   const inputEl = document.getElementById('whatif-amount-' + ticker);
   const resultEl = document.getElementById('whatif-result-' + ticker);
   if (!inputEl || !resultEl) return;
@@ -3118,27 +3184,51 @@ function runWhatIf(ticker) {
   if (!amount || isNaN(amount) || amount <= 0) { showToast('Enter a valid investment amount'); return; }
   const stock = MARKETS.find(m => m.ticker === ticker);
   if (!stock) return;
-  const pts1Y = stock.charts['1Y'];
-  if (!pts1Y || pts1Y.length < 2) return;
-  const startPrice = pts1Y[0].value;
-  const endPrice   = pts1Y[pts1Y.length - 1].value;
+
+  resultEl.classList.add('show');
+  resultEl.innerHTML = `<p style="font-size:11px;color:#94a3b8;font-weight:700">Calculating with best available 1Y data...</p>`;
+
+  const series = await loadBestWhatIfSeries(stock);
+  if (!series) {
+    resultEl.innerHTML = `<p style="font-size:11px;color:#ef4444;font-weight:700">Not enough price history to calculate this accurately.</p>`;
+    return;
+  }
+
+  const startPrice = series.start.value;
+  const endPrice   = series.latest.value;
   const returnPct  = ((endPrice - startPrice) / startPrice * 100);
+  const annualizedPct = Math.pow(endPrice / startPrice, 365 / series.days) - 1;
   const endValue   = amount * (1 + returnPct / 100);
   const gain       = endValue - amount;
+  const shares     = amount / (startPrice * curCfg().rate);
   const pos        = gain >= 0;
-  const fmt = v => v >= 1000 ? '$' + v.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) : '$' + v.toFixed(2);
-  resultEl.classList.add('show');
+  const fmt = getDisplayMoneyFormatter();
+  const priceStart = fmtUnitPrice(startPrice);
+  const priceEnd = fmtUnitPrice(endPrice);
+  const periodText = series.days >= 350 && series.days <= 380 ? '1 year' : `${series.days} days`;
+  const annualizedText = series.days >= 350 && series.days <= 380
+    ? ''
+    : `<span style="font-size:10px;color:#64748b">Annualized: ${(annualizedPct >= 0 ? '+' : '')}${(annualizedPct * 100).toFixed(2)}%</span>`;
+
   resultEl.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px">
       <div>
-        <p style="font-size:10px;color:#64748b;font-weight:600">WOULD BE WORTH</p>
+        <p style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Would be worth</p>
         <p style="font-size:20px;font-weight:800;color:#e2e8f0;font-family:var(--mono)">${fmt(endValue)}</p>
+        <p style="font-size:10px;color:#64748b;margin-top:3px">${periodText} price return · ${series.source}</p>
       </div>
       <div style="text-align:right">
         <p style="font-size:12px;font-weight:800;color:${pos?'#10b981':'#ef4444'}">${pos?'+':''}${fmt(gain)}</p>
-        <p style="font-size:11px;color:${pos?'#10b981':'#ef4444'}">${pos?'+':''}${returnPct.toFixed(2)}% in 1 year</p>
+        <p style="font-size:11px;color:${pos?'#10b981':'#ef4444'}">${pos?'+':''}${returnPct.toFixed(2)}%</p>
+        ${annualizedText}
       </div>
-    </div>`;
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px">
+      <div><p style="font-size:9px;color:#64748b;font-weight:700">ENTRY</p><p style="font-size:11px;color:#e2e8f0;font-family:var(--mono)">${priceStart}</p></div>
+      <div><p style="font-size:9px;color:#64748b;font-weight:700">LATEST</p><p style="font-size:11px;color:#e2e8f0;font-family:var(--mono)">${priceEnd}</p></div>
+      <div><p style="font-size:9px;color:#64748b;font-weight:700">UNITS</p><p style="font-size:11px;color:#e2e8f0;font-family:var(--mono)">${shares.toFixed(shares >= 10 ? 2 : 4)}</p></div>
+    </div>
+    <p style="font-size:9px;color:#64748b;margin-top:9px;line-height:1.35">Price return estimate only. Dividends, fees, tax, spreads, and FX movement after purchase are not included.</p>`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
