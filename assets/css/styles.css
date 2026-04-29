@@ -1207,9 +1207,17 @@ body[data-ui-mode="terminal"] .overlap-badge{background:#13202b;border-color:#2c
   .sd-chart .tv-lightweight-charts,
   .sd-chart table,
   .sd-chart canvas{max-width:100%!important}
-  .sd-timeframes{justify-content:flex-start;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;padding:10px 14px;gap:7px}
+  .sd-timeframes{
+    display:grid;
+    grid-template-columns:repeat(6,minmax(0,1fr));
+    justify-content:stretch;
+    overflow:hidden;
+    scrollbar-width:none;
+    padding:10px 10px;
+    gap:6px;
+  }
   .sd-timeframes::-webkit-scrollbar{display:none}
-  .tf-btn{flex:0 0 auto;min-width:54px;padding:8px 12px}
+  .tf-btn{min-width:0;width:100%;padding:8px 4px;font-size:11px;border-radius:8px}
   .sd-stats{grid-template-columns:1fr 1fr}
   .stat-box{padding:10px 8px}
   .stat-box .val{font-size:12px}
