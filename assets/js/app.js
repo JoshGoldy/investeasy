@@ -799,6 +799,9 @@ const tabPanels = document.querySelectorAll('.tab-content');
 function switchTab(id) {
   closeHeaderDropdown();
   closeMobileNav();
+  if (id === 'learn' && loadSettings().uiMode === 'terminal') {
+    id = 'markets';
+  }
   if (id === 'settings' && !currentUser) {
     document.getElementById('auth-overlay').classList.remove('hidden');
     showAuthTab('login');
@@ -2043,12 +2046,10 @@ function renderMarkets(filter) {
         const starBtn = currentUser && !compareMode
           ? `<button onclick="event.stopPropagation();toggleWatchlist('${m.ticker}','${m.name.replace(/'/g,"\\'")}')"
                class="market-star-btn ${starred ? 'active' : ''}"
-               style="position:absolute;top:8px;right:8px"
                title="${starred?'Remove from watchlist':'Add to watchlist'}">${starred ? '★' : '☆'}</button>`
           : '';
         const bellBtn = currentUser && !compareMode
           ? `<button class="alert-bell${hasAlert?' active':''}" onclick="event.stopPropagation();openAlertModal('${m.ticker}','${m.name.replace(/'/g,"\\'")}',${m.val})"
-               style="position:absolute;top:8px;right:${currentUser?'30px':'8px'};background:none;border:none;cursor:pointer;font-size:13px;padding:2px"
                title="${hasAlert?'Manage alerts':'Set price alert'}">${hasAlert ? '🔔' : '🔕'}</button>`
           : '';
         const overlapBadge = overlapPct
@@ -2056,9 +2057,10 @@ function renderMarkets(filter) {
           : '';
 
         return `
-          <div class="market-tile${inCompare?' compare-selected':''}" onclick="${compareMode?`toggleCompareAsset('${m.ticker}')`:`openStockDetail(${globalIdx})`}" style="position:relative">
-            ${starBtn}${bellBtn}${overlapBadge}
-            <p class="ticker" style="margin-top:${overlapPct?'18px':'0'}">${m.ticker}</p>
+          <div class="market-tile${inCompare?' compare-selected':''}${overlapPct || starBtn || bellBtn ? ' has-top-meta' : ''}" onclick="${compareMode?`toggleCompareAsset('${m.ticker}')`:`openStockDetail(${globalIdx})`}" style="position:relative">
+            ${overlapBadge}
+            ${starBtn || bellBtn ? `<div class="market-tile-actions">${bellBtn}${starBtn}</div>` : ''}
+            <p class="ticker">${m.ticker}</p>
             <p class="name">${m.name}</p>
             <p class="price">${fmtUnitPrice(m.val)}</p>
             <div class="bottom">
@@ -6102,7 +6104,16 @@ function applyUiMode(mode = loadSettings().uiMode) {
   const nextMode = UI_MODES[mode] ? mode : SETTINGS_DEFAULTS.uiMode;
   document.body.dataset.uiMode = nextMode;
   document.documentElement.dataset.uiMode = nextMode;
+  document.querySelectorAll('.nav button[data-tab="learn"]').forEach(btn => {
+    const hideLearn = nextMode === 'terminal';
+    btn.hidden = hideLearn;
+    btn.style.display = hideLearn ? 'none' : '';
+  });
   renderMarketTickerTape();
+  if (nextMode === 'terminal') {
+    const learnPanel = document.getElementById('tab-learn');
+    if (learnPanel && learnPanel.classList.contains('active')) switchTab('markets');
+  }
 }
 
 function renderMarketTickerTape() {
