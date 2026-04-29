@@ -768,6 +768,29 @@ function escHtml(s) {
   const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
 }
 
+function decodeHtmlEntities(value) {
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = String(value ?? '');
+  return textarea.value;
+}
+
+function cleanNewsText(value) {
+  return decodeHtmlEntities(value).replace(/\s+/g, ' ').trim();
+}
+
+function normalizeNewsArticle(article) {
+  if (!article) return article;
+  const title = cleanNewsText(article.title || '');
+  const description = cleanNewsText(String(article.description || '').replace(/<[^>]+>/g, ''));
+  return {
+    ...article,
+    title,
+    description,
+    cat: article.cat || _newsCateg(title),
+    hot: typeof article.hot === 'boolean' ? article.hot : _newsHot(title),
+  };
+}
+
 function parseMd(text) {
   const lines = String(text || '').replace(/\r\n/g, '\n').split('\n');
   const out = [];
@@ -1150,14 +1173,14 @@ async function fetchGuardianNews() {
       const d = await r.json();
       if (d.response?.status !== 'ok') return;
       for (const item of (d.response.results || [])) {
-        const headline = item.fields?.headline || item.webTitle;
+        const headline = cleanNewsText(item.fields?.headline || item.webTitle);
         const { pubTime, timeStr } = _newsTime(item.webPublicationDate);
         articles.push({
           uuid: item.id.split('/').pop().slice(0, 20),
           title: headline,
           publisher: 'The Guardian',
           link: item.webUrl,
-          description: (item.fields?.trailText || '').replace(/<[^>]+>/g, ''),
+          description: cleanNewsText((item.fields?.trailText || '').replace(/<[^>]+>/g, '')),
           time: timeStr,
           pubTime,
           tickers: [],
@@ -1188,22 +1211,23 @@ async function fetchRss2JsonNews() {
       if (d.status !== 'ok' || !Array.isArray(d.items)) return;
       for (const item of d.items) {
         if (!item.title) continue;
-        const key = item.title.trim().toLowerCase();
+        const title = cleanNewsText(item.title);
+        const key = title.toLowerCase();
         if (seen.has(key)) continue;
         seen.add(key);
         const { pubTime, timeStr } = _newsTime(item.pubDate);
         articles.push({
-          uuid: btoa(encodeURIComponent(item.title)).slice(0, 16),
-          title: item.title,
+          uuid: btoa(encodeURIComponent(title)).slice(0, 16),
+          title,
           publisher: pub,
           link: item.link || '',
-          description: (item.description || '').replace(/<[^>]+>/g, '').trim().slice(0, 400),
+          description: cleanNewsText((item.description || '').replace(/<[^>]+>/g, '')).slice(0, 400),
           time: timeStr,
           pubTime,
           tickers: [],
           thumbnail: item.thumbnail || null,
-          cat: _newsCateg(item.title),
-          hot: _newsHot(item.title),
+          cat: _newsCateg(title),
+          hot: _newsHot(title),
         });
       }
     } catch(e) {}
@@ -1236,8 +1260,9 @@ async function fetchNewsClientSide() {
   for (const result of [guardianResult, rssResult]) {
     if (result.status !== 'fulfilled') continue;
     for (const a of result.value) {
-      const key = a.title.trim().toLowerCase();
-      if (!seen.has(key)) { seen.add(key); all.push(a); }
+      const article = normalizeNewsArticle(a);
+      const key = article.title.trim().toLowerCase();
+      if (!seen.has(key)) { seen.add(key); all.push(article); }
     }
   }
   diagnostics.push(
@@ -1311,7 +1336,7 @@ async function fetchLiveNews(force = false) {
     const d = await fetchMarketData('news', { count: 30 });
     if (d.success && d.articles && d.articles.length) {
       const cutoff72h = Math.floor(Date.now() / 1000) - 72 * 60 * 60;
-      liveNews = d.articles.filter(a => (a.pubTime || 0) >= cutoff72h).slice(0, 30);
+      liveNews = d.articles.map(normalizeNewsArticle).filter(a => (a.pubTime || 0) >= cutoff72h).slice(0, 30);
       newsLastFetched = now;
       newsFetchedAt = new Date();
       newsLoadState = 'ready';
@@ -1333,7 +1358,7 @@ async function fetchLiveNews(force = false) {
     const articles = fallbackResult.articles || [];
     fallbackDiagnostics = summarizeNewsDiagnostics(fallbackResult.diagnostics);
     if (articles.length) {
-      liveNews = articles;
+      liveNews = articles.map(normalizeNewsArticle);
       newsLastFetched = now;
       newsFetchedAt = new Date();
       newsLoadState = 'ready';
@@ -1350,7 +1375,7 @@ async function fetchLiveNews(force = false) {
     fallbackError = e;
   }
 
-  liveNews = STATIC_FALLBACK_NEWS.slice();
+  liveNews = STATIC_FALLBACK_NEWS.map(normalizeNewsArticle);
   newsLastFetched = now;
   newsFetchedAt = new Date();
   newsLoadState = 'ready';
@@ -4576,6 +4601,25 @@ let savedSelected = new Set();
 // Tag/folder filter helpers — safe to call from onclick with arbitrary values
 function _srTag(t) { savedTagFilter = (savedTagFilter === t ? '' : t); renderSaved(); }
 function _srFolder(f) { savedFolderFilter = (savedFolderFilter === f ? '' : f); renderSaved(); }
+function _srArg(value) { return JSON.stringify(value).replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
+
+async function deleteSavedTag(tag) {
+  const reports = getSavedReports();
+  const affected = reports.filter(r => Array.isArray(r.tags) && r.tags.includes(tag));
+  if (!affected.length) return;
+  const confirmed = await showConfirmModal(
+    `Delete tag "${tag}"?`,
+    `This removes the tag from ${affected.length} saved report${affected.length !== 1 ? 's' : ''}. Reports will not be deleted.`,
+    'Delete tag'
+  );
+  if (!confirmed) return;
+  const results = await Promise.all(affected.map(r => updateReport(r.id, { tags: r.tags.filter(t => t !== tag) })));
+  if (results.every(Boolean)) {
+    if (savedTagFilter === tag) savedTagFilter = '';
+    renderSaved();
+    showToast('Tag deleted');
+  }
+}
 
 function renderSaved(filter) {
   if (filter !== undefined) savedFilter = filter;
@@ -4727,14 +4771,17 @@ function renderSaved(filter) {
         <span style="font-size:9px;font-weight:800;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;flex-shrink:0;padding:0 6px">📁 Folder</span>
         <div style="width:1px;height:14px;background:var(--border);flex-shrink:0;margin:0 4px"></div>
         <button class="saved-folder-tab ${!savedFolderFilter?'active':''}" onclick="savedFolderFilter='';renderSaved()">All</button>
-        ${folders.map(f => `<button class="saved-folder-tab ${savedFolderFilter===f?'active':''}" onclick="_srFolder(${JSON.stringify(f).replace(/&/g,'&amp;').replace(/"/g,'&quot;')})">${escHtml(f)}</button>`).join('')}
+        ${folders.map(f => `<button class="saved-folder-tab ${savedFolderFilter===f?'active':''}" onclick="_srFolder(${_srArg(f)})">${escHtml(f)}</button>`).join('')}
       </div>` : ''}
       ${folders.length && allTags.length ? `<div style="height:1px;background:var(--border)"></div>` : ''}
       ${allTags.length ? `
       <div style="display:flex;align-items:center;gap:2px;padding:6px 8px;flex-wrap:wrap">
         <span style="font-size:9px;font-weight:800;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;flex-shrink:0;padding:0 6px">🏷 Tags</span>
         <div style="width:1px;height:14px;background:var(--border);flex-shrink:0;margin:0 4px"></div>
-        ${allTags.map(t => `<button class="saved-tag-chip ${savedTagFilter===t?'active':''}" onclick="_srTag(${JSON.stringify(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;')})">${escHtml(t)}</button>`).join('')}
+        ${allTags.map(t => `<span class="saved-tag-chip saved-tag-manage ${savedTagFilter===t?'active':''}">
+          <button class="saved-tag-label" onclick="_srTag(${_srArg(t)})" title="Filter by tag">${escHtml(t)}</button>
+          <button class="saved-tag-delete" onclick="event.stopPropagation();deleteSavedTag(${_srArg(t)})" title="Delete tag">×</button>
+        </span>`).join('')}
       </div>` : ''}
     </div>` : ''}
 
@@ -4780,7 +4827,7 @@ function renderSaved(filter) {
             </div>
           </div>
           ${r.folder ? `<div class="saved-card-folder">📁 ${escHtml(r.folder)}</div>` : ''}
-          ${tags.length ? `<div class="saved-card-tags">${tags.map(t => `<span class="saved-tag-chip" onclick="_srTag(${JSON.stringify(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;')})" title="Filter by tag">${escHtml(t)}</span>`).join('')}</div>` : ''}
+          ${tags.length ? `<div class="saved-card-tags">${tags.map(t => `<span class="saved-tag-chip" onclick="_srTag(${_srArg(t)})" title="Filter by tag">${escHtml(t)}</span>`).join('')}</div>` : ''}
           <div class="saved-preview">${escHtml(preview)}</div>
           ${r.note ? `<div class="saved-card-note-preview" onclick="openReportEditModal('${r.id}')">📝 ${escHtml(r.note.slice(0,120))}${r.note.length>120?'…':''}</div>` : ''}
           <div class="saved-card-actions">
@@ -4974,7 +5021,7 @@ async function saveReportEdits(id) {
   if (ok) { renderSaved(); showToast('Report updated!'); }
 }
 
-function showConfirmModal(title, message) {
+function showConfirmModal(title, message, okLabel = 'Clear all') {
   return new Promise(resolve => {
     let modal = document.getElementById('ie-confirm-modal');
     if (!modal) {
@@ -4997,6 +5044,7 @@ function showConfirmModal(title, message) {
     }
     document.getElementById('ie-confirm-title').textContent = title;
     document.getElementById('ie-confirm-msg').textContent = message;
+    document.getElementById('ie-confirm-ok').textContent = okLabel;
     modal.style.display = 'flex';
     const close = val => { modal.style.display = 'none'; resolve(val); };
     document.getElementById('ie-confirm-ok').onclick = () => close(true);
