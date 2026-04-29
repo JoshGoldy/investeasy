@@ -2565,11 +2565,11 @@ function openStockDetail(idx) {
     <!-- Timeframe performance -->
     <div style="padding:10px 20px 16px">
       <p style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Performance</p>
-      <div style="display:flex;gap:8px">
+      <div class="sd-performance-row" style="display:flex;gap:8px">
         ${returns.map(({tf, r}) => {
           if (r === null) return '';
           const pos = parseFloat(r) >= 0;
-          return `<div style="flex:1;background:#1e293b;border:1px solid #ffffff0a;border-radius:10px;padding:10px 6px;text-align:center">
+          return `<div class="sd-performance-card" style="flex:1;background:#1e293b;border:1px solid #ffffff0a;border-radius:10px;padding:10px 6px;text-align:center">
             <p style="font-size:10px;color:#64748b;margin-bottom:4px;font-weight:600">${tf}</p>
             <p style="font-size:12px;font-weight:800;font-family:var(--mono);color:${pos?'#10b981':'#ef4444'}">${pos?'+':''}${r}%</p>
           </div>`;
@@ -2592,7 +2592,7 @@ function openStockDetail(idx) {
       ${stock.exchange === 'JSE' ? `<div style="padding:8px 12px;border-radius:10px;background:#f59e0b14;border:1px solid #f59e0b30;text-align:center">
         <p style="font-size:11px;color:#f59e0b;font-weight:700">🇿🇦 JSE Listed · Prices in ZAR (R)</p>
       </div>` : ''}
-      ${currentUser ? `<div style="display:flex;gap:10px">
+      ${currentUser ? `<div class="sd-actions-row" style="display:flex;gap:10px">
         <button onclick="toggleWatchlist('${stock.ticker}','${stock.name.replace(/'/g,"\\'")}')"
           style="flex:1;padding:13px;border-radius:13px;background:${watchlistSet.has(stock.ticker)?'#10b98118':'#1e293b'};border:1.5px solid ${watchlistSet.has(stock.ticker)?'#10b981':'#ffffff0a'};font-size:13px;font-weight:700;color:${watchlistSet.has(stock.ticker)?'#10b981':'#64748b'};cursor:pointer;transition:all .2s">
           ${watchlistSet.has(stock.ticker) ? '★ Watchlist' : '☆ Watchlist'}
