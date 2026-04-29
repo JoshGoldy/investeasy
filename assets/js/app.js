@@ -252,6 +252,174 @@ let bookmarkedArticles = JSON.parse(localStorage.getItem('ie_bookmarks') || '{}'
 let newsAlerts = JSON.parse(localStorage.getItem('ie_news_alerts') || '[]');
 // UUIDs of articles that matched an alert (unacknowledged)
 let newsAlertMatches = new Set(JSON.parse(localStorage.getItem('ie_alert_matches') || '[]'));
+// Recent in-app notifications for missed ticker/news alerts.
+let notificationCenter = JSON.parse(localStorage.getItem('ie_notifications') || '[]');
+
+function normalizeNotifications() {
+  if (!Array.isArray(notificationCenter)) notificationCenter = [];
+  notificationCenter = notificationCenter
+    .filter(n => n && n.id && n.title)
+    .slice(0, 40);
+}
+
+function saveNotifications() {
+  normalizeNotifications();
+  try { localStorage.setItem('ie_notifications', JSON.stringify(notificationCenter)); } catch(e) {}
+}
+
+function unreadNotificationCount() {
+  normalizeNotifications();
+  return notificationCenter.filter(n => !n.read).length;
+}
+
+function addNotification(item = {}) {
+  const id = item.id || `${item.type || 'alert'}:${item.key || Date.now()}`;
+  normalizeNotifications();
+  const existing = notificationCenter.find(n => n.id === id);
+  if (existing) {
+    if (item.forceUnread) existing.read = false;
+    existing.at = Date.now();
+    existing.title = item.title || existing.title;
+    existing.body = item.body || existing.body;
+  } else {
+    notificationCenter.unshift({
+      id,
+      type: item.type || 'alert',
+      title: item.title || 'New alert',
+      body: item.body || '',
+      ticker: item.ticker || '',
+      articleUuid: item.articleUuid || '',
+      read: false,
+      at: Date.now()
+    });
+  }
+  saveNotifications();
+  renderNotificationCenter();
+}
+
+function formatNotificationTime(ts) {
+  const minutes = Math.max(0, Math.round((Date.now() - Number(ts || 0)) / 60000));
+  if (minutes < 1) return 'Now';
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  return `${Math.round(hours / 24)}d`;
+}
+
+function escAttr(value) {
+  return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
+}
+
+function ensureNotificationCenter() {
+  const headerRight = document.querySelector('.header-right');
+  if (!headerRight) return null;
+  let center = document.getElementById('notification-center');
+  if (!center) {
+    center = document.createElement('div');
+    center.id = 'notification-center';
+    center.className = 'notification-center';
+    center.innerHTML = `
+      <button id="notification-bell" class="notification-bell" type="button" onclick="toggleNotificationsDropdown(event)" aria-label="Notifications" title="Notifications">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+        <span id="notification-count" class="notification-count"></span>
+      </button>
+      <div id="notification-dropdown" class="notification-dropdown" aria-live="polite"></div>
+    `;
+    const userChip = document.getElementById('header-user');
+    headerRight.insertBefore(center, userChip || headerRight.firstChild);
+  }
+  renderNotificationCenter();
+  return center;
+}
+
+function renderNotificationCenter() {
+  const center = document.getElementById('notification-center') || ensureNotificationCenter();
+  if (!center) return;
+  normalizeNotifications();
+  const count = unreadNotificationCount();
+  const badge = document.getElementById('notification-count');
+  if (badge) {
+    badge.textContent = count > 9 ? '9+' : String(count);
+    badge.classList.toggle('visible', count > 0);
+  }
+  const dropdown = document.getElementById('notification-dropdown');
+  if (!dropdown) return;
+  const items = notificationCenter.slice(0, 8);
+  dropdown.innerHTML = `
+    <div class="notification-head">
+      <div>
+        <p class="notification-title">Notifications</p>
+        <p class="notification-sub">${count ? `${count} unread` : 'All caught up'}</p>
+      </div>
+      ${notificationCenter.length ? `<button class="notification-clear" type="button" onclick="clearNotifications(event)">Clear</button>` : ''}
+    </div>
+    <div class="notification-list">
+      ${items.length ? items.map(n => `
+        <button class="notification-item ${n.read ? '' : 'unread'}" type="button" onclick="openNotificationTarget('${escAttr(n.id)}')">
+          <span class="notification-icon">${n.type === 'price' ? 'P' : 'N'}</span>
+          <span class="notification-copy">
+            <span class="notification-item-title">${escHtml(n.title)}</span>
+            <span class="notification-item-body">${escHtml(n.body)}</span>
+          </span>
+          <span class="notification-time">${formatNotificationTime(n.at)}</span>
+        </button>
+      `).join('') : `<div class="notification-empty">No recent alerts yet.</div>`}
+    </div>
+  `;
+}
+
+function toggleNotificationsDropdown(event) {
+  event?.stopPropagation?.();
+  const center = ensureNotificationCenter();
+  if (!center) return;
+  const willOpen = !center.classList.contains('open');
+  closeHeaderDropdown();
+  center.classList.toggle('open', willOpen);
+  if (willOpen) {
+    notificationCenter.forEach(n => { n.read = true; });
+    saveNotifications();
+    renderNotificationCenter();
+    center.classList.add('open');
+  }
+}
+
+function closeNotificationsDropdown() {
+  document.getElementById('notification-center')?.classList.remove('open');
+}
+
+function clearNotifications(event) {
+  event?.stopPropagation?.();
+  notificationCenter = [];
+  saveNotifications();
+  renderNotificationCenter();
+}
+
+function openNotificationTarget(id) {
+  const note = notificationCenter.find(n => n.id === id);
+  closeNotificationsDropdown();
+  if (!note) return;
+  note.read = true;
+  saveNotifications();
+  renderNotificationCenter();
+  if (note.type === 'news' && note.articleUuid) {
+    switchTab('news');
+    setTimeout(() => {
+      const idx = liveNews.findIndex(n => n.uuid === note.articleUuid);
+      if (idx >= 0) openNewsArticle(idx, true);
+    }, 100);
+    return;
+  }
+  if (note.type === 'price' && note.ticker) {
+    switchTab('markets');
+    setTimeout(() => {
+      const idx = MARKETS.findIndex(m => m.ticker === note.ticker);
+      if (idx >= 0) openStockDetail(idx);
+    }, 100);
+  }
+}
 
 function buildStaticFallbackNews() {
   const now = Date.now();
@@ -798,6 +966,7 @@ const tabPanels = document.querySelectorAll('.tab-content');
 
 function switchTab(id) {
   closeHeaderDropdown();
+  closeNotificationsDropdown();
   closeMobileNav();
   if (id === 'learn' && loadSettings().uiMode === 'terminal') {
     id = 'markets';
@@ -920,15 +1089,20 @@ function setupHeaderDropdown() {
       return;
     }
     event.stopPropagation();
+    closeNotificationsDropdown();
     userEl.classList.toggle('open');
   });
 
   document.addEventListener('click', (event) => {
     if (!userEl.contains(event.target)) closeHeaderDropdown();
+    if (!event.target.closest?.('#notification-center')) closeNotificationsDropdown();
   });
 
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') closeHeaderDropdown();
+    if (event.key === 'Escape') {
+      closeHeaderDropdown();
+      closeNotificationsDropdown();
+    }
   });
 
   window.addEventListener('resize', () => {
@@ -1505,12 +1679,23 @@ function removeNewsAlert(id) {
 // Check a batch of articles against all alerts; updates newsAlertMatches
 function checkNewsAlertsForArticles(articles) {
   if (!newsAlerts.length || !articles.length) return;
+  if (!loadSettings().notifications) return;
   let changed = false;
   for (const article of articles) {
     if (!article.uuid) continue;
     const text = (article.title + ' ' + (article.description || '')).toLowerCase();
     for (const alert of newsAlerts) {
       if (text.includes(alert.keyword.toLowerCase())) {
+        const noteId = `news:${alert.id}:${article.uuid}`;
+        if (!notificationCenter.some(n => n.id === noteId)) {
+          addNotification({
+            id: noteId,
+            type: 'news',
+            title: `News alert: ${alert.keyword}`,
+            body: article.title || 'A saved news alert matched a new article.',
+            articleUuid: article.uuid
+          });
+        }
         if (!newsAlertMatches.has(article.uuid)) {
           newsAlertMatches.add(article.uuid);
           changed = true;
@@ -2552,6 +2737,7 @@ async function deleteAlert(id, ticker) {
 
 function checkAlerts() {
   if (!currentUser || !Object.keys(alertsMap).length) return;
+  if (!loadSettings().priceAlerts) return;
   MARKETS.forEach(m => {
     const alerts = alertsMap[m.ticker];
     if (!alerts) return;
@@ -2560,7 +2746,15 @@ function checkAlerts() {
       const hit = (a.direction === 'above' && m.val >= a.target) || (a.direction === 'below' && m.val <= a.target);
       if (hit) {
         a.triggered = true;
-        showToast(`${m.ticker} ${a.direction === 'above' ? 'crossed above' : 'dropped below'} ${fmtUnitPrice(a.target)}!`, 5000);
+        const alertText = `${m.ticker} ${a.direction === 'above' ? 'crossed above' : 'dropped below'} ${fmtUnitPrice(a.target)}!`;
+        showToast(alertText, 5000);
+        addNotification({
+          id: `price:${a.id}`,
+          type: 'price',
+          title: `${m.ticker} price alert`,
+          body: alertText,
+          ticker: m.ticker
+        });
         dataRequest('price_alerts', 'PUT', { id: a.id }).catch(() => {});
       }
     });
@@ -7084,15 +7278,15 @@ function renderBillingPlanCards(currentTier = currentUser?.tier || 'free') {
         : `onclick="openBillingSupport()"`;
     const disabledAttr = isCurrent ? 'disabled' : '';
     return `
-      <div style="padding:14px;border-radius:16px;border:1px solid ${plan.tone}33;background:linear-gradient(135deg,${plan.badgeBg},#ffffff);display:flex;flex-direction:column;gap:10px">
+      <div class="billing-plan-card" style="padding:14px;border-radius:16px;border:1px solid ${plan.tone}33;background:linear-gradient(135deg,${plan.badgeBg},#ffffff);display:flex;flex-direction:column;gap:10px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
           <div>
-            <p style="font-size:14px;font-weight:800;color:${plan.tone};margin-bottom:4px">${plan.label}</p>
-            <p style="font-size:12px;color:var(--muted);line-height:1.5">${plan.desc}</p>
+            <p class="billing-plan-title" style="font-size:14px;font-weight:800;color:${plan.tone};margin-bottom:4px">${plan.label}</p>
+            <p class="billing-plan-desc" style="font-size:12px;color:var(--muted);line-height:1.5">${plan.desc}</p>
           </div>
-          <span style="font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;background:${plan.badgeBg};color:${plan.tone}">R${plan.priceZar}/mo</span>
+          <span class="billing-plan-price" style="font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;background:${plan.badgeBg};color:${plan.tone}">R${plan.priceZar}/mo</span>
         </div>
-        <div style="font-size:12px;color:var(--text);line-height:1.6">
+        <div class="billing-plan-detail" style="font-size:12px;color:var(--text);line-height:1.6">
           <strong>${plan.credits} credits/month</strong><br>
           FinBot news uses 2 credits Â· Analysis uses 5 credits
         </div>
@@ -7942,6 +8136,7 @@ function updateHeaderUser() {
   const av = document.getElementById('header-avatar');
   const un = document.getElementById('header-username-text');
   setupHeaderDropdown();
+  ensureNotificationCenter();
   document.querySelectorAll('nav.nav .auth-only').forEach(b => {
     b.style.display = currentUser ? '' : 'none';
   });
@@ -10296,6 +10491,7 @@ function fcNav(dir) {
 hydrateStaticUiIcons();
 setupMobileChrome();
 applyUiMode();
+ensureNotificationCenter();
 // Pre-render the default tab
 renderNews();
 // Check auth — shows login overlay if not logged in, syncs data if session exists
