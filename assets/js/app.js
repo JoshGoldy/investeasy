@@ -3848,11 +3848,11 @@ async function runFinBot(modeId) {
   renderFinBot();
 }
 
-function setFinbotMode(id) { finbotState.mode = id; renderFinBot(); }
-function resetFinBot() { finbotState = { mode: null, loading: false, result: null, error: null, savedId: null }; renderFinBot(); }
+function setFinbotMode(id) { finbotState.mode = id; finbotState.fromSaved = false; renderFinBot(); }
+function resetFinBot() { finbotState = { mode: null, loading: false, result: null, error: null, savedId: null, fromSaved: false }; renderFinBot(); }
 function backFromFinBotResult() {
   if (finbotState.fromSaved) {
-    finbotState.result = null; finbotState.error = null; finbotState.fromSaved = false;
+    finbotState.result = null; finbotState.error = null; finbotState.savedId = null; finbotState.fromSaved = false;
     switchTab('saved');
   } else {
     finbotState.result = null; finbotState.error = null;
@@ -4218,7 +4218,7 @@ function renderFinBot() {
     el.innerHTML = `
       <div class="result-header">
         <div style="display:flex;align-items:center;gap:10px">
-          <button class="back-btn" onclick="resetFinBot()">←</button>
+          <button class="back-btn" onclick="backFromFinBotResult()">←</button>
           <div>
             <p style="font-weight:800;font-size:15px;color:var(--text)">${modeObj.title}</p>
             <p style="font-size:11px;color:${modeObj.col};font-weight:600">by ${modeObj.sub}</p>
