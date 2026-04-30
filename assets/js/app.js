@@ -576,7 +576,8 @@ function fmtPrice(v) {
   return v.toFixed(2);
 }
 
-// Currency conversion — all market values stored in USD, converted on display
+// Currency conversion. Portfolio totals are calculated in USD, while known
+// exchange-local assets can keep their native unit prices for display.
 const CURRENCY_CONFIG = {
   USD: { symbol: '$',   rate: 1.00   },
   GBP: { symbol: '£',   rate: 0.79   },
@@ -587,6 +588,11 @@ const CURRENCY_CONFIG = {
   ZAR: { symbol: 'R',   rate: 18.63  },
 };
 function curCfg() { return CURRENCY_CONFIG[loadSettings().currency] || CURRENCY_CONFIG.USD; }
+function cfgForCurrency(currency = 'USD') { return CURRENCY_CONFIG[currency] || CURRENCY_CONFIG.USD; }
+function nativeToUsd(value, currency = 'USD') {
+  const cfg = cfgForCurrency(currency);
+  return Number(value || 0) / (cfg.rate || 1);
+}
 
 function fmtMoney(v) {
   if (loadSettings().hideBalances) return '••••••';
@@ -594,13 +600,35 @@ function fmtMoney(v) {
   return cfg.symbol + (v * cfg.rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// Per-unit price with currency conversion (for avg cost / current price in portfolio)
+// Per-unit price converted into the user's chosen display currency.
 function fmtUnitPrice(v) {
   if (loadSettings().hideBalances) return '••••';
   const cfg = curCfg();
   const c = v * cfg.rate;
   if (c >= 10000) return cfg.symbol + c.toLocaleString('en-US', { maximumFractionDigits: 0 });
   return cfg.symbol + c.toFixed(2);
+}
+
+// Per-unit price in the asset's own market currency, e.g. JSE shares in rand.
+function fmtNativeUnitPrice(v, currency = 'USD') {
+  if (loadSettings().hideBalances) return '••••';
+  const cfg = cfgForCurrency(currency);
+  const n = Number(v || 0);
+  if (n >= 10000) return cfg.symbol + n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  if (n < 1 && n > 0) return cfg.symbol + n.toFixed(4);
+  return cfg.symbol + n.toFixed(2);
+}
+
+function marketCurrency(market) {
+  return market?.currency || 'USD';
+}
+
+function marketNativeToUsd(market, value) {
+  return nativeToUsd(value, marketCurrency(market));
+}
+
+function fmtMarketUnitPrice(market, value = market?.val) {
+  return fmtNativeUnitPrice(value, marketCurrency(market));
 }
 
 const UI_ICON_PATHS = {
@@ -949,7 +977,15 @@ function convertChartData(data) {
   return data.map(d => ({ ...d, value: d.value * rate }));
 }
 
-function createFullChart(container, data, color, height = 300) {
+function marketChartData(market, data) {
+  return marketCurrency(market) === 'USD' ? convertChartData(data) : data;
+}
+
+function marketChartCurrency(market) {
+  return marketCurrency(market) === 'USD' ? loadSettings().currency : marketCurrency(market);
+}
+
+function createFullChart(container, data, color, height = 300, currency = loadSettings().currency) {
   if (!container || !data.length) return null;
   container.innerHTML = '';
   const isMobileChart = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
@@ -980,7 +1016,8 @@ function createFullChart(container, data, color, height = 300) {
     handleScroll: { mouseWheel: false, pressedMouseMove: !isMobileChart },
     handleScale:  { mouseWheel: false, pinch: !isMobileChart },
   });
-  const cfg = curCfg();
+  const chartCurrency = currency || loadSettings().currency;
+  const cfg = cfgForCurrency(chartCurrency);
   const series = chart.addAreaSeries({
     lineColor: color, lineWidth: 2,
     topColor: color + '28', bottomColor: color + '00',
@@ -991,7 +1028,7 @@ function createFullChart(container, data, color, height = 300) {
     priceFormat: {
       type: 'custom',
       formatter: (v) => {
-        const c = curCfg();
+        const c = cfg;
         if (v >= 100000) return c.symbol + (v / 1000).toFixed(1) + 'k';
         if (v >= 10000)  return c.symbol + Math.round(v).toLocaleString('en-US');
         if (v >= 1)      return c.symbol + v.toFixed(2);
@@ -2164,11 +2201,13 @@ function renderMarkets(filter) {
   if (currentUser && dbPortfolio.length) {
     const totalValue = dbPortfolio.reduce((s, h) => {
       const mkt = MARKETS.find(x => x.ticker === h.ticker);
-      return s + (mkt ? mkt.val * h.shares : h.avg_cost * h.shares);
+      const unitUsd = mkt ? marketNativeToUsd(mkt, mkt.val) : h.avg_cost;
+      return s + unitUsd * h.shares;
     }, 0);
     dbPortfolio.forEach(h => {
       const mkt = MARKETS.find(x => x.ticker === h.ticker);
-      const val = mkt ? mkt.val * h.shares : h.avg_cost * h.shares;
+      const unitUsd = mkt ? marketNativeToUsd(mkt, mkt.val) : h.avg_cost;
+      const val = unitUsd * h.shares;
       portfolioMap[h.ticker] = totalValue > 0 ? (val / totalValue * 100).toFixed(1) : '0.0';
     });
   }
@@ -2305,7 +2344,7 @@ function renderMarkets(filter) {
             ${starBtn || bellBtn ? `<div class="market-tile-actions">${bellBtn}${starBtn}</div>` : ''}
             <p class="ticker">${m.ticker}</p>
             <p class="name">${m.name}</p>
-            <p class="price">${fmtUnitPrice(m.val)}</p>
+            <p class="price">${fmtMarketUnitPrice(m)}</p>
             <div class="bottom">
               <span class="mono ${up?'up':'dn'}" style="font-size:12px;font-weight:700">${up?'▲':'▼'} ${Math.abs(m.chg)}%</span>
               <div class="mini-chart" id="mini-${m.ticker}"></div>
@@ -2347,7 +2386,9 @@ let currentDetailIdx = null;
 
 // ── Live data helpers ─────────────────────────────────────────────────────────
 async function fetchLivePrices() {
-  const tickers = MARKETS.map(m => m.ticker).join(',');
+  // JSE symbols are maintained as a local ZAR snapshot until the market-data
+  // function supports exchange-qualified Johannesburg tickers reliably.
+  const tickers = MARKETS.filter(m => m.exchange !== 'JSE').map(m => m.ticker).join(',');
   try {
     const d = await fetchMarketData('quotes', { tickers });
     if (!d.success) throw new Error(d.error || 'Live quotes are unavailable right now.');
@@ -2524,7 +2565,7 @@ function openStockDetail(idx) {
         </div>
       </div>
       <div style="text-align:right">
-        <p id="sd-live-price" class="mono" style="font-size:24px;font-weight:700;color:#fff">${fmtUnitPrice(stock.val)}</p>
+        <p id="sd-live-price" class="mono" style="font-size:24px;font-weight:700;color:#fff">${fmtMarketUnitPrice(stock)}</p>
         <span id="sd-live-change" style="font-size:13px;font-weight:700;color:${color}">${up?'▲':'▼'} ${Math.abs(stock.chg).toFixed(2)}% today</span>
       </div>
     </div>
@@ -2545,8 +2586,8 @@ function openStockDetail(idx) {
         <div id="sd-range-dot" style="position:absolute;left:${rangePct}%;transform:translateX(-50%);top:-4px;width:12px;height:12px;background:${color};border-radius:50%;border:2px solid #0c1320;box-shadow:0 0 6px ${color}80"></div>
       </div>
       <div style="display:flex;justify-content:space-between;margin-top:6px">
-        <span style="font-size:11px;color:#64748b;font-family:var(--mono)">${fmtUnitPrice(parseFloat(stock.lo52))}</span>
-        <span style="font-size:11px;color:#64748b;font-family:var(--mono)">${fmtUnitPrice(parseFloat(stock.hi52))}</span>
+        <span style="font-size:11px;color:#64748b;font-family:var(--mono)">${fmtMarketUnitPrice(stock, parseFloat(stock.lo52))}</span>
+        <span style="font-size:11px;color:#64748b;font-family:var(--mono)">${fmtMarketUnitPrice(stock, parseFloat(stock.hi52))}</span>
       </div>
     </div>
 
@@ -2556,8 +2597,8 @@ function openStockDetail(idx) {
         {l:'Market Cap',  v:stock.mktcap || '—', c:''},
         {l:'P/E Ratio',   v:stock.pe     || '—', c:''},
         {l:'Volume',      v:stock.vol    || '—', c:''},
-        {l:'52W High',    v:fmtUnitPrice(parseFloat(stock.hi52)), c:'#10b981'},
-        {l:'52W Low',     v:fmtUnitPrice(parseFloat(stock.lo52)), c:'#ef4444'},
+        {l:'52W High',    v:fmtMarketUnitPrice(stock, parseFloat(stock.hi52)), c:'#10b981'},
+        {l:'52W Low',     v:fmtMarketUnitPrice(stock, parseFloat(stock.lo52)), c:'#ef4444'},
         {l:'Day Change',  v:(stock.chg>0?'+':'')+stock.chg+'%', c:color, id:'sd-stat-day-change'},
       ].map(s => `<div class="stat-box">
         <p class="label">${s.l}</p>
@@ -2609,7 +2650,7 @@ function openStockDetail(idx) {
     const el = document.getElementById('sd-chart-canvas');
     if (el) {
       if (detailChart) detailChart.remove();
-      detailChart = createFullChart(el, convertChartData(stock.charts['1D']), color, 300);
+      detailChart = createFullChart(el, marketChartData(stock, stock.charts['1D']), color, 300, marketChartCurrency(stock));
     }
     syncStockDetailSummary(stock, stock.charts['1D']);
     // Replace with live data as soon as it arrives
@@ -2622,7 +2663,7 @@ function openStockDetail(idx) {
         stock.charts['1D'] = points;
         syncStockDetailSummary(stock, points);
         const el2 = document.getElementById('sd-chart-canvas');
-        if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, convertChartData(points), color, 300); }
+        if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, marketChartData(stock, points), color, 300, marketChartCurrency(stock)); }
       });
     }
   });
@@ -2654,7 +2695,7 @@ function syncStockDetailSummary(stock, points) {
   const rangeFillEl = document.getElementById('sd-range-fill');
   const rangeDotEl = document.getElementById('sd-range-dot');
 
-  if (priceEl) priceEl.textContent = fmtUnitPrice(last);
+  if (priceEl) priceEl.textContent = fmtMarketUnitPrice(stock, last);
   if (changeEl) {
     changeEl.textContent = `${up ? '▲' : '▼'} ${Math.abs(dayChange).toFixed(2)}% today`;
     changeEl.style.color = color;
@@ -2686,7 +2727,7 @@ function switchDetailTF(idx, tf) {
     const el = document.getElementById('sd-chart-canvas');
     if (el) {
       if (detailChart) detailChart.remove();
-      detailChart = createFullChart(el, convertChartData(stock.charts[tf]), color, 300);
+      detailChart = createFullChart(el, marketChartData(stock, stock.charts[tf]), color, 300, marketChartCurrency(stock));
     }
     if (shouldUseLiveDetailCharts(stock)) {
       fetchLiveChart(stock.ticker, tf, points => {
@@ -2696,7 +2737,7 @@ function switchDetailTF(idx, tf) {
         stock.charts[tf] = points;
         if (tf === '1D') syncStockDetailSummary(stock, points);
         const el2 = document.getElementById('sd-chart-canvas');
-        if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, convertChartData(points), color, 300); }
+        if (el2) { if (detailChart) detailChart.remove(); detailChart = createFullChart(el2, marketChartData(stock, points), color, 300, marketChartCurrency(stock)); }
       });
     }
   });
@@ -2732,10 +2773,11 @@ async function loadAlertsFromDB() {
 
 function openAlertModal(ticker, name, currentPrice) {
   if (!currentUser) { document.getElementById('auth-overlay').classList.remove('hidden'); showAuthTab('login'); return; }
+  const market = MARKETS.find(m => m.ticker === ticker);
   document.getElementById('alert-ticker').value = ticker;
   document.getElementById('alert-ticker-name').value = name;
   document.getElementById('alert-modal-title').textContent = `🔔 Alert - ${ticker}`;
-  document.getElementById('alert-modal-sub').textContent = 'Current price: ' + fmtUnitPrice(currentPrice);
+  document.getElementById('alert-modal-sub').textContent = 'Current price: ' + fmtMarketUnitPrice(market, currentPrice);
   document.getElementById('alert-target').value = '';
   alertDirection = 'above';
   document.getElementById('alert-dir-above').classList.add('selected');
@@ -2759,12 +2801,19 @@ function displayPriceToBasePrice(price) {
   return Number(price) / rate;
 }
 
+function displayPriceToMarketPrice(price, ticker) {
+  const market = MARKETS.find(m => m.ticker === ticker);
+  if (marketCurrency(market) !== 'USD') return Number(price);
+  return displayPriceToBasePrice(price);
+}
+
 function normalizedAlertTarget(alert, ticker) {
   const rawTarget = Number(alert?.target);
   if (!Number.isFinite(rawTarget) || rawTarget <= 0) return rawTarget;
 
   const rate = curCfg().rate || 1;
   const market = MARKETS.find(m => m.ticker === ticker);
+  if (marketCurrency(market) !== 'USD') return rawTarget;
   if (rate === 1 || !market?.val) return rawTarget;
 
   const converted = rawTarget / rate;
@@ -2782,7 +2831,7 @@ function renderAlertList(ticker) {
   if (!alerts.length) { list.innerHTML = ''; return; }
   list.innerHTML = alerts.map(a => `
     <div class="alert-item">
-      <span class="alert-txt">${a.direction === 'above' ? '📈 Above' : '📉 Below'} ${fmtUnitPrice(normalizedAlertTarget(a, ticker))}${a.triggered ? ' ✓' : ''}</span>
+      <span class="alert-txt">${a.direction === 'above' ? '📈 Above' : '📉 Below'} ${fmtMarketUnitPrice(MARKETS.find(m => m.ticker === ticker), normalizedAlertTarget(a, ticker))}${a.triggered ? ' ✓' : ''}</span>
       <button class="alert-del" onclick="deleteAlert(${a.id},'${ticker}')" title="Delete">✕</button>
     </div>`).join('');
 }
@@ -2791,7 +2840,7 @@ async function saveAlert() {
   const ticker = document.getElementById('alert-ticker').value;
   const name   = document.getElementById('alert-ticker-name').value;
   const displayTarget = parseFloat(document.getElementById('alert-target').value);
-  const target = displayPriceToBasePrice(displayTarget);
+  const target = displayPriceToMarketPrice(displayTarget, ticker);
   if (!ticker || !target || isNaN(target) || target <= 0) { showToast('Enter a valid target price'); return; }
   try {
     const d = await dataRequest('price_alerts', 'POST', { ticker, name, target, direction: alertDirection });
@@ -2826,7 +2875,7 @@ function checkAlerts() {
       const hit = (a.direction === 'above' && m.val >= target) || (a.direction === 'below' && m.val <= target);
       if (hit) {
         a.triggered = true;
-        const alertText = `${m.ticker} ${a.direction === 'above' ? 'crossed above' : 'dropped below'} ${fmtUnitPrice(target)}!`;
+        const alertText = `${m.ticker} ${a.direction === 'above' ? 'crossed above' : 'dropped below'} ${fmtMarketUnitPrice(m, target)}!`;
         showToast(alertText, 5000);
         addNotification({
           id: `price:${a.id}`,
@@ -3054,10 +3103,10 @@ function renderIndicators(idx) {
     const el = document.getElementById('sd-chart-canvas');
     if (el && detailChart) {
       const boll = computeBollinger(prices);
-      const fmt = { type:'custom', formatter: v => fmtUnitPrice(v) };
+      const fmt = { type:'custom', formatter: v => fmtMarketUnitPrice(stock, v) };
       [{ d: boll.upper, c: '#f59e0b60' }, { d: boll.mid, c: '#f59e0b' }, { d: boll.lower, c: '#f59e0b60' }].forEach(({d,c}) => {
         const s = detailChart.addLineSeries({ color: c, lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false, priceFormat: fmt });
-        s.setData(convertChartData(d));
+        s.setData(marketChartData(stock, d));
       });
     }
   }
@@ -5781,11 +5830,13 @@ function analyzePortfolioWithFinBot() {
   if (!dbPortfolio.length) return;
   const tot = dbPortfolio.reduce((s, h) => {
     const mkt = RAW_MARKETS.find(m => m.ticker === h.ticker);
-    return s + h.shares * (mkt ? mkt.val : h.avg_cost);
+    const currency = mkt?.currency || h.currency || 'USD';
+    return s + h.shares * nativeToUsd(mkt ? mkt.val : h.avg_cost, currency);
   }, 0);
   finbotForm.portfolio = dbPortfolio.map(h => {
     const mkt = RAW_MARKETS.find(m => m.ticker === h.ticker);
-    const val = h.shares * (mkt ? mkt.val : h.avg_cost);
+    const currency = mkt?.currency || h.currency || 'USD';
+    const val = h.shares * nativeToUsd(mkt ? mkt.val : h.avg_cost, currency);
     const pct = tot > 0 ? ((val / tot) * 100).toFixed(1) : '0';
     return `${h.ticker} ${pct}%`;
   }).join(', ');
@@ -5835,12 +5886,15 @@ function renderDBPortfolio() {
   // Enrich holdings with current prices
   const holdings = dbPortfolio.map(h => {
     const mkt = RAW_MARKETS.find(m => m.ticker === h.ticker);
-    const cur  = mkt ? mkt.val : h.avg_cost;
-    const val  = h.shares * cur;
-    const cost = h.shares * h.avg_cost;
+    const nativeCurrency = mkt?.currency || h.currency || 'USD';
+    const curNative = mkt ? mkt.val : h.avg_cost;
+    const avgCostUsd = nativeToUsd(h.avg_cost, nativeCurrency);
+    const curUsd = nativeToUsd(curNative, nativeCurrency);
+    const val  = h.shares * curUsd;
+    const cost = h.shares * avgCostUsd;
     const pnl  = val - cost;
-    const pnlP = h.avg_cost > 0 ? ((cur - h.avg_cost) / h.avg_cost * 100) : 0;
-    return { ...h, cur, val, cost, pnl, pnlP };
+    const pnlP = avgCostUsd > 0 ? ((curUsd - avgCostUsd) / avgCostUsd * 100) : 0;
+    return { ...h, cur: curUsd, curNative, nativeCurrency, exchange: mkt?.exchange || '', val, cost, pnl, pnlP };
   });
 
   const total     = holdings.reduce((s, h) => s + h.val, 0);
@@ -6071,6 +6125,7 @@ function renderDBPortfolio() {
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <p style="font-weight:800;font-size:14px;color:var(--text);font-family:var(--mono)">${h.ticker}</p>
               ${SECTOR_MAP[h.ticker] ? `<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;background:${SECTOR_COLORS[SECTOR_MAP[h.ticker]] || '#94a3b8'}18;color:${SECTOR_COLORS[SECTOR_MAP[h.ticker]] || '#94a3b8'}">${SECTOR_MAP[h.ticker]}</span>` : ''}
+              ${h.nativeCurrency !== 'USD' ? `<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;background:#eef1fb;color:#6b5bd2">${h.exchange || h.nativeCurrency} / ${h.nativeCurrency}</span>` : ''}
             </div>
             <p style="font-size:11px;color:var(--faint);margin-top:2px">${escHtml(h.name)}</p>
           </div>
@@ -6082,8 +6137,8 @@ function renderDBPortfolio() {
         <div class="holding-stats">
           ${[
             {l:'Units',   v:h.shares},
-            {l:'Avg Cost',v:fmtUnitPrice(h.avg_cost)},
-            {l:'Current', v:fmtUnitPrice(h.cur)},
+            {l:'Avg Cost',v:fmtNativeUnitPrice(h.avg_cost, h.nativeCurrency)},
+            {l:'Current', v:fmtNativeUnitPrice(h.curNative, h.nativeCurrency)},
             {l:'P&L', v:(h.pnl>=0?'+':'')+fmtMoney(Math.abs(h.pnl))},
             {l:'Value',   v:fmtMoney(h.val)},
             {l:'Alloc',   v:total>0?((h.val/total*100).toFixed(1)+'%'):'—'},
@@ -6447,7 +6502,7 @@ function renderMarketTickerTape() {
     const up = m.chg >= 0;
     return `<button class="ticker-tape-item" onclick="switchTab('markets');setTimeout(()=>openStockDetail(${MARKETS.indexOf(m)}),80)">
       <span class="ticker-tape-symbol">${m.ticker}</span>
-      <span class="ticker-tape-price">${fmtUnitPrice(m.val)}</span>
+      <span class="ticker-tape-price">${fmtMarketUnitPrice(m)}</span>
       <span class="ticker-tape-change ${up ? 'up' : 'dn'}">${up ? '+' : ''}${m.chg.toFixed(2)}%</span>
     </button>`;
   }).join('');
@@ -8432,6 +8487,7 @@ function getQuickHoldingAsset(ticker, name = '') {
     ticker: symbol,
     name: name || market?.name || fallback?.name || symbol,
     val: market?.val ?? fallback?.val ?? null,
+    currency: market?.currency || fallback?.currency || 'USD',
   };
 }
 
@@ -8451,7 +8507,7 @@ function holdingQuickPick(ticker, name, chipEl) {
   const hintEl   = document.getElementById('holding-price-hint');
   if (hintEl) {
     if (asset.val !== null) {
-      hintEl.textContent = 'Market price: ' + fmtUnitPrice(asset.val);
+      hintEl.textContent = 'Market price: ' + fmtNativeUnitPrice(asset.val, asset.currency);
       hintEl.style.display = 'block';
     } else {
       hintEl.textContent = '';
@@ -8470,7 +8526,8 @@ function importPortfolioToFinBot(field, textareaId) {
   if (!currentUser || !dbPortfolio.length) return;
   const enriched = dbPortfolio.map(h => {
     const mkt = RAW_MARKETS.find(m => m.ticker === h.ticker);
-    const cur  = mkt ? mkt.val : h.avg_cost;
+    const currency = mkt?.currency || h.currency || 'USD';
+    const cur  = nativeToUsd(mkt ? mkt.val : h.avg_cost, currency);
     return { ...h, val: h.shares * cur };
   });
   const total = enriched.reduce((s, h) => s + h.val, 0);
@@ -8479,7 +8536,7 @@ function importPortfolioToFinBot(field, textareaId) {
     return `${h.ticker} ${pct}%`;
   }).join(', ');
   finbotForm[field] = str;
-  if (field === 'portfolio' && total > 0) finbotForm.portVal = '$' + Math.round(total).toLocaleString();
+  if (field === 'portfolio' && total > 0) finbotForm.portVal = fmtMoney(total);
   const ta = document.getElementById(textareaId);
   if (ta) { ta.value = str; ta.dispatchEvent(new Event('input')); }
   // Flash button feedback
@@ -8654,7 +8711,7 @@ function buildImportRows(text) {
     if (!ticker) errors.push('Missing ticker');
     if (!Number.isFinite(shares) || shares <= 0) errors.push('Invalid shares');
     if (!Number.isFinite(avgCost) || avgCost < 0) errors.push('Invalid average cost');
-    rows.push({ ticker, name, shares, avg_cost: avgCost, sourceLine: i + 1, errors });
+    rows.push({ ticker, name, shares, avg_cost: avgCost, currency: market?.currency || 'USD', sourceLine: i + 1, errors });
   }
 
   const merged = new Map();
@@ -8718,7 +8775,7 @@ function renderPortfolioImportPreview() {
         <div>${escHtml(r.ticker || '-')}</div>
         <div>${escHtml(r.name || '-')}</div>
         <div class="mono">${Number.isFinite(r.shares) ? r.shares.toLocaleString(undefined, { maximumFractionDigits: 8 }) : '-'}</div>
-        <div class="mono">${Number.isFinite(r.avg_cost) ? r.avg_cost.toLocaleString(undefined, { maximumFractionDigits: 4 }) : '-'}</div>
+        <div class="mono">${Number.isFinite(r.avg_cost) ? fmtNativeUnitPrice(r.avg_cost, r.currency) : '-'}</div>
         <div class="${r.errors.length ? 'import-bad' : 'import-good'}">${r.errors.length ? escHtml(r.errors.join(', ')) : `${existingTickers.has(r.ticker) ? 'Update' : 'New'}${r.duplicateCount ? `, merged ${r.duplicateCount + 1} rows` : ''}`}</div>
       `).join('')}
     </div>
@@ -8782,7 +8839,7 @@ function openAddHoldingModal(ticker = '', name = '') {
   e.textContent = ''; e.classList.remove('show');
 
   // Sync currency symbol prefix
-  const sym = curCfg().symbol;
+  const sym = cfgForCurrency(asset.currency).symbol;
   const symEl = document.getElementById('holding-cost-sym');
   if (symEl) symEl.textContent = sym;
 
@@ -8793,7 +8850,7 @@ function openAddHoldingModal(ticker = '', name = '') {
 
   // If pre-filled from a quick-pick context (e.g. stock detail), show market price hint
   if (asset.ticker && asset.val !== null && hint) {
-    hint.textContent = 'Market price: ' + fmtUnitPrice(asset.val);
+    hint.textContent = 'Market price: ' + fmtNativeUnitPrice(asset.val, asset.currency);
   }
 
   document.getElementById('add-holding-modal').classList.remove('hidden');
