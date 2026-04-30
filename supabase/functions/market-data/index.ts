@@ -98,7 +98,7 @@ const TICKER_MAP: Record<string, string> = {
   MATIC: "POL-USD",
   NPN: "NPN.JO",
   PRX: "PRX.JO",
-  BHG: "BHP.JO",
+  BHG: "BHG.JO",
   AGL: "AGL.JO",
   GLN: "GLN.JO",
   CFR: "CFR.JO",
@@ -153,6 +153,15 @@ const NAME_MAP: Record<string, string> = {
   BA: "Boeing",
   CAT: "Caterpillar",
 };
+
+function resolveTickerSymbol(ticker: string) {
+  const normalized = ticker.trim().toUpperCase();
+  if (normalized.startsWith("JSE:")) {
+    const localTicker = normalized.slice(4);
+    return TICKER_MAP[localTicker];
+  }
+  return TICKER_MAP[normalized];
+}
 
 const CHART_CONFIG: Record<string, { interval: string; range: string; trailingSeconds?: number }> = {
   "1D": { interval: "15m", range: "5d", trailingSeconds: 24 * 60 * 60 },
@@ -367,6 +376,18 @@ function isJseSymbol(symbol: string) {
   return symbol.endsWith(".JO");
 }
 
+function yahooPriceScale(symbol: string) {
+  // Yahoo Finance exposes Johannesburg-listed shares in ZAc (cents).
+  // The app displays and stores JSE holdings in ZAR, so normalize here.
+  return isJseSymbol(symbol) ? 100 : 1;
+}
+
+function normalizeYahooPrice(value: unknown, symbol: string, digits = 4) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return null;
+  return Number((num / yahooPriceScale(symbol)).toFixed(digits));
+}
+
 function getJohannesburgParts(unixTime: number) {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Africa/Johannesburg",
@@ -458,14 +479,14 @@ async function handleQuotes(rawTickers: unknown) {
   if (!tickers.length) return json({ success: false, error: "No tickers provided." }, 400);
   if (tickers.length > 80) return json({ success: false, error: "Too many tickers requested at once." }, 400);
   const normalized = [...new Set(tickers.map((ticker) => ticker.toUpperCase()))].sort();
-  const cacheKey = `quotes:${sanitizeCacheKeyPart(normalized.join(","))}`;
+  const cacheKey = `quotes:v2:${sanitizeCacheKeyPart(normalized.join(","))}`;
 
   return withMarketCache("quotes", cacheKey, { tickers: normalized }, async () => {
     const quotes: Record<string, unknown> = {};
 
     await Promise.all(
       normalized.map(async (ticker) => {
-        const mapped = TICKER_MAP[ticker];
+        const mapped = resolveTickerSymbol(ticker);
         if (!mapped) return;
         try {
           const data = await fetchYahooChart(mapped, "1d", "5d");
@@ -477,12 +498,15 @@ async function handleQuotes(rawTickers: unknown) {
           const rawPoints: Array<{ time: number; value: number }> = [];
           for (let i = 0; i < Math.min(closes.length, timestamps.length); i++) {
             if (closes[i] == null) continue;
-            rawPoints.push({ time: Number(timestamps[i]), value: Number(Number(closes[i]).toFixed(4)) });
+            const value = normalizeYahooPrice(closes[i], mapped);
+            if (value == null) continue;
+            rawPoints.push({ time: Number(timestamps[i]), value });
           }
           const cleanedPoints = trimIntradayPoints(rawPoints, meta, mapped, "1D", 24 * 60 * 60);
           const latestPoint = cleanedPoints[cleanedPoints.length - 1]?.value;
-          const price = latestPoint ?? meta.regularMarketPrice ?? null;
-          const prevClose = meta.previousClose ?? meta.chartPreviousClose ?? null;
+          const metaPrice = normalizeYahooPrice(meta.regularMarketPrice, mapped);
+          const price = latestPoint ?? metaPrice ?? null;
+          const prevClose = normalizeYahooPrice(meta.previousClose ?? meta.chartPreviousClose, mapped);
           const chg =
             price && prevClose && prevClose > 0
               ? Number((((price - prevClose) / prevClose) * 100).toFixed(2))
@@ -492,8 +516,8 @@ async function handleQuotes(rawTickers: unknown) {
           quotes[ticker] = {
             price: price != null ? Number(Number(price).toFixed(4)) : null,
             chg,
-            hi52: meta.fiftyTwoWeekHigh != null ? Number(Number(meta.fiftyTwoWeekHigh).toFixed(2)) : null,
-            lo52: meta.fiftyTwoWeekLow != null ? Number(Number(meta.fiftyTwoWeekLow).toFixed(2)) : null,
+            hi52: normalizeYahooPrice(meta.fiftyTwoWeekHigh, mapped, 2),
+            lo52: normalizeYahooPrice(meta.fiftyTwoWeekLow, mapped, 2),
           };
         } catch (_) {}
       }),
@@ -504,10 +528,11 @@ async function handleQuotes(rawTickers: unknown) {
 }
 
 async function handleChart(ticker: string, tf: string) {
-  const mapped = TICKER_MAP[ticker];
+  const requestTicker = ticker.trim().toUpperCase();
+  const mapped = resolveTickerSymbol(requestTicker);
   if (!mapped) return json({ success: false, error: "Unknown ticker" }, 400);
-  const cacheKey = `chart:${sanitizeCacheKeyPart(`${ticker.toUpperCase()}:${tf}`)}`;
-  return withMarketCache("chart", cacheKey, { ticker, tf }, async () => {
+  const cacheKey = `chart:v2:${sanitizeCacheKeyPart(`${requestTicker}:${tf}`)}`;
+  return withMarketCache("chart", cacheKey, { ticker: requestTicker, tf }, async () => {
     const baseCfg = CHART_CONFIG[tf] || CHART_CONFIG["1M"];
     const cfg =
       tf === "1D" && isJseSymbol(mapped)
@@ -519,7 +544,9 @@ async function handleChart(ticker: string, tf: string) {
       const points = [];
       for (let i = 0; i < Math.min(closes.length, timestamps.length); i++) {
         if (closes[i] == null) continue;
-        points.push({ time: Number(timestamps[i]), value: Number(Number(closes[i]).toFixed(4)) });
+        const value = normalizeYahooPrice(closes[i], mapped);
+        if (value == null) continue;
+        points.push({ time: Number(timestamps[i]), value });
       }
       return trimIntradayPoints(points, result?.meta, mapped, tf, config.trailingSeconds);
     };
@@ -546,8 +573,11 @@ async function handleChart(ticker: string, tf: string) {
 
     if (tf === "1D" && isJseSymbol(mapped) && cleanedPoints.length < 2) {
       const meta = result?.meta || {};
-      const currentPrice = Number(meta.regularMarketPrice ?? meta.previousClose ?? meta.chartPreviousClose ?? 0);
-      const previousClose = Number(meta.previousClose ?? meta.chartPreviousClose ?? currentPrice);
+      const currentPrice = normalizeYahooPrice(meta.regularMarketPrice ?? meta.previousClose ?? meta.chartPreviousClose ?? 0, mapped) ?? 0;
+      const rawPreviousClose = meta.previousClose ?? meta.chartPreviousClose;
+      const previousClose = rawPreviousClose != null
+        ? (normalizeYahooPrice(rawPreviousClose, mapped) ?? currentPrice)
+        : currentPrice;
       if (currentPrice > 0) {
         cleanedPoints = buildSyntheticIntradaySeries(currentPrice, previousClose);
       }

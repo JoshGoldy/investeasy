@@ -631,6 +631,10 @@ function fmtMarketUnitPrice(market, value = market?.val) {
   return fmtNativeUnitPrice(value, marketCurrency(market));
 }
 
+function marketDataTicker(market) {
+  return market?.exchange ? `${market.exchange}:${market.ticker}` : market?.ticker;
+}
+
 const UI_ICON_PATHS = {
   "chart-bar": ['M4 19V10', 'M12 19V5', 'M20 19v-8'],
   "trend-up": ['M4 16l6-6 4 4 6-8', 'M14 6h6v6'],
@@ -2384,24 +2388,35 @@ function renderMarkets(filter) {
 let detailChart = null;
 let currentDetailIdx = null;
 
+function rescaleMarketCharts(market, nextPrice) {
+  const oldPrice = Number(market?.val || 0);
+  const newPrice = Number(nextPrice || 0);
+  if (!oldPrice || !newPrice || !market?.charts) return;
+  const factor = newPrice / oldPrice;
+  TIMEFRAMES.forEach(tf => {
+    if (!Array.isArray(market.charts[tf])) return;
+    market.charts[tf] = market.charts[tf].map(point => ({ ...point, value: Number((point.value * factor).toFixed(4)) }));
+  });
+  market._initVal = Number((Number(market._initVal || oldPrice) * factor).toFixed(4));
+}
+
 // ── Live data helpers ─────────────────────────────────────────────────────────
 async function fetchLivePrices() {
-  // JSE symbols are maintained as a local ZAR snapshot until the market-data
-  // function supports exchange-qualified Johannesburg tickers reliably.
-  const tickers = MARKETS.filter(m => m.exchange !== 'JSE').map(m => m.ticker).join(',');
+  const tickers = MARKETS.map(marketDataTicker).filter(Boolean).join(',');
   try {
     const d = await fetchMarketData('quotes', { tickers });
     if (!d.success) throw new Error(d.error || 'Live quotes are unavailable right now.');
     marketsLoadError = '';
     let updated = false;
     MARKETS.forEach(m => {
-      const q = d.quotes[m.ticker];
+      const q = d.quotes[marketDataTicker(m)] || d.quotes[m.ticker];
       if (q && q.price) {
         // Reject if live price is implausible vs. the known initial value.
         // Catches Yahoo Finance data cross-contamination (e.g. ETH-USD returning
         // Ethan Allen ~$22 instead of Ethereum ~$3892 — a 99.4% deviation).
         const ratio = q.price / m._initVal;
-        if (ratio < 0.02 || ratio > 50) return; // more than 98% off → discard
+        if (ratio < 0.2 || ratio > 5) return; // discard obvious cross-listed/currency contamination
+        rescaleMarketCharts(m, q.price);
         m.val = q.price; m.chg = q.chg ?? m.chg;
         if (q.hi52) m.hi52 = String(q.hi52);
         if (q.lo52) m.lo52 = String(q.lo52);
@@ -2433,12 +2448,12 @@ async function fetchLiveChart(ticker, tf, callback) {
 }
 
 function shouldUseLiveDetailCharts(stock) {
-  return stock?.exchange !== 'JSE';
+  return Boolean(stock);
 }
 
 function sanitizeLiveChartPoints(ticker, tf, points) {
   if (!Array.isArray(points) || points.length < 3 || tf !== '1D') return points;
-  const market = MARKETS.find(m => m.ticker === ticker);
+  const market = MARKETS.find(m => marketDataTicker(m) === ticker || m.ticker === ticker);
   if (!market || market.exchange !== 'JSE') return points;
 
   const getSaInfo = (unixTime) => {
@@ -2655,11 +2670,11 @@ function openStockDetail(idx) {
     syncStockDetailSummary(stock, stock.charts['1D']);
     // Replace with live data as soon as it arrives
     if (shouldUseLiveDetailCharts(stock)) {
-      fetchLiveChart(stock.ticker, '1D', points => {
+      fetchLiveChart(marketDataTicker(stock), '1D', points => {
         // Sanity-check against the known initial price (not stock.val which may itself be wrong).
         const last = points[points.length - 1]?.value;
         const ratio = last / stock._initVal;
-        if (!last || !stock._initVal || ratio < 0.02 || ratio > 50) return;
+        if (!last || !stock._initVal || ratio < 0.2 || ratio > 5) return;
         stock.charts['1D'] = points;
         syncStockDetailSummary(stock, points);
         const el2 = document.getElementById('sd-chart-canvas');
@@ -2730,10 +2745,10 @@ function switchDetailTF(idx, tf) {
       detailChart = createFullChart(el, marketChartData(stock, stock.charts[tf]), color, 300, marketChartCurrency(stock));
     }
     if (shouldUseLiveDetailCharts(stock)) {
-      fetchLiveChart(stock.ticker, tf, points => {
+      fetchLiveChart(marketDataTicker(stock), tf, points => {
         const last = points[points.length - 1]?.value;
         const ratio = last / stock._initVal;
-        if (!last || !stock._initVal || ratio < 0.02 || ratio > 50) return;
+        if (!last || !stock._initVal || ratio < 0.2 || ratio > 5) return;
         stock.charts[tf] = points;
         if (tf === '1D') syncStockDetailSummary(stock, points);
         const el2 = document.getElementById('sd-chart-canvas');
