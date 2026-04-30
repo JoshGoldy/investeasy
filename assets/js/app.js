@@ -2586,7 +2586,7 @@ function openStockDetail(idx) {
     </div>
 
     <div class="sd-chart" id="sd-chart-canvas"></div>
-    <div class="sd-timeframes" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;padding:10px;overflow:hidden">
+    <div class="sd-timeframes">
       ${TIMEFRAMES.map(tf => `<button class="tf-btn ${tf==='1D'?(up?'active-up':'active-dn'):''}" style="min-width:0;width:100%;padding:8px 4px;font-size:11px;border-radius:8px" onclick="switchDetailTF(${idx},'${tf}')">${tf}</button>`).join('')}
     </div>
 
