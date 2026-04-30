@@ -5095,6 +5095,7 @@ updateSavedBadge();
 
 let portChart = null;
 let portPerfChart = null;
+let portfolioImportRows = [];
 
 // ─── Interactive Donut Chart (Canvas) ────────────────────────────────────────
 function makeDonut(canvasEl, segments) {
@@ -5308,6 +5309,15 @@ function portfolioDashboardHeading(title, subtitle, actionHtml = '') {
         <p>${subtitle}</p>
       </div>
       ${actionHtml || ''}
+    </div>
+  `;
+}
+
+function portfolioActionGroup(isEmpty = false) {
+  return `
+    <div class="portfolio-action-group">
+      <button onclick="openImportPortfolioModal()" class="portfolio-action portfolio-action-secondary">Import</button>
+      <button onclick="openAddHoldingModal()" class="portfolio-action">${isEmpty ? '+ Add first holding' : '+ Add holding'}</button>
     </div>
   `;
 }
@@ -5556,17 +5566,17 @@ function renderPortfolioDemoDashboard() {
 
 function renderEmptyPortfolioDashboard() {
   document.getElementById('tab-portfolio').innerHTML = `
-    ${portfolioDashboardHeading('Your portfolio', 'Add your first holding to start tracking value, returns, and allocation.', `<button onclick="openAddHoldingModal()" class="portfolio-action">+ Add first holding</button>`)}
+    ${portfolioDashboardHeading('Your portfolio', 'Add your first holding to start tracking value, returns, and allocation.', portfolioActionGroup(true))}
     <div class="dashboard-panel" style="text-align:center;padding:60px 20px 40px">
       <div style="font-size:52px;margin-bottom:16px">ðŸ“Š</div>
       <p style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:8px">No holdings yet</p>
       <p style="font-size:13px;color:var(--faint);line-height:1.6;margin-bottom:24px">
         Add your first stock, ETF or crypto holding to start tracking your portfolio.
       </p>
-      <button onclick="openAddHoldingModal()" style="padding:14px 28px;border-radius:14px;
-        background:var(--green);color:#fff;font-weight:800;font-size:14px">
-        + Add First Holding
-      </button>
+      <div class="portfolio-action-group" style="justify-content:center">
+        <button onclick="openImportPortfolioModal()" class="portfolio-action portfolio-action-secondary">Import Holdings</button>
+        <button onclick="openAddHoldingModal()" class="portfolio-action">+ Add First Holding</button>
+      </div>
     </div>
   `;
 }
@@ -5886,7 +5896,7 @@ function renderDBPortfolio() {
   const topCategories = sectorList.slice(0, 4).map(s => ({ name: s.name, pct: s.pct, value: s.pct.toFixed(1) + '%' }));
 
   document.getElementById('tab-portfolio').innerHTML = `
-    ${portfolioDashboardHeading('Your portfolio', 'Track your holdings, returns, and allocation in one clear view.', `<button onclick="openAddHoldingModal()" class="portfolio-action">+ Add holding</button>`)}
+    ${portfolioDashboardHeading('Your portfolio', 'Track your holdings, returns, and allocation in one clear view.', portfolioActionGroup(false))}
 
     ${portCurrencyBar()}
 
@@ -8475,6 +8485,291 @@ function importPortfolioToFinBot(field, textareaId) {
   // Flash button feedback
   const btn = document.querySelector(`[data-import="${field}"]`);
   if (btn) { btn.textContent = '✓ Imported'; setTimeout(() => btn.textContent = '↓ Import portfolio', 1500); }
+}
+
+function ensurePortfolioImportModal() {
+  let modal = document.getElementById('portfolio-import-modal');
+  if (modal) return modal;
+  modal = document.createElement('div');
+  modal.id = 'portfolio-import-modal';
+  modal.className = 'modal-overlay hidden';
+  modal.onclick = e => { if (e.target === modal) closeImportPortfolioModal(); };
+  modal.innerHTML = `
+    <div class="modal-sheet portfolio-import-sheet" onclick="event.stopPropagation()">
+      <div class="modal-handle"></div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px">
+        <div>
+          <p class="modal-title" style="margin-bottom:4px">Import Holdings</p>
+          <p style="font-size:12px;color:var(--muted);line-height:1.5">Upload a CSV or paste rows from a spreadsheet. You can review everything before it touches your portfolio.</p>
+        </div>
+        <button onclick="closeImportPortfolioModal()" class="import-close-btn">x</button>
+      </div>
+
+      <div class="import-tabs">
+        <button id="import-tab-paste" class="import-tab active" onclick="setImportMode('paste')">Paste</button>
+        <button id="import-tab-file" class="import-tab" onclick="setImportMode('file')">CSV File</button>
+      </div>
+
+      <div id="import-pane-paste">
+        <label class="form-label">Paste holdings</label>
+        <textarea id="portfolio-import-text" class="form-textarea import-textarea" rows="8" placeholder="Ticker,Shares,Average Cost,Name&#10;AAPL,12,185.50,Apple&#10;BTC,0.08,62000,Bitcoin&#10;NPN,5,3180,Naspers"></textarea>
+        <p class="form-hint">Works with comma, tab, or semicolon separated rows. Headers are optional.</p>
+      </div>
+
+      <div id="import-pane-file" style="display:none">
+        <label class="form-label">Upload CSV</label>
+        <input id="portfolio-import-file" class="form-input" type="file" accept=".csv,.txt,text/csv">
+        <p class="form-hint">Export your holdings from your broker, then upload the CSV here.</p>
+      </div>
+
+      <div class="import-help">
+        <strong>Supported columns:</strong> ticker/symbol, shares/quantity/units, avg cost/average price/cost, name/security.
+      </div>
+
+      <div id="portfolio-import-error" class="auth-error"></div>
+      <div id="portfolio-import-preview" class="portfolio-import-preview"></div>
+
+      <div class="import-actions">
+        <button class="modal-cancel" onclick="closeImportPortfolioModal()">Cancel</button>
+        <button class="modal-save-btn" id="portfolio-import-parse-btn" onclick="parsePortfolioImportInput()">Preview Import</button>
+        <button class="modal-save-btn hidden" id="portfolio-import-save-btn" onclick="savePortfolioImportRows()">Import Valid Rows</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  document.getElementById('portfolio-import-file').addEventListener('change', handlePortfolioImportFile);
+  return modal;
+}
+
+function openImportPortfolioModal() {
+  if (!currentUser) {
+    document.getElementById('auth-overlay').classList.remove('hidden');
+    showAuthTab('login');
+    return;
+  }
+  const modal = ensurePortfolioImportModal();
+  portfolioImportRows = [];
+  document.getElementById('portfolio-import-text').value = '';
+  document.getElementById('portfolio-import-file').value = '';
+  document.getElementById('portfolio-import-error').classList.remove('show');
+  document.getElementById('portfolio-import-error').textContent = '';
+  document.getElementById('portfolio-import-preview').innerHTML = '';
+  document.getElementById('portfolio-import-parse-btn').classList.remove('hidden');
+  document.getElementById('portfolio-import-save-btn').classList.add('hidden');
+  setImportMode('paste');
+  modal.classList.remove('hidden');
+}
+
+function closeImportPortfolioModal() {
+  document.getElementById('portfolio-import-modal')?.classList.add('hidden');
+}
+
+function setImportMode(mode) {
+  document.getElementById('import-tab-paste')?.classList.toggle('active', mode === 'paste');
+  document.getElementById('import-tab-file')?.classList.toggle('active', mode === 'file');
+  document.getElementById('import-pane-paste').style.display = mode === 'paste' ? '' : 'none';
+  document.getElementById('import-pane-file').style.display = mode === 'file' ? '' : 'none';
+}
+
+function handlePortfolioImportFile(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    document.getElementById('portfolio-import-text').value = String(reader.result || '');
+    parsePortfolioImportInput();
+  };
+  reader.onerror = () => showPortfolioImportError('Could not read that file.');
+  reader.readAsText(file);
+}
+
+function showPortfolioImportError(message) {
+  const el = document.getElementById('portfolio-import-error');
+  if (!el) return;
+  el.textContent = message;
+  el.classList.add('show');
+}
+
+function splitImportLine(line) {
+  const delimiter = line.includes('\t') ? '\t' : line.includes(';') ? ';' : ',';
+  const cells = [];
+  let cell = '';
+  let quoted = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (quoted && line[i + 1] === '"') { cell += '"'; i += 1; }
+      else quoted = !quoted;
+    } else if (ch === delimiter && !quoted) {
+      cells.push(cell.trim());
+      cell = '';
+    } else {
+      cell += ch;
+    }
+  }
+  cells.push(cell.trim());
+  return cells;
+}
+
+function parseImportNumber(value) {
+  const cleaned = String(value || '')
+    .replace(/[^\d.,-]/g, '')
+    .replace(/,(?=\d{3}(\D|$))/g, '')
+    .replace(',', '.');
+  const n = parseFloat(cleaned);
+  return Number.isFinite(n) ? n : NaN;
+}
+
+function normalizeImportHeader(cell) {
+  return String(cell || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function mapImportColumns(cells) {
+  const keys = cells.map(normalizeImportHeader);
+  const find = names => keys.findIndex(k => names.some(name => k === name || k.includes(name)));
+  const ticker = find(['ticker', 'symbol', 'code', 'instrument']);
+  const shares = find(['shares', 'quantity', 'qty', 'units', 'holding']);
+  const cost = find(['averagecost', 'avgcost', 'averageprice', 'avgprice', 'costbasis', 'cost', 'price']);
+  const name = find(['name', 'asset', 'security', 'description', 'company']);
+  return { ticker, shares, cost, name, hasHeader: ticker >= 0 && shares >= 0 };
+}
+
+function buildImportRows(text) {
+  const lines = String(text || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (!lines.length) return [];
+  const firstCells = splitImportLine(lines[0]);
+  const mapped = mapImportColumns(firstCells);
+  const start = mapped.hasHeader ? 1 : 0;
+  const idx = mapped.hasHeader ? mapped : { ticker: 0, shares: 1, cost: 2, name: 3 };
+  const rows = [];
+
+  for (let i = start; i < lines.length; i++) {
+    const cells = splitImportLine(lines[i]);
+    const ticker = String(cells[idx.ticker] || '').trim().toUpperCase().replace(/[^A-Z0-9.:-]/g, '');
+    const shares = parseImportNumber(cells[idx.shares]);
+    const avgCost = parseImportNumber(cells[idx.cost]);
+    const market = RAW_MARKETS.find(m => m.ticker === ticker);
+    const name = String(cells[idx.name] || market?.name || ticker).trim() || ticker;
+    const errors = [];
+    if (!ticker) errors.push('Missing ticker');
+    if (!Number.isFinite(shares) || shares <= 0) errors.push('Invalid shares');
+    if (!Number.isFinite(avgCost) || avgCost < 0) errors.push('Invalid average cost');
+    rows.push({ ticker, name, shares, avg_cost: avgCost, sourceLine: i + 1, errors });
+  }
+
+  const merged = new Map();
+  rows.forEach(row => {
+    if (row.errors.length) {
+      merged.set(`__invalid_${row.sourceLine}`, row);
+      return;
+    }
+    const existing = merged.get(row.ticker);
+    if (!existing) {
+      merged.set(row.ticker, { ...row, sourceLines: [row.sourceLine], duplicateCount: 0 });
+      return;
+    }
+    const totalShares = existing.shares + row.shares;
+    const totalCost = existing.shares * existing.avg_cost + row.shares * row.avg_cost;
+    existing.shares = totalShares;
+    existing.avg_cost = totalShares > 0 ? totalCost / totalShares : existing.avg_cost;
+    existing.name = existing.name || row.name;
+    existing.sourceLines.push(row.sourceLine);
+    existing.duplicateCount += 1;
+  });
+  return [...merged.values()];
+}
+
+function parsePortfolioImportInput() {
+  const text = document.getElementById('portfolio-import-text')?.value || '';
+  const errorEl = document.getElementById('portfolio-import-error');
+  if (errorEl) { errorEl.textContent = ''; errorEl.classList.remove('show'); }
+  portfolioImportRows = buildImportRows(text);
+  renderPortfolioImportPreview();
+}
+
+function renderPortfolioImportPreview() {
+  const box = document.getElementById('portfolio-import-preview');
+  const saveBtn = document.getElementById('portfolio-import-save-btn');
+  const parseBtn = document.getElementById('portfolio-import-parse-btn');
+  if (!box) return;
+  if (!portfolioImportRows.length) {
+    box.innerHTML = '';
+    saveBtn?.classList.add('hidden');
+    parseBtn?.classList.remove('hidden');
+    showPortfolioImportError('Paste holdings or upload a CSV first.');
+    return;
+  }
+  const valid = portfolioImportRows.filter(r => !r.errors.length);
+  const invalid = portfolioImportRows.length - valid.length;
+  const existingTickers = new Set(dbPortfolio.map(h => h.ticker));
+  box.innerHTML = `
+    <div class="import-summary">
+      <span>${valid.length} valid</span>
+      ${invalid ? `<span class="import-bad">${invalid} need review</span>` : ''}
+      <span>${valid.filter(r => existingTickers.has(r.ticker)).length} will update existing</span>
+    </div>
+    <div class="import-preview-table">
+      <div class="import-preview-head">Ticker</div>
+      <div class="import-preview-head">Name</div>
+      <div class="import-preview-head">Shares</div>
+      <div class="import-preview-head">Avg cost</div>
+      <div class="import-preview-head">Status</div>
+      ${portfolioImportRows.map(r => `
+        <div>${escHtml(r.ticker || '-')}</div>
+        <div>${escHtml(r.name || '-')}</div>
+        <div class="mono">${Number.isFinite(r.shares) ? r.shares.toLocaleString(undefined, { maximumFractionDigits: 8 }) : '-'}</div>
+        <div class="mono">${Number.isFinite(r.avg_cost) ? r.avg_cost.toLocaleString(undefined, { maximumFractionDigits: 4 }) : '-'}</div>
+        <div class="${r.errors.length ? 'import-bad' : 'import-good'}">${r.errors.length ? escHtml(r.errors.join(', ')) : `${existingTickers.has(r.ticker) ? 'Update' : 'New'}${r.duplicateCount ? `, merged ${r.duplicateCount + 1} rows` : ''}`}</div>
+      `).join('')}
+    </div>
+  `;
+  if (valid.length) {
+    saveBtn?.classList.remove('hidden');
+    parseBtn?.classList.add('hidden');
+    saveBtn.textContent = `Import ${valid.length} Holding${valid.length === 1 ? '' : 's'}`;
+  } else {
+    saveBtn?.classList.add('hidden');
+    parseBtn?.classList.remove('hidden');
+  }
+}
+
+async function savePortfolioImportRows() {
+  const rows = portfolioImportRows.filter(r => !r.errors.length);
+  if (!rows.length) { showPortfolioImportError('No valid rows to import.'); return; }
+  const btn = document.getElementById('portfolio-import-save-btn');
+  const original = btn?.textContent || 'Import';
+  if (btn) { btn.disabled = true; btn.textContent = 'Importing...'; }
+  try {
+    for (const row of rows) {
+      const existing = dbPortfolio.find(h => h.ticker === row.ticker);
+      let payload = {
+        ticker: row.ticker,
+        name: row.name || row.ticker,
+        shares: row.shares,
+        avg_cost: row.avg_cost,
+      };
+      if (existing) {
+        const totalShares = Number(existing.shares) + row.shares;
+        const totalCost = Number(existing.shares) * Number(existing.avg_cost) + row.shares * row.avg_cost;
+        payload = {
+          ticker: row.ticker,
+          name: row.name || existing.name || row.ticker,
+          shares: totalShares,
+          avg_cost: totalShares > 0 ? totalCost / totalShares : row.avg_cost,
+        };
+      }
+      const d = await dataRequest('portfolio', 'POST', payload);
+      if (!d.success) throw new Error(d.error || `Could not import ${row.ticker}`);
+    }
+    await loadPortfolioFromDB();
+    closeImportPortfolioModal();
+    renderPortfolio();
+    showToast(`Imported ${rows.length} holding${rows.length === 1 ? '' : 's'}`);
+  } catch (e) {
+    showPortfolioImportError(e.message || 'Import failed.');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = original; }
+  }
 }
 
 function openAddHoldingModal(ticker = '', name = '') {
