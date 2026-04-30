@@ -875,7 +875,7 @@ function parseMd(text) {
         const bodyHtml = bodyRows.flatMap(row =>
           Array.from({ length: colCount }, (_, idx) => `<div class="td">${row[idx] || ''}</div>`)
         ).join('');
-        out.push(`<div class="md-table" style="grid-template-columns:repeat(${colCount},minmax(0,1fr))">${headerHtml}${bodyHtml}</div>`);
+        out.push(`<div class="md-table-scroll"><div class="md-table" style="--md-cols:${colCount};grid-template-columns:repeat(${colCount},minmax(0,1fr))">${headerHtml}${bodyHtml}</div></div>`);
       }
       continue;
     }
