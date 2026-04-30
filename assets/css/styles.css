@@ -1457,6 +1457,47 @@ body[data-ui-mode="terminal"] select option{
   background:#071018!important;
   color:#d9e7e2!important;
 }
+body[data-ui-mode="terminal"] .auth-tabs,
+body[data-ui-mode="terminal"] .auth-method-switch,
+body[data-ui-mode="terminal"] .perf-tabs{
+  background:#13202b!important;
+  border:1px solid #243743!important;
+}
+body[data-ui-mode="terminal"] .auth-tab,
+body[data-ui-mode="terminal"] .auth-method-btn,
+body[data-ui-mode="terminal"] .perf-tab{
+  color:#9fb1ad!important;
+}
+body[data-ui-mode="terminal"] .auth-tab.active,
+body[data-ui-mode="terminal"] .perf-tab.active{
+  background:#e5f2ef!important;
+  color:#071018!important;
+  box-shadow:none!important;
+}
+body[data-ui-mode="terminal"] .auth-method-btn{
+  background:#101a23!important;
+  border-color:#243743!important;
+}
+body[data-ui-mode="terminal"] .auth-method-btn.active{
+  background:#0d2a1c!important;
+  border-color:#22c55e55!important;
+  color:#22c55e!important;
+}
+body[data-ui-mode="terminal"] .auth-card .form-label,
+body[data-ui-mode="terminal"] .auth-check{
+  color:#d9e7e2!important;
+}
+body[data-ui-mode="terminal"] .auth-note,
+body[data-ui-mode="terminal"] .auth-divider{
+  color:#88a09a!important;
+}
+body[data-ui-mode="terminal"] .auth-link{
+  color:#22c55e!important;
+}
+body[data-ui-mode="terminal"] .auth-btn:disabled{
+  background:#182630!important;
+  color:#7d918c!important;
+}
 body[data-ui-mode="terminal"] .alloc-card [style*="background:#f4eee1"]{
   background:#071018!important;
   border:1px solid #243743!important;

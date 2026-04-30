@@ -5191,7 +5191,20 @@ function createPerfChart(container, data, color, height) {
       horzLine: { color: color + '80', labelBackgroundColor: color },
     },
     rightPriceScale: { borderVisible: false, textColor: '#94a3b8' },
-    timeScale: { borderVisible: false, timeVisible: false },
+    localization: {
+      timeFormatter: time => {
+        const date = typeof time === 'string' ? new Date(`${time}T00:00:00`) : new Date(time * 1000);
+        return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      },
+    },
+    timeScale: {
+      borderVisible: false,
+      timeVisible: false,
+      tickMarkFormatter: time => {
+        const date = typeof time === 'string' ? new Date(`${time}T00:00:00`) : new Date(time * 1000);
+        return date.toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
+      },
+    },
     handleScroll: false, handleScale: false,
   });
   const series = chart.addAreaSeries({
@@ -5200,9 +5213,17 @@ function createPerfChart(container, data, color, height) {
     priceLineVisible: false, lastValueVisible: true,
     crosshairMarkerRadius: 5, crosshairMarkerBackgroundColor: color,
   });
-  series.setData(data.map((d, i) => ({ time: i + 1, value: d.value })));
+  series.setData(data.map(d => ({ time: d.time, value: d.value })));
   chart.timeScale().fitContent();
   return chart;
+}
+
+function perfHistoryDate(index, totalPoints) {
+  const today = new Date();
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const pointDate = new Date(monthStart);
+  pointDate.setMonth(monthStart.getMonth() - (totalPoints - 1 - index));
+  return pointDate.toISOString().slice(0, 10);
 }
 
 function initPerfChart(allData, color) {
@@ -5217,7 +5238,13 @@ function initPerfChart(allData, color) {
     else if (range === '6m') slice = allData.slice(-6);
     if (portPerfChart) { try { portPerfChart.remove(); } catch (e) {} portPerfChart = null; }
     const rate = curCfg().rate;
-    portPerfChart = createPerfChart(chartEl, slice.map((p, i) => ({ time: i + 1, value: p.v * rate })), color, 170);
+    portPerfChart = createPerfChart(chartEl, slice.map(p => {
+      const sourceIndex = allData.indexOf(p);
+      return {
+        time: p.time || perfHistoryDate(sourceIndex >= 0 ? sourceIndex : 0, allData.length),
+        value: p.v * rate,
+      };
+    }), color, 170);
   }
   wrap.querySelectorAll('.perf-tab').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -5241,11 +5268,19 @@ function animatePnlBars() {
 function genPortHistory(totalCost, total) {
   const base  = totalCost * 0.95;
   const range = total - base;
+  const today = new Date();
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
   return Array.from({ length: 12 }, (_, i) => {
     const t    = i / 11;
     const ease = t * t * (3 - 2 * t);
     const noise = (Math.sin(i * 2.3) * 0.03 + Math.cos(i * 1.7) * 0.02) * base;
-    return { t: i, v: Math.max(0, base + range * ease + noise) };
+    const pointDate = new Date(monthStart);
+    pointDate.setMonth(monthStart.getMonth() - (11 - i));
+    return {
+      time: pointDate.toISOString().slice(0, 10),
+      t: i,
+      v: Math.max(0, base + range * ease + noise),
+    };
   });
 }
 
@@ -5335,7 +5370,7 @@ function renderPortfolioDemoDashboard() {
   const categories = HOLDINGS.map(h => ({ name:h.ticker, pct:h.alloc, value:h.alloc + '%' })).sort((a,b) => b.pct - a.pct).slice(0,4);
 
   document.getElementById('tab-portfolio').innerHTML = `
-    ${portfolioDashboardHeading('Welcome back', 'Here’s a calmer overview of your demo portfolio with the cleaner dashboard feel you liked.')}
+    ${portfolioDashboardHeading('Your demo portfolio', 'See your holdings, returns, and allocation at a glance before adding your own investments.')}
 
     ${portCurrencyBar()}
 
@@ -5371,7 +5406,7 @@ function renderPortfolioDemoDashboard() {
       <div class="dashboard-panel-header">
         <div>
           <div class="dashboard-panel-title">Performance</div>
-          <div class="dashboard-panel-subtitle">Track whether your portfolio value is moving up or down over time.</div>
+          <div class="dashboard-panel-subtitle">See how your portfolio value has changed across the selected period.</div>
         </div>
         <div class="perf-tabs">
           <button class="perf-tab" data-range="1m">1M</button>
@@ -5521,7 +5556,7 @@ function renderPortfolioDemoDashboard() {
 
 function renderEmptyPortfolioDashboard() {
   document.getElementById('tab-portfolio').innerHTML = `
-    ${portfolioDashboardHeading('Portfolio', 'Track your real holdings in the new cleaner dashboard view.', `<button onclick="openAddHoldingModal()" class="portfolio-action">+ Add first holding</button>`)}
+    ${portfolioDashboardHeading('Your portfolio', 'Add your first holding to start tracking value, returns, and allocation.', `<button onclick="openAddHoldingModal()" class="portfolio-action">+ Add first holding</button>`)}
     <div class="dashboard-panel" style="text-align:center;padding:60px 20px 40px">
       <div style="font-size:52px;margin-bottom:16px">ðŸ“Š</div>
       <p style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:8px">No holdings yet</p>
@@ -5851,7 +5886,7 @@ function renderDBPortfolio() {
   const topCategories = sectorList.slice(0, 4).map(s => ({ name: s.name, pct: s.pct, value: s.pct.toFixed(1) + '%' }));
 
   document.getElementById('tab-portfolio').innerHTML = `
-    ${portfolioDashboardHeading('Welcome back', 'Here’s a cleaner view of your live portfolio, with calmer surfaces and easier hierarchy.', `<button onclick="openAddHoldingModal()" class="portfolio-action">+ Add holding</button>`)}
+    ${portfolioDashboardHeading('Your portfolio', 'Track your holdings, returns, and allocation in one clear view.', `<button onclick="openAddHoldingModal()" class="portfolio-action">+ Add holding</button>`)}
 
     ${portCurrencyBar()}
 
@@ -5892,7 +5927,7 @@ function renderDBPortfolio() {
       <div class="dashboard-panel-header">
         <div>
           <div class="dashboard-panel-title">Performance</div>
-          <div class="dashboard-panel-subtitle">Track whether your portfolio value is moving up or down over time.</div>
+          <div class="dashboard-panel-subtitle">See how your portfolio value has changed across the selected period.</div>
         </div>
         <div class="perf-tabs">
           <button class="perf-tab" data-range="1m">1M</button>
