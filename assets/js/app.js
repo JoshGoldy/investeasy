@@ -7846,7 +7846,7 @@ function getTierPresentation(tier = 'free') {
   if (tier === 'enterprise') {
     return {
       label: 'Enterprise',
-      sub: '300 credits/month · Full access',
+      sub: '300 credits/month - Full access',
       chipBg: '#d9770622',
       chipColor: '#fbbf24',
       iconBg: '#d9770614',
@@ -7856,7 +7856,7 @@ function getTierPresentation(tier = 'free') {
   if (tier === 'pro') {
     return {
       label: 'Pro',
-      sub: '100 credits/month · Full access',
+      sub: '100 credits/month - Full access',
       chipBg: '#7c3aed22',
       chipColor: '#a78bfa',
       iconBg: '#7c3aed14',
@@ -7866,7 +7866,7 @@ function getTierPresentation(tier = 'free') {
   if (tier === 'basic') {
     return {
       label: 'Basic',
-      sub: '50 credits/month · Starter AI access',
+      sub: '50 credits/month - Starter AI access',
       chipBg: '#10b98122',
       chipColor: '#10b981',
       iconBg: '#10b98114',
@@ -7875,7 +7875,7 @@ function getTierPresentation(tier = 'free') {
   }
   return {
     label: 'Free',
-    sub: '0 credits/month · Core access',
+    sub: '0 credits/month - Core access',
     chipBg: '#64748b22',
     chipColor: '#64748b',
     iconBg: '#64748b14',
@@ -7910,11 +7910,11 @@ function renderBillingPlanCards(currentTier = currentUser?.tier || 'free') {
         </div>
         <div class="billing-plan-detail" style="font-size:12px;color:var(--text);line-height:1.6">
           <strong>${plan.credits} credits/month</strong><br>
-          FinBot news uses 2 credits Â· Analysis uses 5 credits
+          FinBot news uses 2 credits - Analysis uses 5 credits
         </div>
         <button ${buttonAction} ${disabledAttr}
           style="padding:10px 12px;border-radius:12px;border:${isCurrent ? '1px solid var(--border)' : 'none'};background:${isCurrent ? 'var(--border)' : plan.tone};color:${isCurrent ? 'var(--muted)' : '#fff'};font-size:12px;font-weight:800;cursor:${isCurrent ? 'default' : 'pointer'};opacity:${billingCheckoutInFlight && billingCheckoutInFlight !== tier ? '.75' : '1'}">
-          ${billingCheckoutInFlight === tier ? 'Redirectingâ€¦' : buttonLabel}
+          ${billingCheckoutInFlight === tier ? 'Redirecting...' : buttonLabel}
         </button>
       </div>
     `;
