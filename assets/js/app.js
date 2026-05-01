@@ -656,7 +656,7 @@ const UI_ICON_PATHS = {
   target: ['M12 3v3', 'M12 18v3', 'M3 12h3', 'M18 12h3', 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z', 'M12 11.5v1'],
   flame: ['M12 3s4 3.2 4 7.2A4 4 0 0 1 8 10c0-2.1 1.1-3.5 2.2-4.8.4 1.7 1.5 2.6 1.8 2.8.8-1 1.4-2.5 0-5.2z', 'M8 14a4 4 0 0 0 8 0c0-1.7-1.1-3.2-2.5-4.2.1 2.3-1.3 4.2-3.5 4.2-1.2 0-2.2-.5-3-1.4A4.8 4.8 0 0 0 8 14z'],
   bolt: ['M13 2L5 13h5l-1 9 8-11h-5l1-9z'],
-  star: ['M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17l-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3z'],
+  star: ['M13.7276 3.44418L15.4874 6.99288C15.7274 7.48687 16.3673 7.9607 16.9073 8.05143L20.0969 8.58575C22.1367 8.92853 22.6167 10.4206 21.1468 11.8925L18.6671 14.3927C18.2471 14.8161 18.0172 15.6327 18.1471 16.2175L18.8571 19.3125C19.417 21.7623 18.1271 22.71 15.9774 21.4296L12.9877 19.6452C12.4478 19.3226 11.5579 19.3226 11.0079 19.6452L8.01827 21.4296C5.8785 22.71 4.57865 21.7522 5.13859 19.3125L5.84851 16.2175C5.97849 15.6327 5.74852 14.8161 5.32856 14.3927L2.84884 11.8925C1.389 10.4206 1.85895 8.92853 3.89872 8.58575L7.08837 8.05143C7.61831 7.9607 8.25824 7.48687 8.49821 6.99288L10.258 3.44418C11.2179 1.51861 12.7777 1.51861 13.7276 3.44418Z'],
   cards: ['M8 7h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z', 'M6 15H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1'],
   coin: ['M12 4c4.4 0 8 1.8 8 4s-3.6 4-8 4-8-1.8-8-4 3.6-4 8-4z', 'M4 8v8c0 2.2 3.6 4 8 4s8-1.8 8-4V8'],
   close: ['M6 6l12 12', 'M18 6 6 18'],
@@ -735,6 +735,10 @@ function bookmarkNewsIcon(isSaved) {
 
 function marketAlertIcon(hasAlert) {
   return iconMarkup(hasAlert ? 'notification-01' : 'notification-off-01', 'market-alert-icon');
+}
+
+function starIcon(className = 'star-icon') {
+  return iconMarkup('star', className);
 }
 
 function stripLeadingDecorativeIcon(line) {
@@ -1627,7 +1631,7 @@ function renderNews(filter, search) {
     </div>
     <div class="filter-row">
       ${cats.map(c => `<button class="news-filter-btn ${newsFilter===c&&!myStocksActive&&!bookmarksActive?'active':''}" onclick="setNewsFilter('${c}')">${c}</button>`).join('')}
-      <button class="news-filter-btn ${myStocksActive?'mystocks-active':''}" onclick="setNewsFilter('My Stocks')" title="Articles mentioning your portfolio & watchlist tickers">⭐ My Stocks</button>
+      <button class="news-filter-btn ${myStocksActive?'mystocks-active':''}" onclick="setNewsFilter('My Stocks')" title="Articles mentioning your portfolio & watchlist tickers">${starIcon('inline-star-icon')} My Stocks</button>
       <button class="news-filter-btn ${bookmarksActive?'bookmarks-active':''}" onclick="toggleNewsBookmarksView()">🔖 Bookmarks${Object.keys(bookmarkedArticles).length > 0 ? ' ('+Object.keys(bookmarkedArticles).length+')' : ''}</button>
     </div>
     <div class="time-range-row">
@@ -2458,7 +2462,7 @@ function renderMarkets(filter) {
         const starBtn = currentUser && !compareMode
           ? `<button onclick="event.stopPropagation();toggleWatchlist('${m.ticker}','${m.name.replace(/'/g,"\\'")}')"
                class="market-star-btn ${starred ? 'active' : ''}"
-               title="${starred?'Remove from watchlist':'Add to watchlist'}">${starred ? '★' : '☆'}</button>`
+               title="${starred?'Remove from watchlist':'Add to watchlist'}">${starIcon('market-star-icon')}</button>`
           : '';
         const bellBtn = currentUser && !compareMode
           ? `<button class="alert-bell${hasAlert?' active':''}" onclick="event.stopPropagation();openAlertModal('${m.ticker}','${m.name.replace(/'/g,"\\'")}',${m.val})"
@@ -2773,7 +2777,7 @@ function openStockDetail(idx) {
       ${currentUser ? `<div class="sd-actions-row" style="display:flex;gap:10px">
         <button onclick="toggleWatchlist('${stock.ticker}','${stock.name.replace(/'/g,"\\'")}')"
           style="flex:1;padding:13px;border-radius:13px;background:${watchlistSet.has(stock.ticker)?'#10b98118':'#1e293b'};border:1.5px solid ${watchlistSet.has(stock.ticker)?'#10b981':'#ffffff0a'};font-size:13px;font-weight:700;color:${watchlistSet.has(stock.ticker)?'#10b981':'#64748b'};cursor:pointer;transition:all .2s">
-          ${watchlistSet.has(stock.ticker) ? '★ Watchlist' : '☆ Watchlist'}
+          ${starIcon('inline-star-icon')} Watchlist
         </button>
         <button onclick="openAddHoldingModal('${stock.ticker}','${stock.name.replace(/'/g,"\\'")}')"
           style="flex:1;padding:13px;border-radius:13px;background:var(--green);color:#fff;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .2s">
@@ -4967,7 +4971,7 @@ function renderSaved(filter) {
       <select class="saved-sort-select" onchange="savedSort=this.value;renderSaved()">
         <option value="newest"  ${savedSort==='newest' ?'selected':''}>↓ Newest</option>
         <option value="oldest"  ${savedSort==='oldest' ?'selected':''}>↑ Oldest</option>
-        <option value="starred" ${savedSort==='starred'?'selected':''}>⭐ First</option>
+        <option value="starred" ${savedSort==='starred'?'selected':''}>Starred First</option>
       </select>
     </div>
 
@@ -4976,7 +4980,7 @@ function renderSaved(filter) {
       ${filterBtn('all',    'All',       allReports.length, 'var(--green)')}
       ${filterBtn('finbot', iconMarkup('bot', 'inline-icon') + ' FinBot', finbotCount,       '#6366f1')}
       ${filterBtn('news',   '📰 News',   newsCount,         '#7c3aed')}
-      ${starCount ? filterBtn('starred', '⭐ Starred', starCount, '#f59e0b') : ''}
+      ${starCount ? filterBtn('starred', starIcon('inline-star-icon') + ' Starred', starCount, '#f59e0b') : ''}
     </div>
 
     <!-- Folders + Tags panel -->
@@ -5035,7 +5039,7 @@ function renderSaved(filter) {
               </div>
             </div>
             <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-              <button class="saved-card-star ${r.starred?'starred':''}" onclick="toggleReportStar('${r.id}')" title="${r.starred?'Unstar':'Star'}">⭐</button>
+              <button class="saved-card-star ${r.starred?'starred':''}" onclick="toggleReportStar('${r.id}')" title="${r.starred?'Unstar':'Star'}">${starIcon('saved-star-icon')}</button>
               <button onclick="deleteSavedReport('${r.id}')"
                 style="background:#ef4444;border:none;cursor:pointer;color:#fff;padding:6px 8px;border-radius:8px;line-height:1;display:flex;align-items:center;justify-content:center;transition:background .15s" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'" title="Delete">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
@@ -5176,7 +5180,7 @@ function openReportEditModal(id) {
       </div>
       <label style="display:flex;align-items:center;gap:10px;margin-bottom:16px;cursor:pointer">
         <input type="checkbox" id="edit-starred" ${r.starred?'checked':''} style="width:16px;height:16px;accent-color:var(--amber)">
-        <span style="font-size:13px;font-weight:600;color:var(--text)">⭐ Starred</span>
+        <span style="font-size:13px;font-weight:600;color:var(--text);display:inline-flex;align-items:center;gap:6px">${starIcon('inline-star-icon')} Starred</span>
       </label>
       <div style="margin-bottom:16px">
         <label style="font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:6px">Folder</label>
