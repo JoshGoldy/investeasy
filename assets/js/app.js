@@ -668,7 +668,10 @@ const UI_ICON_PATHS = {
   lock: ['M7 11V8a5 5 0 0 1 10 0v3', 'M5 11h14v10H5z'],
   trash: ['M4 7h16', 'M9 7V4h6v3', 'M8 7l1 13h6l1-13'],
   mail: ['M4 6h16v12H4z', 'M4 7l8 6 8-6'],
-  wallet: ['M3 7h18v11H3z', 'M16 12h5', 'M3 10h18'],
+  wallet: ['M13 3.5H14C14.93 3.5 15.395 3.5 15.7765 3.60222C16.8117 3.87962 17.6204 4.68827 17.8978 5.72354C18 6.10504 18 6.57003 18 7.5H5C3.89543 7.5 3 6.60457 3 5.5C3 4.39543 3.89543 3.5 5 3.5H8', 'M3 5.5V15.5C3 18.3284 3 19.7426 3.87868 20.6213C4.75736 21.5 6.17157 21.5 9 21.5H15C17.8284 21.5 19.2426 21.5 20.1213 20.6213C21 19.7426 21 18.3284 21 15.5V13.5C21 10.6716 21 9.25736 20.1213 8.37868C19.2426 7.5 17.8284 7.5 15 7.5H7', 'M21 12.5H19C18.535 12.5 18.3025 12.5 18.1118 12.5511C17.5941 12.6898 17.1898 13.0941 17.0511 13.6118C17 13.8025 17 14.035 17 14.5C17 14.965 17 15.1975 17.0511 15.3882C17.1898 15.9059 17.5941 16.3102 18.1118 16.4489C18.3025 16.5 18.535 16.5 19 16.5H21', 'M10.5 2.5C12.433 2.5 14 4.067 14 6C14 6.5368 13.8792 7.04537 13.6632 7.5H7.33682C7.12085 7.04537 7 6.5368 7 6C7 4.067 8.567 2.5 10.5 2.5Z'],
+  "pie-chart-09": ['M16.5557 4.61883C15.7488 4.07099 14.8724 3.64848 13.9552 3.3602C12.7981 2.99648 12.2195 2.81462 11.6098 3.2715C11 3.72839 11 4.4705 11 5.95472V10.5064C11 11.7697 11 12.4013 11.2341 12.9676C11.4683 13.534 11.9122 13.9761 12.8 14.8604L15.999 18.0466C17.0421 19.0855 17.5637 19.605 18.3116 19.4823C19.0596 19.3597 19.3367 18.8125 19.8911 17.7182C20.3153 16.881 20.6251 15.9835 20.8079 15.0499C21.1937 13.0788 20.9957 11.0358 20.2388 9.17903C19.4819 7.32232 18.2002 5.73535 16.5557 4.61883Z', 'M14 20.4184C13.0736 20.7934 12.0609 20.9999 11 20.9999C6.58172 20.9999 3 17.4182 3 12.9999C3 9.56293 5.16736 6.6322 8.20988 5.49988'],
+  "chart-03": ['M3 4V14C3 16.8284 3 18.2426 3.87868 19.1213C4.75736 20 6.17157 20 9 20H21', 'M6 14L9.25 10.75C9.89405 10.1059 10.2161 9.78392 10.5927 9.67766C10.8591 9.60254 11.1409 9.60254 11.4073 9.67766C11.7839 9.78392 12.1059 10.1059 12.75 10.75C13.3941 11.3941 13.7161 11.7161 14.0927 11.8223C14.3591 11.8975 14.6409 11.8975 14.9073 11.8223C15.2839 11.7161 15.6059 11.3941 16.25 10.75L20 7'],
+  "dashboard-square-01": ['M13.6903 19.4567C13.5 18.9973 13.5 18.4149 13.5 17.25C13.5 16.0851 13.5 15.5027 13.6903 15.0433C13.944 14.4307 14.4307 13.944 15.0433 13.6903C15.5027 13.5 16.0851 13.5 17.25 13.5C18.4149 13.5 18.9973 13.5 19.4567 13.6903C20.0693 13.944 20.556 14.4307 20.8097 15.0433C21 15.5027 21 16.0851 21 17.25C21 18.4149 21 18.9973 20.8097 19.4567C20.556 20.0693 20.0693 20.556 19.4567 20.8097C18.9973 21 18.4149 21 17.25 21C16.0851 21 15.5027 21 15.0433 20.8097C14.4307 20.556 13.944 20.0693 13.6903 19.4567Z', 'M13.6903 8.95671C13.5 8.49728 13.5 7.91485 13.5 6.75C13.5 5.58515 13.5 5.00272 13.6903 4.54329C13.944 3.93072 14.4307 3.44404 15.0433 3.1903C15.5027 3 16.0851 3 17.25 3C18.4149 3 18.9973 3 19.4567 3.1903C20.0693 3.44404 20.556 3.93072 20.8097 4.54329C21 5.00272 21 5.58515 21 6.75C21 7.91485 21 8.49728 20.8097 8.95671C20.556 9.56928 20.0693 10.056 19.4567 10.3097C18.9973 10.5 18.4149 10.5 17.25 10.5C16.0851 10.5 15.5027 10.5 15.0433 10.3097C14.4307 10.056 13.944 9.56928 13.6903 8.95671Z', 'M3.1903 19.4567C3 18.9973 3 18.4149 3 17.25C3 16.0851 3 15.5027 3.1903 15.0433C3.44404 14.4307 3.93072 13.944 4.54329 13.6903C5.00272 13.5 5.58515 13.5 6.75 13.5C7.91485 13.5 8.49728 13.5 8.95671 13.6903C9.56928 13.944 10.056 14.4307 10.3097 15.0433C10.5 15.5027 10.5 16.0851 10.5 17.25C10.5 18.4149 10.5 18.9973 10.3097 19.4567C10.056 20.0693 9.56928 20.556 8.95671 20.8097C8.49728 21 7.91485 21 6.75 21C5.58515 21 5.00272 21 4.54329 20.8097C3.93072 20.556 3.44404 20.0693 3.1903 19.4567Z', 'M3.1903 8.95671C3 8.49728 3 7.91485 3 6.75C3 5.58515 3 5.00272 3.1903 4.54329C3.44404 3.93072 3.93072 3.44404 4.54329 3.1903C5.00272 3 5.58515 3 6.75 3C7.91485 3 8.49728 3 8.95671 3.1903C9.56928 3.44404 10.056 3.93072 10.3097 4.54329C10.5 5.00272 10.5 5.58515 10.5 6.75C10.5 7.91485 10.5 8.49728 10.3097 8.95671C10.056 9.56928 9.56928 10.056 8.95671 10.3097C8.49728 10.5 7.91485 10.5 6.75 10.5C5.58515 10.5 5.00272 10.5 4.54329 10.3097C3.93072 10.056 3.44404 9.56928 3.1903 8.95671Z'],
   "eye-off": ['M3 3l18 18', 'M10.6 10.6a3 3 0 1 0 4.2 4.2', 'M9.9 5.1A10.9 10.9 0 0 1 12 5c5 0 9 4 10 7a18.3 18.3 0 0 1-4.3 4.9', 'M6.6 6.6A18.2 18.2 0 0 0 2 12c1 3 5 7 10 7 1.6 0 3.1-.4 4.5-1.1'],
   clock: ['M12 7v5l3 3', 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z'],
   rocket: ['M5 19c1.5-1 3-1.5 4.5-1.5L18 9c.2-2.5-.5-4.5-2-6-1.5 1.5-3.5 2.2-6 2L1.5 13.5C1.5 15 1 16.5 0 18c2 0 3.5-.5 5-1.5z', 'M14 10l4 4', 'M7 17l-2 2'],
@@ -1718,7 +1721,7 @@ function renderNewsContent() {
   const lastUpdatedStr = newsFetchedAt
     ? `Updated ${newsFetchedAt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`
     : 'Fetching…';
-  const sourceBadge = newsShowBookmarks ? '🔖' : (newsSourceMode === 'fallback' ? 'Backup feed' : 'LIVE');
+  const sourceBadge = newsShowBookmarks ? bookmarkNewsIcon(true) : (newsSourceMode === 'fallback' ? 'Backup feed' : 'LIVE');
   const sourceNotice = newsSourceMode === 'fallback' && !newsShowBookmarks
     ? `<div style="margin-bottom:12px;padding:12px 14px;border-radius:14px;background:#f59e0b12;border:1px solid #f59e0b33;color:#9a6700;font-size:12px;line-height:1.5">
         <div>${escHtml(newsLoadError)}</div>
@@ -1737,7 +1740,7 @@ function renderNewsContent() {
       </div>
       <span style="font-size:11px;color:rgba(255,255,255,0.7)">${lastUpdatedStr}</span>
     </div>
-    ${list.length === 0 ? `<div style="text-align:center;padding:40px;color:var(--faint);font-size:13px">${newsShowBookmarks ? 'No bookmarked articles yet — click 🔖 on any card to save it.' : 'No articles found'}</div>` : ''}
+${list.length === 0 ? `<div style="text-align:center;padding:40px;color:var(--faint);font-size:13px">${newsShowBookmarks ? `No bookmarked articles yet - click ${bookmarkNewsIcon(false)} on any card to save it.` : 'No articles found'}</div>` : ''}
     <div class="news-cols">
     ${list.map(n => {
       // Ensure article is accessible by index — add to liveNews if from bookmarks only
@@ -5743,9 +5746,9 @@ function renderPortfolioDemoDashboard() {
 
     <div class="dashboard-stats">
       ${portfolioStatCard(`${iconMarkup('wallet', 'portfolio-stat-icon')}`, fmtMoney(total), 'Portfolio value')}
-      ${portfolioStatCard(`${iconMarkup('briefcase', 'portfolio-stat-icon')}`, HOLDINGS.length, 'Active holdings')}
-      ${portfolioStatCard(`${iconMarkup(up ? 'trend-up' : 'trend-down', 'portfolio-stat-icon')}`, `${up?'+':''}${pnlP}%`, 'Total return')}
-      ${portfolioStatCard(`${iconMarkup('grid', 'portfolio-stat-icon')}`, HOLDINGS.length, 'Tracked assets')}
+      ${portfolioStatCard(`${iconMarkup('pie-chart-09', 'portfolio-stat-icon')}`, HOLDINGS.length, 'Active holdings')}
+      ${portfolioStatCard(`${iconMarkup('chart-03', 'portfolio-stat-icon')}`, `${up?'+':''}${pnlP}%`, 'Total return')}
+      ${portfolioStatCard(`${iconMarkup('dashboard-square-01', 'portfolio-stat-icon')}`, HOLDINGS.length, 'Tracked assets')}
     </div>
 
     <div class="dashboard-grid">
@@ -6367,9 +6370,9 @@ function renderDBPortfolio() {
 
     <div class="dashboard-stats">
       ${portfolioStatCard(`${iconMarkup('wallet', 'portfolio-stat-icon')}`, fmtMoney(total), 'Portfolio value')}
-      ${portfolioStatCard(`${iconMarkup('briefcase', 'portfolio-stat-icon')}`, holdings.length, 'Active holdings')}
-      ${portfolioStatCard(`${iconMarkup(up ? 'trend-up' : 'trend-down', 'portfolio-stat-icon')}`, `${up?'+':''}${totalPnlP}%`, 'Portfolio return')}
-      ${portfolioStatCard(`${iconMarkup('grid', 'portfolio-stat-icon')}`, sectors.size, 'Sectors covered')}
+      ${portfolioStatCard(`${iconMarkup('pie-chart-09', 'portfolio-stat-icon')}`, holdings.length, 'Active holdings')}
+      ${portfolioStatCard(`${iconMarkup('chart-03', 'portfolio-stat-icon')}`, `${up?'+':''}${totalPnlP}%`, 'Portfolio return')}
+      ${portfolioStatCard(`${iconMarkup('dashboard-square-01', 'portfolio-stat-icon')}`, sectors.size, 'Sectors covered')}
     </div>
 
     <div class="dashboard-grid">
