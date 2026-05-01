@@ -5455,7 +5455,10 @@ function renderPortfolioDemoDashboard() {
   const top2Pct = demoAllocations.slice(0, 2).reduce((s, h) => s + h.allocPct, 0);
   const top3Pct = demoAllocations.slice(0, 3).reduce((s, h) => s + h.allocPct, 0);
   const cryptoPct = demoAllocations.filter(h => h.sector === 'Crypto').reduce((s, h) => s + h.allocPct, 0);
-  const divScore = Math.min(100, Math.round(HOLDINGS.length * 10 + new Set(demoAllocations.map(h => h.sector)).size * 8));
+  const demoHoldingCountScore = Math.min(100, HOLDINGS.length * 12);
+  const demoAssetMixScore = cryptoPct > 25 ? 35 : 72;
+  const demoConcentrationScore = Math.max(0, 100 - top1Pct * 1.7 - top2Pct * 0.45);
+  const divScore = Math.round(demoHoldingCountScore * 0.30 + demoAssetMixScore * 0.25 + demoConcentrationScore * 0.45);
   const concentrationRows = [
     { label: `Top holding (${demoAllocations[0]?.ticker || '-'})`, pct: top1Pct, value: top1Pct.toFixed(1) + '%', tone: top1Pct > 35 ? 'bad' : top1Pct > 25 ? 'warn' : 'good', sub: 'Shows single-name dependency' },
     { label: 'Top 2 holdings', pct: top2Pct, value: top2Pct.toFixed(1) + '%', tone: top2Pct > 60 ? 'bad' : top2Pct > 45 ? 'warn' : 'good', sub: 'How concentrated your biggest pair is' },
@@ -5467,9 +5470,9 @@ function renderPortfolioDemoDashboard() {
   ].filter(row => row.pct > 0.1);
   const geographyRows = exposureRows;
   const riskFactors = [
-    { label: 'Holdings count', pct: Math.min(100, HOLDINGS.length * 12), value: `${HOLDINGS.length} holdings`, tone: riskTone(Math.min(100, HOLDINGS.length * 12)), sub: 'More holdings can reduce single-name risk' },
-    { label: 'Asset mix', pct: cryptoPct > 25 ? 35 : 72, value: `${cryptoPct.toFixed(1)}% crypto`, tone: cryptoPct > 25 ? 'warn' : 'good', sub: cryptoPct > 25 ? 'Crypto is a large driver' : 'Speculative exposure is contained' },
-    { label: 'Top holding weight', pct: Math.max(0, 100 - top1Pct), value: top1Pct.toFixed(1) + '%', tone: riskTone(top1Pct, true), sub: 'Lower top weight improves resilience' },
+    { label: 'Holdings count', pct: demoHoldingCountScore, value: `${HOLDINGS.length} holdings`, tone: riskTone(demoHoldingCountScore), sub: 'More holdings can reduce single-name risk' },
+    { label: 'Asset mix', pct: demoAssetMixScore, value: `${cryptoPct.toFixed(1)}% crypto`, tone: cryptoPct > 25 ? 'warn' : 'good', sub: cryptoPct > 25 ? 'Crypto is a large driver' : 'Speculative exposure is contained' },
+    { label: 'Concentration', pct: demoConcentrationScore, value: top1Pct.toFixed(1) + '% top holding', tone: riskTone(demoConcentrationScore), sub: 'Lower top weights improve resilience' },
   ];
   const insightCards = [
     { tone: top1Pct > 30 ? 'warn' : 'good', label: 'Concentration', title: top1Pct > 30 ? 'Top holding needs watching' : 'Top holding looks reasonable', body: `Your largest holding is ${top1Pct.toFixed(1)}% of the demo portfolio.` },
@@ -5994,7 +5997,6 @@ function renderDBPortfolio() {
   const gainers = holdings.filter(h => h.pnl >= 0).length;
   const losers  = holdings.length - gainers;
   const sectors = new Set(holdings.map(h => SECTOR_MAP[h.ticker] || 'Other'));
-  const divScore = Math.min(100, Math.round(holdings.length * 10 + sectors.size * 8));
 
   // Sector breakdown
   const sectorTotals = {};
@@ -6051,10 +6053,16 @@ function renderDBPortfolio() {
   const sectorSpreadScore = Math.min(100, sectors.size * 22);
   const concentrationScore = Math.max(0, 100 - top1Pct * 1.7 - top2Pct * 0.45);
   const cryptoBalanceScore = Math.max(0, 100 - cryptoPct * 2.3);
+  const divScore = Math.round(
+    holdingCountScore * 0.25 +
+    sectorSpreadScore * 0.25 +
+    concentrationScore * 0.30 +
+    cryptoBalanceScore * 0.20
+  );
   const riskFactors = [
     { label: 'Holdings count', pct: holdingCountScore, value: `${holdings.length} holding${holdings.length === 1 ? '' : 's'}`, tone: riskTone(holdingCountScore), sub: holdings.length >= 8 ? 'Good spread across positions' : 'Add more positions to reduce single-name risk' },
     { label: 'Sector spread', pct: sectorSpreadScore, value: `${sectors.size} sector${sectors.size === 1 ? '' : 's'}`, tone: riskTone(sectorSpreadScore), sub: sectors.size >= 4 ? 'Healthy sector variety' : 'More sectors would smooth portfolio swings' },
-    { label: 'Top holding weight', pct: Math.max(0, 100 - top1Pct), value: `${top1Pct.toFixed(1)}%`, tone: riskTone(top1Pct, true), sub: top1Pct > 30 ? `${allocations[0]?.ticker || 'Top holding'} is doing a lot of work` : 'No single holding dominates the portfolio' },
+    { label: 'Concentration', pct: concentrationScore, value: `${top1Pct.toFixed(1)}% top holding`, tone: riskTone(concentrationScore), sub: top1Pct > 30 ? `${allocations[0]?.ticker || 'Top holding'} is doing a lot of work` : 'No single holding dominates the portfolio' },
     { label: 'Crypto balance', pct: cryptoBalanceScore, value: `${cryptoPct.toFixed(1)}%`, tone: riskTone(cryptoBalanceScore), sub: cryptoPct > 20 ? 'Crypto can lift volatility quickly' : 'Crypto exposure is contained' },
   ];
   const exposureTotals = {};
