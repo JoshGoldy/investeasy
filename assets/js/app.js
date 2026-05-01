@@ -9296,10 +9296,15 @@ async function savePortfolioImportRows() {
 
 function openAddHoldingModal(ticker = '', name = '') {
   const asset = getQuickHoldingAsset(ticker, name);
+  const existing = asset.ticker ? dbPortfolio.find(h => h.ticker === asset.ticker) : null;
+  const sharesValue = existing ? Number(existing.shares) : '';
+  const costValue = existing
+    ? Number(existing.avg_cost)
+    : (asset.val !== null ? Number(asset.val) : null);
   document.getElementById('holding-ticker').value = asset.ticker;
-  document.getElementById('holding-name').value   = asset.name;
-  document.getElementById('holding-shares').value = '';
-  document.getElementById('holding-cost').value   = asset.val !== null ? Number(asset.val).toFixed(asset.val < 10 ? 4 : 2) : '';
+  document.getElementById('holding-name').value   = existing?.name || asset.name;
+  document.getElementById('holding-shares').value = Number.isFinite(sharesValue) ? String(sharesValue) : '';
+  document.getElementById('holding-cost').value   = Number.isFinite(costValue) ? costValue.toFixed(costValue < 10 ? 4 : 2) : '';
   const e = document.getElementById('holding-error');
   e.textContent = ''; e.classList.remove('show');
 
@@ -9315,7 +9320,9 @@ function openAddHoldingModal(ticker = '', name = '') {
 
   // If pre-filled from a quick-pick context (e.g. stock detail), show market price hint
   if (asset.ticker && asset.val !== null && hint) {
-    hint.textContent = 'Market price: ' + fmtNativeUnitPrice(asset.val, asset.currency);
+    hint.textContent = existing
+      ? `Editing existing holding · Market price: ${fmtNativeUnitPrice(asset.val, asset.currency)}`
+      : 'Market price: ' + fmtNativeUnitPrice(asset.val, asset.currency);
   }
 
   document.getElementById('add-holding-modal').classList.remove('hidden');
