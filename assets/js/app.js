@@ -2425,6 +2425,7 @@ async function fetchLivePrices() {
     });
     if (updated) {
       marketsLoadError = '';
+      clearAppIssues('market-data');
       const tab = document.getElementById('tab-markets');
       if (tab && tab.classList.contains('active')) renderMarkets();
       renderMarketTickerTape();
@@ -6864,7 +6865,8 @@ function renderSettings() {
   const diagnostics = getDiagnosticsLog();
   const recentIssues = diagnostics.slice(0, 5);
   const opsData = opsStatusState.data;
-  const latestByService = diagnostics.reduce((acc, entry) => {
+  const activeDiagnostics = getActiveDiagnosticsLog();
+  const latestByService = activeDiagnostics.reduce((acc, entry) => {
     if (!acc[entry.service]) acc[entry.service] = entry;
     return acc;
   }, {});
@@ -7453,7 +7455,6 @@ async function invokeMarketDataFunction(payload) {
       } catch (_) {}
     }
     const message = describeAppError([error.message, contextMessage].filter(Boolean).join(' ').trim(), 'Market data is unavailable right now.');
-    logAppIssue('market-data', message, 'warn');
     throw new Error(message);
   }
   return data;
@@ -7809,6 +7810,7 @@ function showTransientErrorNotice(key, message, cooldownMs = 120000) {
 }
 
 const DIAGNOSTICS_KEY = 'fs_diagnostics';
+const DIAGNOSTICS_ACTIVE_MS = 15 * 60 * 1000;
 
 function getDiagnosticsLog() {
   try {
@@ -7830,6 +7832,17 @@ function logAppIssue(service, error, severity = 'error') {
   };
   const next = [entry, ...getDiagnosticsLog()].slice(0, 20);
   try { localStorage.setItem(DIAGNOSTICS_KEY, JSON.stringify(next)); } catch (_) {}
+}
+
+function clearAppIssues(service) {
+  if (!service) return;
+  const next = getDiagnosticsLog().filter(entry => entry.service !== service);
+  try { localStorage.setItem(DIAGNOSTICS_KEY, JSON.stringify(next)); } catch (_) {}
+}
+
+function getActiveDiagnosticsLog() {
+  const cutoff = Date.now() - DIAGNOSTICS_ACTIVE_MS;
+  return getDiagnosticsLog().filter(entry => Number(entry.at || 0) >= cutoff);
 }
 
 function clearDiagnosticsLog() {
