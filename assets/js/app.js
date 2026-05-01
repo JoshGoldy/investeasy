@@ -6049,7 +6049,7 @@ function renderDBPortfolio() {
     NPN:'Tech',PRX:'Tech',
     BHG:'Mining',AGL:'Mining',GLN:'Mining',ANG:'Mining',IMP:'Mining',
     CFR:'Consumer',SHP:'Consumer',
-    FSR:'Finance',SBK:'Finance',CPI:'Finance',ABG:'Finance',NED:'Finance',SLM:'Finance',DSY:'Finance',OMU:'Finance',
+    FSR:'Finance',SBK:'Finance',CPI:'Finance',ABG:'Finance',NED:'Finance',SLM:'Finance',DSY:'Healthcare',OMU:'Finance',
     MTN:'Telecom',
     SOLJ:'Energy',
     MNP:'Industrial',
@@ -6071,7 +6071,8 @@ function renderDBPortfolio() {
     const cost = h.shares * avgCostUsd;
     const pnl  = val - cost;
     const pnlP = avgCostUsd > 0 ? ((curUsd - avgCostUsd) / avgCostUsd * 100) : 0;
-    return { ...h, cur: curUsd, curNative, nativeCurrency, exchange: mkt?.exchange || '', val, cost, pnl, pnlP };
+    const sector = mkt?.sector || SECTOR_MAP[h.ticker] || 'Other';
+    return { ...h, cur: curUsd, curNative, nativeCurrency, exchange: mkt?.exchange || '', sector, val, cost, pnl, pnlP };
   });
 
   const total     = holdings.reduce((s, h) => s + h.val, 0);
@@ -6088,12 +6089,12 @@ function renderDBPortfolio() {
   const worst   = sortedByPnl[sortedByPnl.length - 1];
   const gainers = holdings.filter(h => h.pnl >= 0).length;
   const losers  = holdings.length - gainers;
-  const sectors = new Set(holdings.map(h => SECTOR_MAP[h.ticker] || 'Other'));
+  const sectors = new Set(holdings.map(h => h.sector || 'Other'));
 
   // Sector breakdown
   const sectorTotals = {};
   holdings.forEach(h => {
-    const sec = SECTOR_MAP[h.ticker] || 'Other';
+    const sec = h.sector || 'Other';
     sectorTotals[sec] = (sectorTotals[sec] || 0) + h.val;
   });
   const sectorList = Object.entries(sectorTotals)
@@ -6129,7 +6130,7 @@ function renderDBPortfolio() {
       ...h,
       allocPct: total > 0 ? (h.val / total * 100) : 0,
       color: COLORS[i % COLORS.length],
-      sector: SECTOR_MAP[h.ticker] || 'Other',
+      sector: h.sector || 'Other',
     }))
     .sort((a, b) => b.allocPct - a.allocPct);
   const top1Pct = allocations[0]?.allocPct || 0;
@@ -6403,7 +6404,7 @@ function renderDBPortfolio() {
           <div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <p style="font-weight:800;font-size:14px;color:var(--text);font-family:var(--mono)">${h.ticker}</p>
-              ${SECTOR_MAP[h.ticker] ? `<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;background:${SECTOR_COLORS[SECTOR_MAP[h.ticker]] || '#94a3b8'}18;color:${SECTOR_COLORS[SECTOR_MAP[h.ticker]] || '#94a3b8'}">${SECTOR_MAP[h.ticker]}</span>` : ''}
+              ${h.sector && h.sector !== 'Other' ? `<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;background:${SECTOR_COLORS[h.sector] || '#94a3b8'}18;color:${SECTOR_COLORS[h.sector] || '#94a3b8'}">${h.sector}</span>` : ''}
               ${h.nativeCurrency !== 'USD' ? `<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;background:#eef1fb;color:#6b5bd2">${h.exchange || h.nativeCurrency} / ${h.nativeCurrency}</span>` : ''}
             </div>
             <p style="font-size:11px;color:var(--faint);margin-top:2px">${escHtml(h.name)}</p>
@@ -6658,9 +6659,9 @@ function renderDBPortfolio() {
           <div>
             <div style="display:flex;align-items:center;gap:8px">
               <p style="font-weight:800;font-size:14px;color:var(--text);font-family:var(--mono)">${h.ticker}</p>
-              ${SECTOR_MAP[h.ticker] ? `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;
-                background:${SECTOR_COLORS[SECTOR_MAP[h.ticker]] || '#94a3b8'}18;
-                color:${SECTOR_COLORS[SECTOR_MAP[h.ticker]] || '#94a3b8'}">${SECTOR_MAP[h.ticker]}</span>` : ''}
+              ${h.sector && h.sector !== 'Other' ? `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;
+                background:${SECTOR_COLORS[h.sector] || '#94a3b8'}18;
+                color:${SECTOR_COLORS[h.sector] || '#94a3b8'}">${h.sector}</span>` : ''}
             </div>
             <p style="font-size:11px;color:var(--faint);margin-top:1px">${escHtml(h.name)}</p>
           </div>
