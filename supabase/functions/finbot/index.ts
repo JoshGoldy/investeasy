@@ -8,9 +8,9 @@ const corsHeaders = {
 
 const DEFAULT_CREDITS: Record<string, number> = {
   free: 0,
-  basic: 15,
-  pro: 50,
-  enterprise: 200,
+  basic: 50,
+  pro: 100,
+  enterprise: 300,
 };
 
 const REQUEST_COST: Record<string, number> = {

@@ -82,9 +82,9 @@ This migration adds:
 
 The current seeded defaults are:
 
-- `basic`: `R99` / month, `15` credits
-- `pro`: `R199` / month, `50` credits
-- `enterprise`: `R499` / month, `200` credits
+- `basic`: `R199` / month, `50` credits
+- `pro`: `R399` / month, `100` credits
+- `enterprise`: `R799` / month, `300` credits
 
 ### Abuse protection
 

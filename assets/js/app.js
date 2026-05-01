@@ -43,24 +43,24 @@ const TAB_PAGE_MAP = {
 const BILLING_PLANS = {
   basic: {
     label: 'Basic',
-    priceZar: 99,
-    credits: 15,
+    priceZar: 199,
+    credits: 50,
     tone: '#10b981',
     badgeBg: '#10b98122',
     desc: 'Starter AI access with monthly credits',
   },
   pro: {
     label: 'Pro',
-    priceZar: 199,
-    credits: 50,
+    priceZar: 399,
+    credits: 100,
     tone: '#7c3aed',
     badgeBg: '#7c3aed22',
     desc: 'Full FinBot access with a larger credit pool',
   },
   enterprise: {
     label: 'Enterprise',
-    priceZar: 499,
-    credits: 200,
+    priceZar: 799,
+    credits: 300,
     tone: '#d97706',
     badgeBg: '#d9770622',
     desc: 'Highest monthly credit pool and priority support',
@@ -4272,12 +4272,12 @@ function renderFinBot() {
           <div style="padding:16px;border-radius:14px;background:linear-gradient(135deg,#7c3aed18,#6d28d918);border:1px solid #7c3aed44">
             <div style="font-size:20px;margin-bottom:6px">⚡</div>
             <p style="font-weight:800;font-size:13px;color:#a78bfa;margin-bottom:4px">Pro</p>
-            <p style="font-size:11.5px;color:var(--faint);line-height:1.5">50 credits<br>News AI: 2 credits<br>Analysis: 5 credits</p>
+            <p style="font-size:11.5px;color:var(--faint);line-height:1.5">100 credits<br>News AI: 2 credits<br>Analysis: 5 credits</p>
           </div>
           <div style="padding:16px;border-radius:14px;background:linear-gradient(135deg,#d9770618,#b4530918);border:1px solid #d9770644">
             <div style="font-size:20px;margin-bottom:6px">🏆</div>
             <p style="font-weight:800;font-size:13px;color:#fbbf24;margin-bottom:4px">Enterprise</p>
-            <p style="font-size:11.5px;color:var(--faint);line-height:1.5">200 credits<br>News AI: 2 credits<br>Analysis: 5 credits</p>
+            <p style="font-size:11.5px;color:var(--faint);line-height:1.5">300 credits<br>News AI: 2 credits<br>Analysis: 5 credits</p>
           </div>
         </div>
         <div style="display:none;width:100%;max-width:360px;padding:14px 16px;border-radius:14px;background:var(--card);border:1px solid var(--border);margin-bottom:8px">
@@ -7846,7 +7846,7 @@ function getTierPresentation(tier = 'free') {
   if (tier === 'enterprise') {
     return {
       label: 'Enterprise',
-      sub: '200 credits/month · Full access',
+      sub: '300 credits/month · Full access',
       chipBg: '#d9770622',
       chipColor: '#fbbf24',
       iconBg: '#d9770614',
@@ -7856,7 +7856,7 @@ function getTierPresentation(tier = 'free') {
   if (tier === 'pro') {
     return {
       label: 'Pro',
-      sub: '50 credits/month · Full access',
+      sub: '100 credits/month · Full access',
       chipBg: '#7c3aed22',
       chipColor: '#a78bfa',
       iconBg: '#7c3aed14',
@@ -7866,7 +7866,7 @@ function getTierPresentation(tier = 'free') {
   if (tier === 'basic') {
     return {
       label: 'Basic',
-      sub: '15 credits/month Â· Starter AI access',
+      sub: '50 credits/month · Starter AI access',
       chipBg: '#10b98122',
       chipColor: '#10b981',
       iconBg: '#10b98114',

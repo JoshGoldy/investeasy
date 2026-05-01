@@ -150,9 +150,9 @@ Handles:
 
 Default monthly plans seeded by the billing migration:
 
-- `basic`: `R99` / month, `15` FinBot credits
-- `pro`: `R199` / month, `50` FinBot credits
-- `enterprise`: `R499` / month, `200` FinBot credits
+- `basic`: `R199` / month, `50` FinBot credits
+- `pro`: `R399` / month, `100` FinBot credits
+- `enterprise`: `R799` / month, `300` FinBot credits
 
 These defaults can be changed later in the billing migration seed data and matching frontend plan config.
 

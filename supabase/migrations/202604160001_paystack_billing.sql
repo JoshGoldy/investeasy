@@ -25,9 +25,9 @@ create table if not exists public.billing_plans (
 
 insert into public.billing_plans (tier, label, price_zar, monthly_credits, description, sort_order)
 values
-  ('basic', 'Basic', 99.00, 15, 'Starter AI access with monthly credits.', 1),
-  ('pro', 'Pro', 199.00, 50, 'Full FinBot access with a larger monthly credit pool.', 2),
-  ('enterprise', 'Enterprise', 499.00, 200, 'Highest monthly credit pool and premium support.', 3)
+  ('basic', 'Basic', 199.00, 50, 'Starter AI access with monthly credits.', 1),
+  ('pro', 'Pro', 399.00, 100, 'Full FinBot access with a larger monthly credit pool.', 2),
+  ('enterprise', 'Enterprise', 799.00, 300, 'Highest monthly credit pool and premium support.', 3)
 on conflict (tier) do update
 set
   label = excluded.label,

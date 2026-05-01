@@ -1,15 +1,15 @@
 export type BillingTier = "basic" | "pro" | "enterprise";
 
 export const DEFAULT_CREDITS: Record<BillingTier, number> = {
-  basic: 15,
-  pro: 50,
-  enterprise: 200,
+  basic: 50,
+  pro: 100,
+  enterprise: 300,
 };
 
 export const DEFAULT_PRICES_ZAR: Record<BillingTier, number> = {
-  basic: 99,
-  pro: 199,
-  enterprise: 499,
+  basic: 199,
+  pro: 399,
+  enterprise: 799,
 };
 
 const PLAN_ENV_KEYS: Record<BillingTier, string> = {
