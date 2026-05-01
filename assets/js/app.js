@@ -662,7 +662,7 @@ const UI_ICON_PATHS = {
   close: ['M6 6l12 12', 'M18 6 6 18'],
   "chevron-left": ['M15 18l-6-6 6-6'],
   plus: ['M12 5v14', 'M5 12h14'],
-  bot: ['M9 4h6', 'M12 2v2', 'M7 8h10a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-5a3 3 0 0 1 3-3z', 'M9 13h.01', 'M15 13h.01', 'M9 17h6'],
+  bot: ['M12 4V2', 'M20 22C20 17.5817 16.4183 14 12 14C7.58172 14 4 17.5817 4 22', 'M9.375 8.25H9.25M9.5 8.25C9.5 8.38807 9.38807 8.5 9.25 8.5C9.11193 8.5 9 8.38807 9 8.25C9 8.11193 9.11193 8 9.25 8C9.38807 8 9.5 8.11193 9.5 8.25Z', 'M14.875 8.25H14.75M15 8.25C15 8.38807 14.8881 8.5 14.75 8.5C14.6119 8.5 14.5 8.38807 14.5 8.25C14.5 8.11193 14.6119 8 14.75 8C14.8881 8 15 8.11193 15 8.25Z', 'M15.1538 4H8.84615C7.59095 4 6.96334 4 6.47397 4.22025C5.91693 4.47095 5.47095 4.91693 5.22025 5.47397C5 5.96334 5 6.59095 5 7.84615C5 9.85448 5 10.8586 5.3524 11.6417C5.75353 12.5329 6.46709 13.2465 7.35835 13.6476C8.14135 14 9.14552 14 11.1538 14H12.8462C14.8545 14 15.8586 14 16.6417 13.6476C17.5329 13.2465 18.2465 12.5329 18.6476 11.6417C19 10.8586 19 9.85448 19 7.84615C19 6.59095 19 5.96334 18.7797 5.47397C18.529 4.91693 18.0831 4.47095 17.526 4.22025C17.0367 4 16.4091 4 15.1538 4Z'],
   folder: ['M3 7h5l2 2h11v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z'],
   tag: ['M20 10l-8 8-8-8V4h6l10 10z', 'M7.5 7.5h.01'],
   lock: ['M7 11V8a5 5 0 0 1 10 0v3', 'M5 11h14v10H5z'],
@@ -4183,7 +4183,7 @@ function renderFinBotChatPanel() {
       <div class="finbot-chat-body" id="finbot-chat-body">
         ${finbotChatState.messages.map(m => `
           <div class="finbot-chat-msg ${m.role}">
-            <div class="finbot-chat-avatar">${m.role === 'assistant' ? '🤖' : 'You'}</div>
+            <div class="finbot-chat-avatar">${m.role === 'assistant' ? iconMarkup('bot', 'finbot-avatar-icon') : 'You'}</div>
             <div class="finbot-chat-bubble">
               ${m.role === 'assistant' ? parseMd(m.text) : `<p>${escHtml(m.text)}</p>`}
             </div>
@@ -4191,7 +4191,7 @@ function renderFinBotChatPanel() {
         `).join('')}
         ${finbotChatState.loading ? `
           <div class="finbot-chat-msg assistant">
-            <div class="finbot-chat-avatar">🤖</div>
+            <div class="finbot-chat-avatar">${iconMarkup('bot', 'finbot-avatar-icon')}</div>
             <div class="finbot-chat-bubble finbot-chat-thinking">
               <span></span><span></span><span></span>
             </div>
@@ -4225,7 +4225,7 @@ function renderFinBot() {
     el.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 20px 24px">
         <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#7c3aed,#6d28d9);
-                    display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px">🤖</div>
+                    display:flex;align-items:center;justify-content:center;color:#fff;margin-bottom:16px">${iconMarkup('bot', 'finbot-hero-icon')}</div>
         <h2 style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px">Meet FinBot</h2>
         <p style="font-size:13.5px;color:var(--muted);line-height:1.65;max-width:300px;margin-bottom:24px">
           Your personal AI financial analyst. Run deep analysis on stocks, portfolios, news, and more — all in seconds.
@@ -4266,7 +4266,7 @@ function renderFinBot() {
     el.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 20px 24px">
         <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#7c3aed,#6d28d9);
-                    display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px">🤖</div>
+                    display:flex;align-items:center;justify-content:center;color:#fff;margin-bottom:16px">${iconMarkup('bot', 'finbot-hero-icon')}</div>
         <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:#64748b22;margin-bottom:12px">
           <span style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em">Free Plan</span>
         </div>
@@ -4347,7 +4347,7 @@ function renderFinBot() {
     el.innerHTML = `
       <div class="section-title">
         <div class="finbot-header">
-          <div class="finbot-icon">🤖</div>
+          <div class="finbot-icon">${iconMarkup('bot', 'finbot-main-icon')}</div>
           <div style="flex:1">
             <h2>FinBot</h2>
             <p style="font-size:11px;color:var(--faint)">Quick chat + 6 elite analysis modes</p>
@@ -4974,7 +4974,7 @@ function renderSaved(filter) {
     <!-- Segmented type filter -->
     <div style="background:var(--border);border-radius:13px;padding:4px;display:flex;gap:2px;margin-bottom:12px">
       ${filterBtn('all',    'All',       allReports.length, 'var(--green)')}
-      ${filterBtn('finbot', '🤖 FinBot', finbotCount,       '#6366f1')}
+      ${filterBtn('finbot', iconMarkup('bot', 'inline-icon') + ' FinBot', finbotCount,       '#6366f1')}
       ${filterBtn('news',   '📰 News',   newsCount,         '#7c3aed')}
       ${starCount ? filterBtn('starred', '⭐ Starred', starCount, '#f59e0b') : ''}
     </div>
