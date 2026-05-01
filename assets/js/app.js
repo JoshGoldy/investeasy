@@ -5647,6 +5647,15 @@ function renderPortfolioDemoDashboard() {
         </div>
         <div style="font-size:12px;color:${up?'var(--green)':'var(--red)'};font-weight:700">${up?'▲':'▼'} ${fmtMoney(Math.abs(pnl))}</div>
       </div>
+      <div class="portfolio-insight-grid">
+        ${insightCards.map(card => `
+          <div class="portfolio-insight-card tone-${card.tone}">
+            <p class="portfolio-insight-label">${card.label}</p>
+            <h4>${card.title}</h4>
+            <p>${card.body}</p>
+          </div>
+        `).join('')}
+      </div>
       <div class="portfolio-allocation-wrap">
         <canvas id="port-donut" style="flex-shrink:0"></canvas>
         ${portfolioAllocationMidChart(HOLDINGS.map((h, i) => ({
@@ -6288,6 +6297,15 @@ function renderDBPortfolio() {
             <div style="height:100%;width:${divScore}%;background:${divScore >= 60 ? 'var(--green)' : divScore >= 30 ? 'var(--amber)' : 'var(--red)'}"></div>
           </div>
         </div>
+      </div>
+      <div class="portfolio-insight-grid">
+        ${insightCards.map(card => `
+          <div class="portfolio-insight-card tone-${card.tone}">
+            <p class="portfolio-insight-label">${card.label}</p>
+            <h4>${card.title}</h4>
+            <p>${card.body}</p>
+          </div>
+        `).join('')}
       </div>
       <div class="portfolio-allocation-wrap">
         <canvas id="port-donut" style="flex-shrink:0"></canvas>

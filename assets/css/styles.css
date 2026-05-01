@@ -2003,7 +2003,7 @@ body[data-ui-mode="terminal"] .header{background:#071018!important;border-bottom
 .holding-stat .hv{word-break:break-word}
 .portfolio-metric-mini-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
 .portfolio-metric-mini{background:#f0eadf;border:1px solid var(--border);border-radius:14px;padding:12px;min-width:0}
-.portfolio-metric-label{font-size:10px;color:var(--faint);font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.portfolio-metric-label,.portfolio-insight-label{font-size:10px;color:var(--faint);font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
 .portfolio-metric-value{font-size:15px;font-weight:850;color:var(--text);line-height:1.15}
 .portfolio-metric-detail{font-size:11px;color:var(--muted);line-height:1.35;margin-top:4px}
 .portfolio-metric-mini.tone-good .portfolio-metric-value{color:var(--green)}
@@ -2034,6 +2034,12 @@ body[data-ui-mode="terminal"] .header{background:#071018!important;border-bottom
 .portfolio-allocation-chart-row strong{font-size:10px;color:var(--muted);text-align:right}
 .portfolio-allocation-chart-track{height:9px;background:#ebe4d7;border-radius:999px;overflow:hidden}
 .portfolio-allocation-chart-fill{height:100%;border-radius:999px}
+.portfolio-insight-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+.portfolio-insight-card{background:#fffbf4;border:1px solid var(--border);border-left:4px solid var(--green);border-radius:14px;padding:12px;min-width:0}
+.portfolio-insight-card.tone-warn{border-left-color:var(--amber)}
+.portfolio-insight-card.tone-bad{border-left-color:var(--red)}
+.portfolio-insight-card h4{font-size:12.5px;line-height:1.25;color:var(--text);font-weight:850;margin-bottom:5px}
+.portfolio-insight-card p:last-child{font-size:11.5px;color:var(--muted);line-height:1.45}
 .category-track,.portfolio-bar-track,.pnl-bar-track{background:#ebe4d7}
 .portfolio-bar-fill,.category-fill,.pnl-bar-fill{box-shadow:inset 0 1px 0 rgba(255,255,255,.22)}
 .import-help,.saved-card-note-preview{
@@ -2177,15 +2183,18 @@ body[data-ui-mode="terminal"] .portfolio-allocation-chart-track{
   box-shadow:inset 0 0 0 1px #1f303b!important;
 }
 body[data-ui-mode="terminal"] .portfolio-metric-mini,
-body[data-ui-mode="terminal"] .portfolio-analytics-card{
+body[data-ui-mode="terminal"] .portfolio-analytics-card,
+body[data-ui-mode="terminal"] .portfolio-insight-card{
   background:#101a23!important;
   border-color:#1f303b!important;
   box-shadow:none!important;
 }
 body[data-ui-mode="terminal"] .portfolio-analytics-title,
+body[data-ui-mode="terminal"] .portfolio-insight-card h4,
 body[data-ui-mode="terminal"] .portfolio-metric-value{color:#e4eeeb!important}
 body[data-ui-mode="terminal"] .portfolio-analytics-subtitle,
 body[data-ui-mode="terminal"] .portfolio-analytics-sub,
+body[data-ui-mode="terminal"] .portfolio-insight-card p:last-child,
 body[data-ui-mode="terminal"] .portfolio-metric-detail{color:#8ea19b!important}
 body[data-ui-mode="terminal"] .portfolio-analytics-row-head span{color:#b4c4bf!important}
 body[data-ui-mode="terminal"] .portfolio-analytics-row-head strong{color:#e4eeeb!important}
@@ -2206,7 +2215,7 @@ body[data-ui-mode="terminal"] .saved-preview::after{
   .dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .dashboard-grid{gap:12px}
   .dashboard-panel,.port-hero,.alloc-card,.holding-card,.port-perf-card,.pnl-bars-card{padding:16px}
-  .portfolio-metric-mini-grid,.portfolio-analytics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .portfolio-metric-mini-grid,.portfolio-analytics-grid,.portfolio-insight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .portfolio-allocation-wrap{grid-template-columns:auto minmax(0,1fr);align-items:flex-start}
   .portfolio-allocation-list{grid-column:1 / -1;width:100%}
   .portfolio-intro{gap:12px}
@@ -2215,7 +2224,7 @@ body[data-ui-mode="terminal"] .saved-preview::after{
 }
 @media (max-width: 520px){
   .dashboard-stats{grid-template-columns:1fr}
-  .portfolio-metric-mini-grid,.portfolio-analytics-grid{grid-template-columns:1fr}
+  .portfolio-metric-mini-grid,.portfolio-analytics-grid,.portfolio-insight-grid{grid-template-columns:1fr}
   .portfolio-allocation-wrap{grid-template-columns:1fr}
   .portfolio-allocation-wrap canvas{justify-self:center}
   .portfolio-allocation-wrap>div{width:100%}
