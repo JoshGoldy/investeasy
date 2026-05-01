@@ -2014,6 +2014,9 @@ body[data-ui-mode="terminal"] .header{background:#071018!important;border-bottom
 .portfolio-analytics-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
 .portfolio-analytics-title{font-size:13px;font-weight:850;color:var(--text)}
 .portfolio-analytics-subtitle{font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:3px}
+.portfolio-analytics-canvas{display:block;width:100%;height:180px;margin:2px 0 12px}
+.portfolio-exposure-chart-wrap{display:flex;align-items:center;justify-content:center;min-height:172px;margin:0 0 12px}
+.portfolio-analytics-donut{display:block;max-width:100%;height:auto}
 .portfolio-analytics-bars{display:flex;flex-direction:column;gap:10px}
 .portfolio-analytics-row{min-width:0}
 .portfolio-analytics-row-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:5px}

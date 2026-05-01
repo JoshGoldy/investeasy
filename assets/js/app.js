@@ -5243,6 +5243,93 @@ function makeDonut(canvasEl, segments) {
   draw();
 }
 
+function makePortfolioMiniDonut(canvasEl, segments, centerLabel = 'EXPOSURE') {
+  if (!canvasEl || !segments?.length) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const rect = canvasEl.parentElement?.getBoundingClientRect();
+  const SIZE = Math.max(150, Math.min(230, Math.floor(rect?.width || 220)));
+  const cx = SIZE / 2, cy = SIZE / 2, outer = SIZE * 0.36, inner = SIZE * 0.22;
+  canvasEl.width = SIZE * dpr;
+  canvasEl.height = SIZE * dpr;
+  canvasEl.style.width = SIZE + 'px';
+  canvasEl.style.height = SIZE + 'px';
+  const ctx = canvasEl.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, SIZE, SIZE);
+  let start = -Math.PI / 2;
+  segments.forEach(seg => {
+    const sweep = (Math.max(0, seg.pct) / 100) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, outer, start, start + sweep);
+    ctx.arc(cx, cy, inner, start + sweep, start, true);
+    ctx.closePath();
+    ctx.fillStyle = seg.color || '#287a55';
+    ctx.globalAlpha = 0.9;
+    ctx.fill();
+    start += sweep;
+  });
+  ctx.globalAlpha = 1;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--faint').trim() || '#94a3b8';
+  ctx.font = '800 10px system-ui,sans-serif';
+  ctx.fillText(centerLabel, cx, cy - 6);
+  ctx.font = '11px system-ui,sans-serif';
+  ctx.fillText(segments.length + ' groups', cx, cy + 8);
+}
+
+function makePortfolioConcentrationChart(canvasEl, rows) {
+  if (!canvasEl || !rows?.length) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const rect = canvasEl.parentElement?.getBoundingClientRect();
+  const W = Math.max(280, Math.floor(rect?.width || 420));
+  const H = 180;
+  canvasEl.width = W * dpr;
+  canvasEl.height = H * dpr;
+  canvasEl.style.width = '100%';
+  canvasEl.style.height = H + 'px';
+  const ctx = canvasEl.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  const styles = getComputedStyle(document.documentElement);
+  const text = styles.getPropertyValue('--text').trim() || '#17231d';
+  const muted = styles.getPropertyValue('--muted').trim() || '#647266';
+  const grid = styles.getPropertyValue('--border').trim() || '#e3d9c8';
+  const green = styles.getPropertyValue('--green').trim() || '#287a55';
+  const amber = styles.getPropertyValue('--amber').trim() || '#b9842f';
+  const red = styles.getPropertyValue('--red').trim() || '#d94a4a';
+  const pad = { left: 26, right: 18, top: 20, bottom: 38 };
+  const chartW = W - pad.left - pad.right;
+  const chartH = H - pad.top - pad.bottom;
+  ctx.strokeStyle = grid;
+  ctx.lineWidth = 1;
+  [0, 25, 50, 75, 100].forEach(tick => {
+    const y = pad.top + chartH - (tick / 100) * chartH;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(W - pad.right, y);
+    ctx.stroke();
+  });
+  const gap = 14;
+  const barW = (chartW - gap * (rows.length - 1)) / rows.length;
+  rows.forEach((row, i) => {
+    const x = pad.left + i * (barW + gap);
+    const h = Math.max(2, (Math.min(row.pct, 100) / 100) * chartH);
+    const y = pad.top + chartH - h;
+    ctx.fillStyle = row.tone === 'bad' ? red : row.tone === 'warn' ? amber : green;
+    ctx.beginPath();
+    ctx.roundRect(x, y, barW, h, 8);
+    ctx.fill();
+    ctx.fillStyle = text;
+    ctx.font = '800 12px system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(row.pct.toFixed(0) + '%', x + barW / 2, Math.max(14, y - 7));
+    ctx.fillStyle = muted;
+    ctx.font = '700 10px system-ui,sans-serif';
+    ctx.fillText(i === 0 ? 'Top 1' : i === 1 ? 'Top 2' : 'Top 3', x + barW / 2, H - 16);
+  });
+}
+
 // ─── Portfolio Performance Chart with period tabs ─────────────────────────────
 function createPerfChart(container, data, color, height) {
   if (!container || !data.length) return null;
@@ -5540,9 +5627,11 @@ function renderPortfolioDemoDashboard() {
       </div>
       <div class="portfolio-analytics-grid">
         ${portfolioAnalyticsCard('Concentration risk', 'How much of your portfolio depends on your biggest positions.',
-          portfolioHorizontalBars(concentrationRows, { fullScale: true }))}
+          `<canvas id="port-concentration-chart" class="portfolio-analytics-canvas"></canvas>
+          ${portfolioHorizontalBars(concentrationRows, { fullScale: true })}`)}
         ${portfolioAnalyticsCard('Exposure breakdown', 'Split by asset type and market region.',
-          `<div class="portfolio-analytics-split">
+          `<div class="portfolio-exposure-chart-wrap"><canvas id="port-exposure-chart" class="portfolio-analytics-donut"></canvas></div>
+          <div class="portfolio-analytics-split">
             <div>
               <div class="portfolio-analytics-mini-title">Asset mix</div>
               ${portfolioHorizontalBars(exposureRows, { fullScale: true })}
@@ -5695,6 +5784,8 @@ function renderPortfolioDemoDashboard() {
     initPerfChart(PORT_HIST, '#10b981');
     const donut = document.getElementById('port-donut');
     if (donut) makeDonut(donut, HOLDINGS.map((h, i) => ({ label: h.ticker, pct: h.alloc, color: ALLOC_COLORS[i] })));
+    makePortfolioConcentrationChart(document.getElementById('port-concentration-chart'), concentrationRows);
+    makePortfolioMiniDonut(document.getElementById('port-exposure-chart'), exposureRows, 'EXPOSURE');
     animatePnlBars();
   });
 }
@@ -6209,9 +6300,11 @@ function renderDBPortfolio() {
       </div>
       <div class="portfolio-analytics-grid">
         ${portfolioAnalyticsCard('Concentration risk', 'How much of your portfolio depends on your biggest positions.',
-          portfolioHorizontalBars(concentrationRows, { fullScale: true }))}
+          `<canvas id="port-concentration-chart" class="portfolio-analytics-canvas"></canvas>
+          ${portfolioHorizontalBars(concentrationRows, { fullScale: true })}`)}
         ${portfolioAnalyticsCard('Exposure breakdown', 'Split by asset type and market region.',
-          `<div class="portfolio-analytics-split">
+          `<div class="portfolio-exposure-chart-wrap"><canvas id="port-exposure-chart" class="portfolio-analytics-donut"></canvas></div>
+          <div class="portfolio-analytics-split">
             <div>
               <div class="portfolio-analytics-mini-title">Asset mix</div>
               ${portfolioHorizontalBars(exposureRows, { fullScale: true })}
@@ -6364,6 +6457,8 @@ function renderDBPortfolio() {
     initPerfChart(perfData, up ? '#10b981' : '#ef4444');
     const donut = document.getElementById('port-donut');
     if (donut) makeDonut(donut, holdings.map((h, i) => ({ label: h.ticker, pct: total > 0 ? (h.val / total * 100) : 0, color: COLORS[i % COLORS.length] })));
+    makePortfolioConcentrationChart(document.getElementById('port-concentration-chart'), concentrationRows);
+    makePortfolioMiniDonut(document.getElementById('port-exposure-chart'), exposureRows, 'EXPOSURE');
     animatePnlBars();
   });
   return;
