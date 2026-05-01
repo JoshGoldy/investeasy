@@ -1022,10 +1022,11 @@ body[data-ui-mode="terminal"] .overlap-badge{background:#13202b;border-color:#2c
 .news-card.read:hover{opacity:0.85}
 
 /* Bookmark button on card */
-.news-bookmark-btn{background:none;border:none;cursor:pointer;font-size:15px;line-height:1;
-  padding:3px;transition:transform .15s,filter .15s;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center}
+.news-bookmark-btn{background:none;border:none;cursor:pointer;font-size:15px;line-height:1;color:var(--muted);
+  padding:3px;transition:transform .15s,filter .15s,color .15s;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center}
+.news-bookmark-btn svg{width:19px;height:19px;stroke-width:1.7}
 .news-bookmark-btn:hover{transform:scale(1.2)}
-.news-bookmark-btn.saved{filter:drop-shadow(0 0 4px #f59e0b)}
+.news-bookmark-btn.saved{color:var(--green);filter:drop-shadow(0 0 4px #22c55e55)}
 
 /* Time range filter row */
 .time-range-row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:0 0 10px;align-items:center}

@@ -644,6 +644,8 @@ const UI_ICON_PATHS = {
   briefcase: ['M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2', 'M3 8h18v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z', 'M3 12h18'],
   bell: ['M15 17H9', 'M18 17H6l1.5-2.5V10a4.5 4.5 0 0 1 9 0v4.5L18 17z', 'M10 19a2 2 0 0 0 4 0'],
   bookmark: ['M7 4h10a1 1 0 0 1 1 1v15l-6-3-6 3V5a1 1 0 0 1 1-1z'],
+  "bookmark-add-01": ['M11 2C7.22876 2 5.34315 2 4.17157 3.12874C3 4.25748 3 6.07416 3 9.70753V17.9808C3 20.2867 3 21.4396 3.77285 21.8523C5.26947 22.6514 8.0768 19.9852 9.41 19.1824C10.1832 18.7168 10.5698 18.484 11 18.484C11.4302 18.484 11.8168 18.7168 12.59 19.1824C13.9232 19.9852 16.7305 22.6514 18.2272 21.8523C19 21.4396 19 20.2867 19 17.9808V12.5', 'M3.5 7.00005H10', 'M17 10L17 2M13 6H21'],
+  "bookmark-check-01": ['M4 17.9808V9.70753C4 6.07416 4 4.25748 5.17157 3.12874C6.34315 2 8.22876 2 12 2C15.7712 2 17.6569 2 18.8284 3.12874C20 4.25748 20 6.07416 20 9.70753V17.9808C20 20.2867 20 21.4396 19.2272 21.8523C17.7305 22.6514 14.9232 19.9852 13.59 19.1824C12.8168 18.7168 12.4302 18.484 12 18.484C11.5698 18.484 11.1832 18.7168 10.41 19.1824C9.0768 19.9852 6.26947 22.6514 4.77285 21.8523C4 21.4396 4 20.2867 4 17.9808Z', 'M10 13.7143C10 13.7143 11 14.2357 11.5 15C11.5 15 13 12 15 11', 'M4 7H20'],
   newspaper: ['M5 5h12a2 2 0 0 1 2 2v12H7a2 2 0 0 1-2-2V5z', 'M8 9h8', 'M8 12h8', 'M8 15h5'],
   inbox: ['M4 5h16v11H4z', 'M4 13h4l2 3h4l2-3h4'],
   book: ['M5 4.5A2.5 2.5 0 0 1 7.5 2H19v18H7.5A2.5 2.5 0 0 0 5 22', 'M5 4.5V20'],
@@ -723,6 +725,10 @@ function iconMarkup(name, className = '') {
   const pathHtml = paths.map(d => `<path d="${d}" />`).join('');
   const classes = ['ui-icon', className].filter(Boolean).join(' ');
   return `<span class="${classes}" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${pathHtml}</svg></span>`;
+}
+
+function bookmarkNewsIcon(isSaved) {
+  return iconMarkup(isSaved ? 'bookmark-check-01' : 'bookmark-add-01', 'news-bookmark-icon');
 }
 
 function stripLeadingDecorativeIcon(line) {
@@ -1743,7 +1749,7 @@ function renderNewsContent() {
             ${n.hot ? '<span>🔥</span>' : ''}
             <span style="font-size:11px;color:var(--faint)">${n.time}</span>
             <button class="news-bookmark-btn${isBookmarked?' saved':''}" title="${isBookmarked?'Remove bookmark':'Bookmark'}"
-              onclick="event.stopPropagation();toggleNewsBookmark('${escHtml(n.uuid)}',${actualIdx})">${isBookmarked?'🔖':'🏷️'}</button>
+              onclick="event.stopPropagation();toggleNewsBookmark('${escHtml(n.uuid)}',${actualIdx})">${bookmarkNewsIcon(isBookmarked)}</button>
           </div>
         </div>
         <h3 style="${isRead?'color:var(--muted)':''}">${escHtml(n.title)}</h3>
@@ -1986,8 +1992,8 @@ function openNewsArticle(idx, fromLive) {
           <span class="news-sheet-time">${escHtml(n.time)}</span>
           <button id="sheet-bookmark-btn" class="news-bookmark-btn${isBookmarked?' saved':''}"
             title="${isBookmarked?'Remove bookmark':'Bookmark this article'}"
-            onclick="toggleNewsBookmark('${n.uuid ? escHtml(n.uuid) : ''}',${idx});document.getElementById('sheet-bookmark-btn').textContent=bookmarkedArticles['${n.uuid ? escHtml(n.uuid) : ''}']?'🔖':'🏷️';document.getElementById('sheet-bookmark-btn').classList.toggle('saved',!!bookmarkedArticles['${n.uuid ? escHtml(n.uuid) : ''}'])"
-            style="font-size:18px">${isBookmarked?'🔖':'🏷️'}</button>
+            onclick="toggleNewsBookmark('${n.uuid ? escHtml(n.uuid) : ''}',${idx});this.innerHTML=bookmarkNewsIcon(!!bookmarkedArticles['${n.uuid ? escHtml(n.uuid) : ''}']);this.classList.toggle('saved',!!bookmarkedArticles['${n.uuid ? escHtml(n.uuid) : ''}']);this.title=bookmarkedArticles['${n.uuid ? escHtml(n.uuid) : ''}']?'Remove bookmark':'Bookmark this article'"
+            style="font-size:18px">${bookmarkNewsIcon(isBookmarked)}</button>
         </div>
       </div>
       <div class="news-sheet-title">${escHtml(n.title)}</div>
@@ -5295,6 +5301,10 @@ function makeDonut(canvasEl, segments) {
   let hov = -1;
 
   function draw() {
+    const styles = getComputedStyle(document.body);
+    const textCol = styles.getPropertyValue('--text').trim() || '#1e293b';
+    const mutedCol = styles.getPropertyValue('--muted').trim() || '#64748b';
+    const faintCol = styles.getPropertyValue('--faint').trim() || '#94a3b8';
     ctx.clearRect(0, 0, SIZE, SIZE);
     let start = -Math.PI / 2;
     segments.forEach((seg, i) => {
@@ -5315,17 +5325,16 @@ function makeDonut(canvasEl, segments) {
     ctx.globalAlpha = 1;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const textCol = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#1e293b';
     if (hov >= 0) {
       const s = segments[hov];
       ctx.fillStyle = textCol;
       ctx.font = 'bold 13px system-ui,sans-serif';
       ctx.fillText(s.label, cx, cy - 7);
-      ctx.fillStyle = '#64748b';
+      ctx.fillStyle = mutedCol;
       ctx.font = '11px system-ui,sans-serif';
       ctx.fillText(s.pct.toFixed(1) + '%', cx, cy + 9);
     } else {
-      ctx.fillStyle = '#94a3b8';
+      ctx.fillStyle = faintCol;
       ctx.font = 'bold 9px system-ui,sans-serif';
       ctx.fillText('ALLOCATION', cx, cy - 6);
       ctx.font = '9px system-ui,sans-serif';
@@ -5375,6 +5384,9 @@ function makePortfolioMiniDonut(canvasEl, segments, centerLabel = 'EXPOSURE') {
   const ctx = canvasEl.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, SIZE, SIZE);
+  const styles = getComputedStyle(document.body);
+  const labelCol = styles.getPropertyValue('--faint').trim() || '#94a3b8';
+  const valueCol = styles.getPropertyValue('--muted').trim() || '#64748b';
   let start = -Math.PI / 2;
   segments.forEach(seg => {
     const sweep = (Math.max(0, seg.pct) / 100) * Math.PI * 2;
@@ -5390,9 +5402,10 @@ function makePortfolioMiniDonut(canvasEl, segments, centerLabel = 'EXPOSURE') {
   ctx.globalAlpha = 1;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--faint').trim() || '#94a3b8';
+  ctx.fillStyle = labelCol;
   ctx.font = '800 10px system-ui,sans-serif';
   ctx.fillText(centerLabel, cx, cy - 6);
+  ctx.fillStyle = valueCol;
   ctx.font = '11px system-ui,sans-serif';
   ctx.fillText(segments.length + ' groups', cx, cy + 8);
 }
@@ -11457,4 +11470,3 @@ updateNewsAlertBadge();
 const initialTabFromPath = Object.entries(TAB_PAGE_MAP).find(([, file]) => file === window.location.pathname.split('/').pop())?.[0];
 const requestedInitialTab = window.__INITIAL_TAB__ || document.body.dataset.initialTab || initialTabFromPath;
 if (requestedInitialTab && requestedInitialTab !== 'news') switchTab(requestedInitialTab);
-
