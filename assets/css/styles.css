@@ -1012,9 +1012,10 @@ body.stock-detail-open{overflow:hidden;max-width:100vw}
 body[data-ui-mode="terminal"] .overlap-badge{background:#13202b;border-color:#2c4a63;color:#60a5fa}
 
 /* ── ALERT BELL ───────────────────────────────────────────────── */
-.alert-bell{background:none;border:none;cursor:pointer;font-size:14px;line-height:1;padding:2px;transition:transform .15s;display:inline-flex;align-items:center;justify-content:center}
+.alert-bell{background:none;border:none;cursor:pointer;font-size:14px;line-height:1;padding:2px;color:var(--muted);transition:transform .15s,color .15s,filter .15s;display:inline-flex;align-items:center;justify-content:center}
+.alert-bell svg{width:19px;height:19px;stroke-width:1.7}
 .alert-bell:hover{transform:scale(1.2)}
-.alert-bell.active{filter:drop-shadow(0 0 3px #f59e0b)}
+.alert-bell.active{color:var(--green);filter:drop-shadow(0 0 3px #22c55e55)}
 
 /* ── NEWS FEATURE ADDITIONS ───────────────────────────────────── */
 /* Read/Unread dimming */

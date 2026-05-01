@@ -678,6 +678,8 @@ const UI_ICON_PATHS = {
   scale: ['M12 3v18', 'M7 7h10', 'M5 7l-3 5h6l-3-5z', 'M19 7l-3 5h6l-3-5z'],
   check: ['M5 12l4 4L19 6'],
   "bell-off": ['M9 17h6', 'M18 17H6l1.5-2.5V10a4.5 4.5 0 0 1 7.6-3.2', 'M10 19a2 2 0 0 0 4 0', 'M3 3l18 18'],
+  "notification-01": ['M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18', 'M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z'],
+  "notification-off-01": ['M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18', 'M2 2L22 22', 'M21 16.2311C21 15.762 20.8136 15.3121 20.4819 14.9803L19.8787 14.3771C19.3161 13.8145 19 13.0514 19 12.2558V9.5C19 5.634 15.866 2.5 12 2.5C10.4497 2.5 9.01706 3.00399 7.85707 3.85707M4.76887 18C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 8.20839 5.34981 6.99849 5.95987 5.95987L18 18H4.76887Z'],
   eye: ['M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z', 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'],
   refresh: ['M21 12a9 9 0 1 1-2.6-6.4', 'M21 3v6h-6'],
   compare: ['M4 7h10', 'M10 3l4 4-4 4', 'M20 17H10', 'M14 13l-4 4 4 4'],
@@ -729,6 +731,10 @@ function iconMarkup(name, className = '') {
 
 function bookmarkNewsIcon(isSaved) {
   return iconMarkup(isSaved ? 'bookmark-check-01' : 'bookmark-add-01', 'news-bookmark-icon');
+}
+
+function marketAlertIcon(hasAlert) {
+  return iconMarkup(hasAlert ? 'notification-01' : 'notification-off-01', 'market-alert-icon');
 }
 
 function stripLeadingDecorativeIcon(line) {
@@ -2456,7 +2462,7 @@ function renderMarkets(filter) {
           : '';
         const bellBtn = currentUser && !compareMode
           ? `<button class="alert-bell${hasAlert?' active':''}" onclick="event.stopPropagation();openAlertModal('${m.ticker}','${m.name.replace(/'/g,"\\'")}',${m.val})"
-               title="${hasAlert?'Manage alerts':'Set price alert'}">${hasAlert ? '🔔' : '🔕'}</button>`
+               title="${hasAlert?'Manage alerts':'Set price alert'}">${marketAlertIcon(hasAlert)}</button>`
           : '';
         const overlapBadge = overlapPct
           ? `<div class="overlap-badge" title="In Portfolio · ${overlapPct}%">Portfolio · ${overlapPct}%</div>`
