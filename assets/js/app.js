@@ -5330,6 +5330,28 @@ function makePortfolioConcentrationChart(canvasEl, rows) {
   });
 }
 
+// Portfolio allocation summary chart
+function portfolioAllocationMidChart(items) {
+  const max = Math.max(...items.map(item => item.value), 1);
+  return `
+    <div class="portfolio-allocation-chart" aria-label="Value by holding chart">
+      <div class="portfolio-allocation-chart-title">Value by holding</div>
+      ${items.map(item => {
+        const width = Math.min(100, Math.max((item.value / max) * 100, item.value > 0 ? 5 : 0));
+        return `
+          <div class="portfolio-allocation-chart-row">
+            <span>${item.label}</span>
+            <div class="portfolio-allocation-chart-track">
+              <div class="portfolio-allocation-chart-fill" style="width:${width.toFixed(1)}%;background:${item.color}"></div>
+            </div>
+            <strong>${item.pct}</strong>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
 // ─── Portfolio Performance Chart with period tabs ─────────────────────────────
 function createPerfChart(container, data, color, height) {
   if (!container || !data.length) return null;
@@ -5625,44 +5647,15 @@ function renderPortfolioDemoDashboard() {
         </div>
         <div style="font-size:12px;color:${up?'var(--green)':'var(--red)'};font-weight:700">${up?'▲':'▼'} ${fmtMoney(Math.abs(pnl))}</div>
       </div>
-      <div class="portfolio-analytics-grid">
-        ${portfolioAnalyticsCard('Concentration risk', 'How much of your portfolio depends on your biggest positions.',
-          `<canvas id="port-concentration-chart" class="portfolio-analytics-canvas"></canvas>
-          ${portfolioHorizontalBars(concentrationRows, { fullScale: true })}`)}
-        ${portfolioAnalyticsCard('Exposure breakdown', 'Split by asset type and market region.',
-          `<div class="portfolio-exposure-chart-wrap"><canvas id="port-exposure-chart" class="portfolio-analytics-donut"></canvas></div>
-          <div class="portfolio-analytics-split">
-            <div>
-              <div class="portfolio-analytics-mini-title">Asset mix</div>
-              ${portfolioHorizontalBars(exposureRows, { fullScale: true })}
-            </div>
-            <div>
-              <div class="portfolio-analytics-mini-title">Market split</div>
-              ${portfolioHorizontalBars(geographyRows, { fullScale: true })}
-            </div>
-          </div>`)}
-      </div>
-      <div class="portfolio-analytics-card portfolio-risk-card">
-        <div class="portfolio-analytics-head">
-          <div>
-            <div class="portfolio-analytics-title">Diversification score breakdown</div>
-            <div class="portfolio-analytics-subtitle">Why the score is ${divScore}/100 and what would improve it.</div>
-          </div>
-        </div>
-        ${portfolioHorizontalBars(riskFactors, { fullScale: true })}
-      </div>
-      <div class="portfolio-insight-grid">
-        ${insightCards.map(card => `
-          <div class="portfolio-insight-card tone-${card.tone}">
-            <p class="portfolio-insight-label">${card.label}</p>
-            <h4>${card.title}</h4>
-            <p>${card.body}</p>
-          </div>
-        `).join('')}
-      </div>
       <div class="portfolio-allocation-wrap">
         <canvas id="port-donut" style="flex-shrink:0"></canvas>
-        <div style="flex:1">
+        ${portfolioAllocationMidChart(HOLDINGS.map((h, i) => ({
+          label: h.ticker,
+          value: h.shares * h.cur,
+          pct: h.alloc + '%',
+          color: ALLOC_COLORS[i % ALLOC_COLORS.length],
+        })))}
+        <div class="portfolio-allocation-list">
           ${HOLDINGS.map((h, i) => {
             const val = h.shares * h.cur;
             return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -5784,8 +5777,6 @@ function renderPortfolioDemoDashboard() {
     initPerfChart(PORT_HIST, '#10b981');
     const donut = document.getElementById('port-donut');
     if (donut) makeDonut(donut, HOLDINGS.map((h, i) => ({ label: h.ticker, pct: h.alloc, color: ALLOC_COLORS[i] })));
-    makePortfolioConcentrationChart(document.getElementById('port-concentration-chart'), concentrationRows);
-    makePortfolioMiniDonut(document.getElementById('port-exposure-chart'), exposureRows, 'EXPOSURE');
     animatePnlBars();
   });
 }
@@ -6298,44 +6289,15 @@ function renderDBPortfolio() {
           </div>
         </div>
       </div>
-      <div class="portfolio-analytics-grid">
-        ${portfolioAnalyticsCard('Concentration risk', 'How much of your portfolio depends on your biggest positions.',
-          `<canvas id="port-concentration-chart" class="portfolio-analytics-canvas"></canvas>
-          ${portfolioHorizontalBars(concentrationRows, { fullScale: true })}`)}
-        ${portfolioAnalyticsCard('Exposure breakdown', 'Split by asset type and market region.',
-          `<div class="portfolio-exposure-chart-wrap"><canvas id="port-exposure-chart" class="portfolio-analytics-donut"></canvas></div>
-          <div class="portfolio-analytics-split">
-            <div>
-              <div class="portfolio-analytics-mini-title">Asset mix</div>
-              ${portfolioHorizontalBars(exposureRows, { fullScale: true })}
-            </div>
-            <div>
-              <div class="portfolio-analytics-mini-title">Market split</div>
-              ${portfolioHorizontalBars(geographyRows, { fullScale: true })}
-            </div>
-          </div>`)}
-      </div>
-      <div class="portfolio-analytics-card portfolio-risk-card">
-        <div class="portfolio-analytics-head">
-          <div>
-            <div class="portfolio-analytics-title">Diversification score breakdown</div>
-            <div class="portfolio-analytics-subtitle">Why the score is ${divScore}/100 and what would improve it.</div>
-          </div>
-        </div>
-        ${portfolioHorizontalBars(riskFactors, { fullScale: true })}
-      </div>
-      <div class="portfolio-insight-grid">
-        ${insightCards.map(card => `
-          <div class="portfolio-insight-card tone-${card.tone}">
-            <p class="portfolio-insight-label">${card.label}</p>
-            <h4>${card.title}</h4>
-            <p>${card.body}</p>
-          </div>
-        `).join('')}
-      </div>
       <div class="portfolio-allocation-wrap">
         <canvas id="port-donut" style="flex-shrink:0"></canvas>
-        <div style="flex:1">
+        ${portfolioAllocationMidChart(holdings.map((h, i) => ({
+          label: h.ticker,
+          value: h.val,
+          pct: total > 0 ? ((h.val / total) * 100).toFixed(1) + '%' : '0.0%',
+          color: COLORS[i % COLORS.length],
+        })))}
+        <div class="portfolio-allocation-list">
           ${holdings.map((h, i) => {
             const pct = total > 0 ? ((h.val / total) * 100).toFixed(1) : '0.0';
             return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -6457,8 +6419,6 @@ function renderDBPortfolio() {
     initPerfChart(perfData, up ? '#10b981' : '#ef4444');
     const donut = document.getElementById('port-donut');
     if (donut) makeDonut(donut, holdings.map((h, i) => ({ label: h.ticker, pct: total > 0 ? (h.val / total * 100) : 0, color: COLORS[i % COLORS.length] })));
-    makePortfolioConcentrationChart(document.getElementById('port-concentration-chart'), concentrationRows);
-    makePortfolioMiniDonut(document.getElementById('port-exposure-chart'), exposureRows, 'EXPOSURE');
     animatePnlBars();
   });
   return;
