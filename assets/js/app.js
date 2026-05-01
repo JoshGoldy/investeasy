@@ -1419,21 +1419,34 @@ function marketNewsSearchTerms(market = {}) {
   return [...terms].filter(Boolean);
 }
 
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function newsTermMatches(text, term) {
+  const cleanTerm = String(term || '').trim();
+  if (cleanTerm.length <= 2) return false;
+  const escaped = escapeRegExp(cleanTerm);
+  const boundary = '[A-Za-z0-9]';
+  if (/^[A-Za-z0-9&.-]+$/.test(cleanTerm)) {
+    return new RegExp(`(^|[^${boundary.slice(1, -1)}])${escaped}([^${boundary.slice(1, -1)}]|$)`, 'i').test(text);
+  }
+  return new RegExp(`(^|[^A-Za-z0-9])${escaped}([^A-Za-z0-9]|$)`, 'i').test(text);
+}
+
 function relatedNewsForMarket(market, limit = 3) {
   const source = (liveNews.length ? liveNews : STATIC_FALLBACK_NEWS).map(normalizeNewsArticle);
   const ticker = String(market?.ticker || '').toUpperCase();
   const terms = marketNewsSearchTerms(market);
-  const tickerPattern = ticker && ticker.length > 1 ? new RegExp(`(^|[^A-Z0-9])${ticker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^A-Z0-9]|$)`, 'i') : null;
 
   return source
     .map(article => {
       const text = `${article.title || ''} ${article.description || ''} ${(article.tickers || []).join(' ')}`;
-      const textUpper = text.toUpperCase();
       let score = 0;
       if ((article.tickers || []).map(t => String(t).toUpperCase()).includes(ticker)) score += 100;
-      if (tickerPattern && tickerPattern.test(textUpper)) score += 70;
+      if (ticker && newsTermMatches(text, ticker)) score += 70;
       terms.forEach(term => {
-        if (term.length > 2 && text.toLowerCase().includes(term.toLowerCase())) score += term.includes(' ') ? 40 : 18;
+        if (newsTermMatches(text, term)) score += term.includes(' ') ? 40 : 18;
       });
       return { article, score };
     })
