@@ -5442,6 +5442,40 @@ function renderPortfolioDemoDashboard() {
   const best = [...HOLDINGS].sort((a,b) => ((b.cur - b.cost) / b.cost) - ((a.cur - a.cost) / a.cost))[0];
   const monthBars = ['Nov','Dec','Jan','Feb','Mar','Apr'].map((label, index) => ({ label, value:index === 5 ? HOLDINGS.length : 0, display:index === 5 ? String(HOLDINGS.length) : '0' }));
   const categories = HOLDINGS.map(h => ({ name:h.ticker, pct:h.alloc, value:h.alloc + '%' })).sort((a,b) => b.pct - a.pct).slice(0,4);
+  const demoAllocations = HOLDINGS
+    .map((h, i) => ({
+      ...h,
+      val: h.shares * h.cur,
+      allocPct: h.alloc,
+      color: ALLOC_COLORS[i % ALLOC_COLORS.length],
+      sector: h.ticker === 'BTC' || h.ticker === 'ETH' ? 'Crypto' : 'Global equities',
+    }))
+    .sort((a, b) => b.allocPct - a.allocPct);
+  const top1Pct = demoAllocations[0]?.allocPct || 0;
+  const top2Pct = demoAllocations.slice(0, 2).reduce((s, h) => s + h.allocPct, 0);
+  const top3Pct = demoAllocations.slice(0, 3).reduce((s, h) => s + h.allocPct, 0);
+  const cryptoPct = demoAllocations.filter(h => h.sector === 'Crypto').reduce((s, h) => s + h.allocPct, 0);
+  const divScore = Math.min(100, Math.round(HOLDINGS.length * 10 + new Set(demoAllocations.map(h => h.sector)).size * 8));
+  const concentrationRows = [
+    { label: `Top holding (${demoAllocations[0]?.ticker || '-'})`, pct: top1Pct, value: top1Pct.toFixed(1) + '%', tone: top1Pct > 35 ? 'bad' : top1Pct > 25 ? 'warn' : 'good', sub: 'Shows single-name dependency' },
+    { label: 'Top 2 holdings', pct: top2Pct, value: top2Pct.toFixed(1) + '%', tone: top2Pct > 60 ? 'bad' : top2Pct > 45 ? 'warn' : 'good', sub: 'How concentrated your biggest pair is' },
+    { label: 'Top 3 holdings', pct: top3Pct, value: top3Pct.toFixed(1) + '%', tone: top3Pct > 75 ? 'bad' : top3Pct > 60 ? 'warn' : 'good', sub: 'How much the top group controls' },
+  ];
+  const exposureRows = [
+    { label: 'Global equities', pct: Math.max(0, 100 - cryptoPct), value: Math.max(0, 100 - cryptoPct).toFixed(1) + '%', color: '#287a55' },
+    { label: 'Crypto', pct: cryptoPct, value: cryptoPct.toFixed(1) + '%', color: '#f59e0b' },
+  ].filter(row => row.pct > 0.1);
+  const geographyRows = exposureRows;
+  const riskFactors = [
+    { label: 'Holdings count', pct: Math.min(100, HOLDINGS.length * 12), value: `${HOLDINGS.length} holdings`, tone: riskTone(Math.min(100, HOLDINGS.length * 12)), sub: 'More holdings can reduce single-name risk' },
+    { label: 'Asset mix', pct: cryptoPct > 25 ? 35 : 72, value: `${cryptoPct.toFixed(1)}% crypto`, tone: cryptoPct > 25 ? 'warn' : 'good', sub: cryptoPct > 25 ? 'Crypto is a large driver' : 'Speculative exposure is contained' },
+    { label: 'Top holding weight', pct: Math.max(0, 100 - top1Pct), value: top1Pct.toFixed(1) + '%', tone: riskTone(top1Pct, true), sub: 'Lower top weight improves resilience' },
+  ];
+  const insightCards = [
+    { tone: top1Pct > 30 ? 'warn' : 'good', label: 'Concentration', title: top1Pct > 30 ? 'Top holding needs watching' : 'Top holding looks reasonable', body: `Your largest holding is ${top1Pct.toFixed(1)}% of the demo portfolio.` },
+    { tone: cryptoPct > 20 ? 'warn' : 'good', label: 'Volatility', title: cryptoPct > 20 ? 'Crypto can move the result' : 'Crypto is contained', body: `Crypto makes up ${cryptoPct.toFixed(1)}%, which changes how volatile the portfolio feels.` },
+    { tone: divScore >= 60 ? 'good' : 'warn', label: 'Next step', title: 'Improve the spread', body: 'Adding different sectors or asset classes would raise the diversification score.' },
+  ];
 
   document.getElementById('tab-portfolio').innerHTML = `
     ${portfolioDashboardHeading('Your demo portfolio', 'See your holdings, returns, and allocation at a glance before adding your own investments.')}
@@ -5500,7 +5534,40 @@ function renderPortfolioDemoDashboard() {
         </div>
         <div style="font-size:12px;color:${up?'var(--green)':'var(--red)'};font-weight:700">${up?'▲':'▼'} ${fmtMoney(Math.abs(pnl))}</div>
       </div>
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+      <div class="portfolio-analytics-grid">
+        ${portfolioAnalyticsCard('Concentration risk', 'How much of your portfolio depends on your biggest positions.',
+          portfolioHorizontalBars(concentrationRows, { fullScale: true }))}
+        ${portfolioAnalyticsCard('Exposure breakdown', 'Split by asset type and market region.',
+          `<div class="portfolio-analytics-split">
+            <div>
+              <div class="portfolio-analytics-mini-title">Asset mix</div>
+              ${portfolioHorizontalBars(exposureRows, { fullScale: true })}
+            </div>
+            <div>
+              <div class="portfolio-analytics-mini-title">Market split</div>
+              ${portfolioHorizontalBars(geographyRows, { fullScale: true })}
+            </div>
+          </div>`)}
+      </div>
+      <div class="portfolio-analytics-card portfolio-risk-card">
+        <div class="portfolio-analytics-head">
+          <div>
+            <div class="portfolio-analytics-title">Diversification score breakdown</div>
+            <div class="portfolio-analytics-subtitle">Why the score is ${divScore}/100 and what would improve it.</div>
+          </div>
+        </div>
+        ${portfolioHorizontalBars(riskFactors, { fullScale: true })}
+      </div>
+      <div class="portfolio-insight-grid">
+        ${insightCards.map(card => `
+          <div class="portfolio-insight-card tone-${card.tone}">
+            <p class="portfolio-insight-label">${card.label}</p>
+            <h4>${card.title}</h4>
+            <p>${card.body}</p>
+          </div>
+        `).join('')}
+      </div>
+      <div class="portfolio-allocation-wrap">
         <canvas id="port-donut" style="flex-shrink:0"></canvas>
         <div style="flex:1">
           ${HOLDINGS.map((h, i) => {
@@ -5963,6 +6030,88 @@ function renderDBPortfolio() {
     display: index === 5 ? String(holdings.length) : String(Math.max(0, Math.round((holdings.length / 6) * index * 0.2)))
   }));
   const topCategories = sectorList.slice(0, 4).map(s => ({ name: s.name, pct: s.pct, value: s.pct.toFixed(1) + '%' }));
+  const allocations = holdings
+    .map((h, i) => ({
+      ...h,
+      allocPct: total > 0 ? (h.val / total * 100) : 0,
+      color: COLORS[i % COLORS.length],
+      sector: SECTOR_MAP[h.ticker] || 'Other',
+    }))
+    .sort((a, b) => b.allocPct - a.allocPct);
+  const top1Pct = allocations[0]?.allocPct || 0;
+  const top2Pct = allocations.slice(0, 2).reduce((s, h) => s + h.allocPct, 0);
+  const top3Pct = allocations.slice(0, 3).reduce((s, h) => s + h.allocPct, 0);
+  const cryptoPct = allocations.filter(h => h.sector === 'Crypto').reduce((s, h) => s + h.allocPct, 0);
+  const jsePct = allocations.filter(h => h.exchange === 'JSE' || h.nativeCurrency === 'ZAR').reduce((s, h) => s + h.allocPct, 0);
+  const topSector = sectorList[0] || { name: 'None', pct: 0 };
+  const concentrationTone = top1Pct > 35 || top2Pct > 60 ? 'bad' : top1Pct > 25 || top2Pct > 45 ? 'warn' : 'good';
+  const cryptoTone = cryptoPct > 25 ? 'bad' : cryptoPct > 10 ? 'warn' : 'good';
+  const sectorTone = topSector.pct > 55 ? 'bad' : topSector.pct > 35 ? 'warn' : 'good';
+  const holdingCountScore = Math.min(100, holdings.length * 12);
+  const sectorSpreadScore = Math.min(100, sectors.size * 22);
+  const concentrationScore = Math.max(0, 100 - top1Pct * 1.7 - top2Pct * 0.45);
+  const cryptoBalanceScore = Math.max(0, 100 - cryptoPct * 2.3);
+  const riskFactors = [
+    { label: 'Holdings count', pct: holdingCountScore, value: `${holdings.length} holding${holdings.length === 1 ? '' : 's'}`, tone: riskTone(holdingCountScore), sub: holdings.length >= 8 ? 'Good spread across positions' : 'Add more positions to reduce single-name risk' },
+    { label: 'Sector spread', pct: sectorSpreadScore, value: `${sectors.size} sector${sectors.size === 1 ? '' : 's'}`, tone: riskTone(sectorSpreadScore), sub: sectors.size >= 4 ? 'Healthy sector variety' : 'More sectors would smooth portfolio swings' },
+    { label: 'Top holding weight', pct: Math.max(0, 100 - top1Pct), value: `${top1Pct.toFixed(1)}%`, tone: riskTone(top1Pct, true), sub: top1Pct > 30 ? `${allocations[0]?.ticker || 'Top holding'} is doing a lot of work` : 'No single holding dominates the portfolio' },
+    { label: 'Crypto balance', pct: cryptoBalanceScore, value: `${cryptoPct.toFixed(1)}%`, tone: riskTone(cryptoBalanceScore), sub: cryptoPct > 20 ? 'Crypto can lift volatility quickly' : 'Crypto exposure is contained' },
+  ];
+  const exposureTotals = {};
+  allocations.forEach(h => {
+    const key = h.sector === 'Crypto' ? 'Crypto'
+      : h.sector === 'ETF' ? 'ETFs'
+      : h.sector === 'Commodities' ? 'Commodities'
+      : (h.exchange === 'JSE' || h.nativeCurrency === 'ZAR') ? 'JSE equities'
+      : 'Global equities';
+    exposureTotals[key] = (exposureTotals[key] || 0) + h.allocPct;
+  });
+  const exposureColors = {
+    'Global equities':'#287a55',
+    'JSE equities':'#3e73a8',
+    'Crypto':'#f59e0b',
+    'ETFs':'#7562c8',
+    'Commodities':'#84cc16',
+  };
+  const exposureRows = Object.entries(exposureTotals)
+    .map(([label, pct]) => ({ label, pct, color: exposureColors[label] || '#94a3b8', value: pct.toFixed(1) + '%' }))
+    .sort((a, b) => b.pct - a.pct);
+  const geographyRows = [
+    { label: 'South Africa', pct: jsePct, color: '#3e73a8', value: jsePct.toFixed(1) + '%' },
+    { label: 'Crypto', pct: cryptoPct, color: '#f59e0b', value: cryptoPct.toFixed(1) + '%' },
+    { label: 'Global / US', pct: Math.max(0, 100 - jsePct - cryptoPct), color: '#287a55', value: Math.max(0, 100 - jsePct - cryptoPct).toFixed(1) + '%' },
+  ].filter(row => row.pct > 0.1);
+  const concentrationRows = [
+    { label: `Top holding${allocations[0] ? ' (' + allocations[0].ticker + ')' : ''}`, pct: top1Pct, value: top1Pct.toFixed(1) + '%', tone: top1Pct > 35 ? 'bad' : top1Pct > 25 ? 'warn' : 'good', sub: top1Pct > 30 ? 'A large move here will strongly affect the portfolio' : 'Single holding risk is manageable' },
+    { label: 'Top 2 holdings', pct: top2Pct, value: top2Pct.toFixed(1) + '%', tone: top2Pct > 60 ? 'bad' : top2Pct > 45 ? 'warn' : 'good', sub: top2Pct > 50 ? 'Returns depend heavily on two assets' : 'Top two holdings are not overly dominant' },
+    { label: 'Top 3 holdings', pct: top3Pct, value: top3Pct.toFixed(1) + '%', tone: top3Pct > 75 ? 'bad' : top3Pct > 60 ? 'warn' : 'good', sub: top3Pct > 65 ? 'Consider whether this is intentional conviction' : 'Top three exposure looks balanced enough' },
+  ];
+  const insightCards = [
+    {
+      tone: concentrationTone,
+      label: 'Concentration',
+      title: top1Pct > 30 ? `${allocations[0]?.ticker || 'Top holding'} needs watching` : 'Single-name risk looks controlled',
+      body: top1Pct > 30 ? `Your largest holding is ${top1Pct.toFixed(1)}% of the portfolio. A simple target is keeping one position below 25-30%.` : `Your largest holding is ${top1Pct.toFixed(1)}%, so no single asset is carrying the whole portfolio.`,
+    },
+    {
+      tone: cryptoTone,
+      label: 'Volatility',
+      title: cryptoPct > 20 ? 'Crypto is a major swing factor' : 'Crypto exposure is contained',
+      body: cryptoPct > 20 ? `Crypto is ${cryptoPct.toFixed(1)}% of the portfolio, so drawdowns may feel sharper in risk-off markets.` : `Crypto is ${cryptoPct.toFixed(1)}%, which keeps speculative exposure from dominating your result.`,
+    },
+    {
+      tone: sectorTone,
+      label: 'Exposure',
+      title: `${topSector.name} is your biggest theme`,
+      body: topSector.pct > 40 ? `${topSector.name} is ${topSector.pct.toFixed(1)}% of the portfolio. Adding a different sector could improve balance.` : `${topSector.name} leads at ${topSector.pct.toFixed(1)}%, but sector concentration is not extreme.`,
+    },
+    {
+      tone: divScore >= 60 ? 'good' : divScore >= 35 ? 'warn' : 'bad',
+      label: 'Next step',
+      title: divScore >= 60 ? 'Keep rebalancing deliberately' : 'Improve diversification first',
+      body: divScore >= 60 ? 'Your spread is improving. The main job is keeping weights from drifting too far.' : 'The easiest improvement is adding holdings from different sectors or asset classes.',
+    },
+  ];
 
   document.getElementById('tab-portfolio').innerHTML = `
     ${portfolioDashboardHeading('Your money at a glance', 'See what you own, how it is performing, and where your risk is concentrated.', portfolioActionGroup(false))}
@@ -6049,7 +6198,40 @@ function renderDBPortfolio() {
           </div>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+      <div class="portfolio-analytics-grid">
+        ${portfolioAnalyticsCard('Concentration risk', 'How much of your portfolio depends on your biggest positions.',
+          portfolioHorizontalBars(concentrationRows, { fullScale: true }))}
+        ${portfolioAnalyticsCard('Exposure breakdown', 'Split by asset type and market region.',
+          `<div class="portfolio-analytics-split">
+            <div>
+              <div class="portfolio-analytics-mini-title">Asset mix</div>
+              ${portfolioHorizontalBars(exposureRows, { fullScale: true })}
+            </div>
+            <div>
+              <div class="portfolio-analytics-mini-title">Market split</div>
+              ${portfolioHorizontalBars(geographyRows, { fullScale: true })}
+            </div>
+          </div>`)}
+      </div>
+      <div class="portfolio-analytics-card portfolio-risk-card">
+        <div class="portfolio-analytics-head">
+          <div>
+            <div class="portfolio-analytics-title">Diversification score breakdown</div>
+            <div class="portfolio-analytics-subtitle">Why the score is ${divScore}/100 and what would improve it.</div>
+          </div>
+        </div>
+        ${portfolioHorizontalBars(riskFactors, { fullScale: true })}
+      </div>
+      <div class="portfolio-insight-grid">
+        ${insightCards.map(card => `
+          <div class="portfolio-insight-card tone-${card.tone}">
+            <p class="portfolio-insight-label">${card.label}</p>
+            <h4>${card.title}</h4>
+            <p>${card.body}</p>
+          </div>
+        `).join('')}
+      </div>
+      <div class="portfolio-allocation-wrap">
         <canvas id="port-donut" style="flex-shrink:0"></canvas>
         <div style="flex:1">
           ${holdings.map((h, i) => {
@@ -6528,6 +6710,58 @@ function renderMarketTickerTape() {
       <div class="ticker-tape-loop">${tapeItems}</div>
     </div>
   `;
+}
+
+function portfolioMetricMiniCard(label, value, detail = '', tone = '') {
+  return `
+    <div class="portfolio-metric-mini ${tone ? 'tone-' + tone : ''}">
+      <p class="portfolio-metric-label">${label}</p>
+      <p class="portfolio-metric-value">${value}</p>
+      ${detail ? `<p class="portfolio-metric-detail">${detail}</p>` : ''}
+    </div>
+  `;
+}
+
+function portfolioHorizontalBars(items, opts = {}) {
+  const max = Math.max(...items.map(item => item.pct), opts.fullScale ? 100 : 1);
+  return `
+    <div class="portfolio-analytics-bars">
+      ${items.map(item => `
+        <div class="portfolio-analytics-row">
+          <div class="portfolio-analytics-row-head">
+            <span>${item.label}</span>
+            <strong>${item.value || item.pct.toFixed(1) + '%'}</strong>
+          </div>
+          <div class="portfolio-analytics-track">
+            <div class="portfolio-analytics-fill ${item.tone ? 'tone-' + item.tone : ''}"
+              style="width:${Math.min(100, Math.max((item.pct / max) * 100, item.pct > 0 ? 4 : 0))}%;background:${item.color || ''}"></div>
+          </div>
+          ${item.sub ? `<div class="portfolio-analytics-sub">${item.sub}</div>` : ''}
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function portfolioAnalyticsCard(title, subtitle, bodyHtml) {
+  return `
+    <div class="portfolio-analytics-card">
+      <div class="portfolio-analytics-head">
+        <div>
+          <div class="portfolio-analytics-title">${title}</div>
+          <div class="portfolio-analytics-subtitle">${subtitle}</div>
+        </div>
+      </div>
+      ${bodyHtml}
+    </div>
+  `;
+}
+
+function riskTone(score, inverse = false) {
+  const value = inverse ? 100 - score : score;
+  if (value >= 70) return 'good';
+  if (value >= 40) return 'warn';
+  return 'bad';
 }
 
 function saveSettings(updates) {
