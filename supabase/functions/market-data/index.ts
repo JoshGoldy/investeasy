@@ -178,8 +178,8 @@ const NEWS_FEEDS = [
   { id: "marketwatch-top", url: "https://feeds.marketwatch.com/marketwatch/topstories/", pub: "MarketWatch", kind: "rss" },
   { id: "marketwatch-pulse", url: "https://feeds.marketwatch.com/marketwatch/marketpulse/", pub: "MarketWatch", kind: "rss" },
   { id: "nyt-business", url: "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml", pub: "New York Times", kind: "rss" },
-  { id: "guardian-business", url: "https://content.guardianapis.com/business?api-key=test&show-fields=headline,trailText,thumbnail&page-size=20&order-by=newest", pub: "The Guardian", kind: "guardian" },
-  { id: "guardian-tech", url: "https://content.guardianapis.com/technology?api-key=test&show-fields=headline,trailText,thumbnail&page-size=20&order-by=newest", pub: "The Guardian", kind: "guardian" },
+  { id: "guardian-business", url: "https://content.guardianapis.com/business?api-key=test&show-fields=headline,trailText&page-size=40&order-by=newest", pub: "The Guardian", kind: "guardian" },
+  { id: "guardian-tech", url: "https://content.guardianapis.com/technology?api-key=test&show-fields=headline,trailText&page-size=40&order-by=newest", pub: "The Guardian", kind: "guardian" },
 ] as const;
 
 function json(body: Record<string, unknown>, status = 200) {
@@ -727,7 +727,7 @@ async function fetchGuardianItems(url: string, publisher: string) {
       time: formatRelativeNewsTime(pubTime),
       pubTime,
       tickers: [],
-      thumbnail: (item.fields as Record<string, unknown> | undefined)?.thumbnail || null,
+      thumbnail: null,
       cat: classifyNewsCategory(title),
       hot: isHotNewsTitle(title),
     };
@@ -735,7 +735,7 @@ async function fetchGuardianItems(url: string, publisher: string) {
 }
 
 async function handleNews() {
-  return withMarketCache("news", "news:feed:top30", {}, async () => {
+  return withMarketCache("news", "news:feed:top40", {}, async () => {
     const seen = new Set<string>();
     const combined: Array<Record<string, unknown>> = [];
     const sourceDiagnostics: Array<Record<string, unknown>> = [];
@@ -779,7 +779,7 @@ async function handleNews() {
     combined.sort((a, b) => Number(b.pubTime || 0) - Number(a.pubTime || 0));
     return {
       success: true,
-      articles: combined.slice(0, 30),
+      articles: combined.slice(0, 40),
       fetchedAt: Math.floor(Date.now() / 1000),
       diagnostics: {
         sourceCount: NEWS_FEEDS.length,

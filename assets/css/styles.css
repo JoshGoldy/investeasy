@@ -2172,6 +2172,16 @@ body[data-ui-mode="terminal"] .finbot-chat-bubble{
   border-color:#1f303b!important;
   color:#e4eeeb!important;
 }
+body[data-ui-mode="terminal"] .finbot-chat-starter{
+  background:#111d26!important;
+  border-color:#2a3d49!important;
+  color:#dbe8e5!important;
+}
+body[data-ui-mode="terminal"] .finbot-chat-starter:hover{
+  background:#14242f!important;
+  border-color:#19c37d55!important;
+  color:#ffffff!important;
+}
 body[data-ui-mode="terminal"] .finbot-chat-msg.user .finbot-chat-bubble{
   background:#0e2a1c!important;
   border-color:#19c37d55!important;

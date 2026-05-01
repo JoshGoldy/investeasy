@@ -1238,7 +1238,7 @@ async function fetchGuardianNews() {
   const articles = [];
   await Promise.allSettled(sections.map(async section => {
     try {
-      const url = `https://content.guardianapis.com/${section}?api-key=test&show-fields=headline,thumbnail,trailText&page-size=20&order-by=newest`;
+      const url = `https://content.guardianapis.com/${section}?api-key=test&show-fields=headline,trailText&page-size=40&order-by=newest`;
       const r = await fetch(url);
       if (!r.ok) return;
       const d = await r.json();
@@ -1255,7 +1255,7 @@ async function fetchGuardianNews() {
           time: timeStr,
           pubTime,
           tickers: [],
-          thumbnail: item.fields?.thumbnail || null,
+          thumbnail: null,
           cat: _newsCateg(headline),
           hot: _newsHot(headline),
         });
@@ -1267,7 +1267,7 @@ async function fetchGuardianNews() {
 
 // Fallback: rss2json.com — CORS proxy for financial RSS feeds
 async function fetchRss2JsonNews() {
-  const RSS2JSON = 'https://api.rss2json.com/v1/api.json?count=20&rss_url=';
+  const RSS2JSON = 'https://api.rss2json.com/v1/api.json?count=40&rss_url=';
   const feeds = [
     { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html', pub: 'CNBC' },
     { url: 'https://feeds.marketwatch.com/marketwatch/topstories/',  pub: 'MarketWatch' },
@@ -1296,7 +1296,7 @@ async function fetchRss2JsonNews() {
           time: timeStr,
           pubTime,
           tickers: [],
-          thumbnail: item.thumbnail || null,
+          thumbnail: null,
           cat: _newsCateg(title),
           hot: _newsHot(title),
         });
@@ -1348,7 +1348,7 @@ async function fetchNewsClientSide() {
   );
   const cutoff = Math.floor(Date.now() / 1000) - 72 * 60 * 60;
   all.sort((a, b) => b.pubTime - a.pubTime);
-  return { articles: all.filter(a => a.pubTime >= cutoff).slice(0, 30), diagnostics };
+  return { articles: all.filter(a => a.pubTime >= cutoff).slice(0, 40), diagnostics };
 }
 
 function resultRecentCount(items = []) {
@@ -1517,10 +1517,10 @@ async function fetchLiveNews(force = false) {
 
   // 1. Try Supabase market-data function
   try {
-    const d = await fetchMarketData('news', { count: 30 });
+    const d = await fetchMarketData('news', { count: 40 });
     if (d.success && d.articles && d.articles.length) {
       const cutoff72h = Math.floor(Date.now() / 1000) - 72 * 60 * 60;
-      liveNews = d.articles.map(normalizeNewsArticle).filter(a => (a.pubTime || 0) >= cutoff72h).slice(0, 30);
+      liveNews = d.articles.map(normalizeNewsArticle).filter(a => (a.pubTime || 0) >= cutoff72h).slice(0, 40);
       newsLastFetched = now;
       newsFetchedAt = new Date();
       newsLoadState = 'ready';
@@ -1737,7 +1737,6 @@ function renderNewsContent() {
       return `
       <div class="card news-card${isRead?' read':''}" style="break-inside:avoid;margin-bottom:12px;${isAlert?'border:1.5px solid #ef444440;':''}" onclick="openNewsArticle(${actualIdx},true)">
         ${isAlert ? '<div style="font-size:10px;font-weight:800;color:#ef4444;margin-bottom:6px;letter-spacing:.04em">🔔 ALERT MATCH</div>' : ''}
-        ${n.thumbnail ? `<img class="news-thumb" src="${escHtml(n.thumbnail)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
         <div class="meta">
           <span class="cat" style="background:${catColor}18;color:${catColor}">${n.cat}</span>
           <div style="display:flex;align-items:center;gap:5px">
@@ -1991,7 +1990,6 @@ function openNewsArticle(idx, fromLive) {
             style="font-size:18px">${isBookmarked?'🔖':'🏷️'}</button>
         </div>
       </div>
-      ${n.thumbnail ? `<img class="news-sheet-img" src="${escHtml(n.thumbnail)}" alt="" onerror="this.style.display='none'">` : ''}
       <div class="news-sheet-title">${escHtml(n.title)}</div>
       ${cleanTickers.length ? `<div class="news-sheet-tickers">${cleanTickers.map(t=>`<span class="news-ticker-chip">${escHtml(t)}</span>`).join('')}</div>` : ''}
       <div id="news-body-box" style="margin:14px 0 16px">${bodyHtml}</div>
