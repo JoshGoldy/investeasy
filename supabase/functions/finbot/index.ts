@@ -36,6 +36,22 @@ const MODE_TOKEN_LIMITS: Record<string, number> = {
   builder: 4200,
 };
 
+const USD_TO_ZAR_ESTIMATE = 16.4;
+
+const MODEL_PRICING_USD_PER_MTOK: Record<string, { input: number; output: number }> = {
+  "claude-opus-4-6": { input: 5, output: 25 },
+  "claude-opus-4-5": { input: 5, output: 25 },
+  "claude-opus-4-1": { input: 15, output: 75 },
+  "claude-opus-4": { input: 15, output: 75 },
+  "claude-sonnet-4-6": { input: 3, output: 15 },
+  "claude-sonnet-4-5": { input: 3, output: 15 },
+  "claude-sonnet-4": { input: 3, output: 15 },
+  "claude-3-7-sonnet": { input: 3, output: 15 },
+  "claude-haiku-4-5": { input: 1, output: 5 },
+  "claude-3-5-haiku": { input: 0.8, output: 4 },
+  "claude-3-haiku": { input: 0.25, output: 1.25 },
+};
+
 function json(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -52,6 +68,48 @@ function resetNeeded(creditsResetAt?: string | null) {
 
 function trimText(value: unknown, max = 2400) {
   return String(value || "").trim().slice(0, max);
+}
+
+function pricingForModel(model: string) {
+  const normalized = model.toLowerCase();
+  const exact = MODEL_PRICING_USD_PER_MTOK[normalized];
+  if (exact) return exact;
+  if (normalized.includes("haiku")) return MODEL_PRICING_USD_PER_MTOK["claude-haiku-4-5"];
+  if (normalized.includes("opus")) return MODEL_PRICING_USD_PER_MTOK["claude-opus-4-5"];
+  return MODEL_PRICING_USD_PER_MTOK["claude-sonnet-4-5"];
+}
+
+function roundCurrency(value: number, decimals = 6) {
+  return Number(value.toFixed(decimals));
+}
+
+function estimateAnthropicCost(model: string, usage: Record<string, unknown> = {}) {
+  const pricing = pricingForModel(model);
+  const inputTokens = Number(usage.input_tokens ?? 0);
+  const outputTokens = Number(usage.output_tokens ?? 0);
+  const cacheCreationTokens = Number(usage.cache_creation_input_tokens ?? 0);
+  const cacheReadTokens = Number(usage.cache_read_input_tokens ?? 0);
+  const billableInputTokens = Math.max(0, inputTokens + cacheCreationTokens + cacheReadTokens);
+  const totalTokens = billableInputTokens + Math.max(0, outputTokens);
+  const inputCostUsd = (billableInputTokens / 1_000_000) * pricing.input;
+  const outputCostUsd = (Math.max(0, outputTokens) / 1_000_000) * pricing.output;
+  const totalCostUsd = inputCostUsd + outputCostUsd;
+
+  return {
+    inputTokens,
+    outputTokens,
+    cacheCreationTokens,
+    cacheReadTokens,
+    billableInputTokens,
+    totalTokens,
+    inputCostUsd: roundCurrency(inputCostUsd),
+    outputCostUsd: roundCurrency(outputCostUsd),
+    totalCostUsd: roundCurrency(totalCostUsd),
+    totalCostZar: roundCurrency(totalCostUsd * USD_TO_ZAR_ESTIMATE, 4),
+    inputPriceUsdPerMTok: pricing.input,
+    outputPriceUsdPerMTok: pricing.output,
+    usdToZarEstimate: USD_TO_ZAR_ESTIMATE,
+  };
 }
 
 async function consumeRateLimit(
@@ -288,6 +346,8 @@ Deno.serve(async (req) => {
       return json({ error: "FinBot returned an empty response." }, 502);
     }
 
+    const usageCost = estimateAnthropicCost(anthropicModel, anthropicData?.usage || {});
+
     creditsRemaining -= cost;
     const { error: debitError } = await adminClient
       .from("profiles")
@@ -299,17 +359,48 @@ Deno.serve(async (req) => {
       return json({ error: debitError.message }, 500);
     }
 
-    await logFunctionEvent(adminClient, "finbot", "info", authData.user.id, "request_succeeded", `Processed ${requestType}`, {
-      requestType,
-      mode,
-      cost,
-      creditsRemaining,
-    });
+    await logFunctionEvent(
+      adminClient,
+      "finbot",
+      "info",
+      authData.user.id,
+      "request_succeeded",
+      `Processed ${requestType} (${usageCost.inputTokens} in / ${usageCost.outputTokens} out, est $${usageCost.totalCostUsd})`,
+      {
+        requestType,
+        mode,
+        cost,
+        creditsRemaining,
+        anthropicModel,
+        usage: {
+          inputTokens: usageCost.inputTokens,
+          outputTokens: usageCost.outputTokens,
+          cacheCreationTokens: usageCost.cacheCreationTokens,
+          cacheReadTokens: usageCost.cacheReadTokens,
+          billableInputTokens: usageCost.billableInputTokens,
+          totalTokens: usageCost.totalTokens,
+        },
+        estimatedCost: {
+          inputUsd: usageCost.inputCostUsd,
+          outputUsd: usageCost.outputCostUsd,
+          totalUsd: usageCost.totalCostUsd,
+          totalZar: usageCost.totalCostZar,
+          inputPriceUsdPerMTok: usageCost.inputPriceUsdPerMTok,
+          outputPriceUsdPerMTok: usageCost.outputPriceUsdPerMTok,
+          usdToZarEstimate: usageCost.usdToZarEstimate,
+        },
+      },
+    );
 
     return json({
       success: true,
       text,
       credits_remaining: creditsRemaining,
+      usage: {
+        input_tokens: usageCost.inputTokens,
+        output_tokens: usageCost.outputTokens,
+        total_tokens: usageCost.totalTokens,
+      },
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unexpected server error.";

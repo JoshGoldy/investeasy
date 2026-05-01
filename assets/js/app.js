@@ -7415,6 +7415,7 @@ function renderSettings() {
                   <span class="settings-log-time">${formatDiagnosticsTime(event.created_at)}</span>
                 </div>
                 ${event.detail ? `<p class="settings-log-body">${escHtml(event.detail)}</p>` : ''}
+                ${event.meta?.estimatedCost ? `<p class="settings-log-body">Tokens: ${Number(event.meta?.usage?.inputTokens || 0).toLocaleString()} in / ${Number(event.meta?.usage?.outputTokens || 0).toLocaleString()} out · Est cost: $${escHtml(String(event.meta.estimatedCost.totalUsd ?? '0'))} / R${escHtml(String(event.meta.estimatedCost.totalZar ?? '0'))}</p>` : ''}
               </div>
             `).join('') || `
               <div class="settings-note-card">

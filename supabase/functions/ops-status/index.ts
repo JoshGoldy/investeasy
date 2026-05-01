@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
     const [{ data: recentEvents, error: eventsError }, { data: profileStats, error: profileError }] = await Promise.all([
       adminClient
         .from("function_event_logs")
-        .select("service, level, event, detail, created_at")
+        .select("service, level, event, detail, meta, created_at")
         .gte("created_at", sinceIso)
         .order("created_at", { ascending: false })
         .limit(12),
@@ -104,6 +104,7 @@ Deno.serve(async (req) => {
         level: row.level,
         event: row.event,
         detail: row.detail,
+        meta: row.meta,
         created_at: row.created_at,
       })),
     });
