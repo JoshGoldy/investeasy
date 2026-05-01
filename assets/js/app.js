@@ -5965,7 +5965,7 @@ function renderDBPortfolio() {
   const topCategories = sectorList.slice(0, 4).map(s => ({ name: s.name, pct: s.pct, value: s.pct.toFixed(1) + '%' }));
 
   document.getElementById('tab-portfolio').innerHTML = `
-    ${portfolioDashboardHeading('Your portfolio', 'Track your holdings, returns, and allocation in one clear view.', portfolioActionGroup(false))}
+    ${portfolioDashboardHeading('Your money at a glance', 'See what you own, how it is performing, and where your risk is concentrated.', portfolioActionGroup(false))}
 
     ${portCurrencyBar()}
 
