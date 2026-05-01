@@ -276,6 +276,18 @@ body.stock-detail-open{overflow:hidden;max-width:100vw}
   background:#0f172a;border-bottom:1px solid #ffffff0a;position:relative;z-index:2;box-sizing:border-box;
   flex:0 0 auto;min-height:58px;overflow:visible}
 .sd-performance-row,.sd-actions-row{max-width:100%;min-width:0}
+.sd-related-news{margin:12px 20px 4px;padding:14px;border:1px solid #ffffff12;border-radius:14px;background:#111c2b}
+.sd-related-news-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px}
+.sd-related-news-kicker{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#64748b;margin-bottom:3px}
+.sd-related-news h3{font-size:14px;font-weight:850;color:#e2e8f0;line-height:1.25}
+.sd-related-news-state{font-size:10px;font-weight:800;color:#94a3b8;background:#1e293b;border-radius:999px;padding:4px 8px;white-space:nowrap}
+.sd-related-news-list{display:grid;gap:8px}
+.sd-related-news-item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:9px;width:100%;padding:10px;border:1px solid #ffffff0d;border-radius:11px;background:#0f172a;text-align:left;cursor:pointer}
+.sd-related-news-item:hover{border-color:#19c37d55;background:#122033}
+.sd-related-news-cat{font-size:9px;font-weight:850;text-transform:uppercase;letter-spacing:.04em;border-radius:999px;padding:3px 7px;white-space:nowrap}
+.sd-related-news-title{font-size:12px;font-weight:750;color:#dbe8e5;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sd-related-news-meta{font-size:10px;color:#64748b;white-space:nowrap}
+.sd-related-news-empty{padding:12px;border-radius:11px;background:#0f172a;border:1px dashed #ffffff18;color:#94a3b8;font-size:12px;line-height:1.5}
 .tf-btn{padding:7px 18px;border-radius:10px;font-family:var(--mono);font-size:12px;font-weight:600;
   background:#1e293b;color:#64748b;transition:all 0.2s;border:none;cursor:pointer;min-height:34px}
 .tf-btn.active-up{background:var(--green);color:#fff}
@@ -1235,6 +1247,9 @@ body[data-ui-mode="terminal"] .overlap-badge{background:#13202b;border-color:#2c
   }
   .sd-timeframes::-webkit-scrollbar{display:none}
   .tf-btn{min-width:0;width:100%;padding:8px 4px;font-size:11px;line-height:1.1;border-radius:8px}
+  .sd-related-news{margin:10px 12px 4px;padding:12px}
+  .sd-related-news-item{grid-template-columns:1fr;gap:6px}
+  .sd-related-news-meta{white-space:normal}
   .sd-stats{grid-template-columns:1fr 1fr}
   .stat-box{padding:10px 8px}
   .stat-box .val{font-size:12px}

@@ -1388,6 +1388,106 @@ function formatNewsFailureReason(serverError, fallbackError, serverReturnedEmpty
   return `The live news providers did not return usable articles.${[serverExtra.trim(), fallbackExtra.trim()].filter(Boolean).join(' ')}`.trim();
 }
 
+function marketNewsSearchTerms(market = {}) {
+  const terms = new Set();
+  const ticker = String(market.ticker || '').trim().toUpperCase();
+  const name = cleanNewsText(market.name || '');
+  if (ticker && ticker.length > 1) terms.add(ticker);
+  if (name) {
+    terms.add(name);
+    const simplified = name
+      .replace(/\b(group|holdings?|inc\.?|corp\.?|corporation|plc|ltd\.?|limited|company|co\.?|class [ab])\b/gi, '')
+      .replace(/[^\w\s&.-]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (simplified && simplified.length > 2) terms.add(simplified);
+    simplified.split(/\s+/).filter(w => w.length > 4).forEach(w => terms.add(w));
+  }
+  const aliases = {
+    SPX: ['S&P 500', 'S and P 500', 'US stocks', 'Wall Street'],
+    NDX: ['Nasdaq', 'Nasdaq 100', 'tech stocks'],
+    DJI: ['Dow Jones', 'Dow'],
+    BTC: ['Bitcoin', 'BTC'],
+    ETH: ['Ethereum', 'ETH'],
+    XAU: ['Gold'],
+    XAG: ['Silver'],
+    CL1: ['Oil', 'Crude', 'WTI'],
+    NG1: ['Natural gas'],
+    HG1: ['Copper'],
+  };
+  (aliases[ticker] || []).forEach(term => terms.add(term));
+  return [...terms].filter(Boolean);
+}
+
+function relatedNewsForMarket(market, limit = 3) {
+  const source = (liveNews.length ? liveNews : STATIC_FALLBACK_NEWS).map(normalizeNewsArticle);
+  const ticker = String(market?.ticker || '').toUpperCase();
+  const terms = marketNewsSearchTerms(market);
+  const tickerPattern = ticker && ticker.length > 1 ? new RegExp(`(^|[^A-Z0-9])${ticker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^A-Z0-9]|$)`, 'i') : null;
+
+  return source
+    .map(article => {
+      const text = `${article.title || ''} ${article.description || ''} ${(article.tickers || []).join(' ')}`;
+      const textUpper = text.toUpperCase();
+      let score = 0;
+      if ((article.tickers || []).map(t => String(t).toUpperCase()).includes(ticker)) score += 100;
+      if (tickerPattern && tickerPattern.test(textUpper)) score += 70;
+      terms.forEach(term => {
+        if (term.length > 2 && text.toLowerCase().includes(term.toLowerCase())) score += term.includes(' ') ? 40 : 18;
+      });
+      return { article, score };
+    })
+    .filter(item => item.score > 0)
+    .sort((a, b) => b.score - a.score || (b.article.pubTime || 0) - (a.article.pubTime || 0))
+    .slice(0, limit)
+    .map(item => item.article);
+}
+
+function renderMarketNewsSection(market) {
+  const related = relatedNewsForMarket(market, 3);
+  const sourceNote = newsSourceMode === 'fallback' ? 'Backup feed' : 'Recent news';
+  return `
+    <div class="sd-related-news" id="sd-related-news">
+      <div class="sd-related-news-head">
+        <div>
+          <p class="sd-related-news-kicker">${sourceNote}</p>
+          <h3>${escHtml(market.ticker)} news</h3>
+        </div>
+        ${newsLoadState === 'loading' ? '<span class="sd-related-news-state">Updating...</span>' : ''}
+      </div>
+      ${related.length ? `
+        <div class="sd-related-news-list">
+          ${related.map(article => {
+            let idx = liveNews.findIndex(n => n.uuid === article.uuid);
+            if (idx === -1) {
+              liveNews.push(article);
+              idx = liveNews.length - 1;
+            }
+            const catColor = CAT_COLORS[article.cat] || '#10b981';
+            return `
+              <button class="sd-related-news-item" onclick="openNewsArticle(${idx},true)">
+                <span class="sd-related-news-cat" style="background:${catColor}22;color:${catColor}">${escHtml(article.cat || 'Markets')}</span>
+                <span class="sd-related-news-title">${escHtml(article.title)}</span>
+                <span class="sd-related-news-meta">${escHtml(article.publisher || 'News')} · ${escHtml(article.time || '')}</span>
+              </button>
+            `;
+          }).join('')}
+        </div>
+      ` : `
+        <div class="sd-related-news-empty">
+          No recent articles found for ${escHtml(market.name || market.ticker)} yet. Try the main News tab for broader market coverage.
+        </div>
+      `}
+    </div>
+  `;
+}
+
+function refreshMarketNewsSection(market) {
+  const el = document.getElementById('sd-related-news');
+  if (!el || !market) return;
+  el.outerHTML = renderMarketNewsSection(market);
+}
+
 async function fetchLiveNews(force = false) {
   const now = Date.now();
   if (!force && liveNews.length && (now - newsLastFetched) < 5 * 60 * 1000) return;
@@ -1415,6 +1515,7 @@ async function fetchLiveNews(force = false) {
       newsLoadDetail = '';
       checkNewsAlertsForArticles(liveNews);
       renderNewsContent();
+      if (currentDetailIdx !== null) refreshMarketNewsSection(MARKETS[currentDetailIdx]);
       return;
     }
     serverDiagnostics = summarizeNewsDiagnostics(d?.diagnostics?.sources);
@@ -1439,6 +1540,7 @@ async function fetchLiveNews(force = false) {
         : '';
       checkNewsAlertsForArticles(liveNews);
       renderNewsContent();
+      if (currentDetailIdx !== null) refreshMarketNewsSection(MARKETS[currentDetailIdx]);
       return;
     }
     fallbackReturnedEmpty = true;
@@ -1457,6 +1559,7 @@ async function fetchLiveNews(force = false) {
   showTransientErrorNotice('news-feed', newsLoadDetail || newsLoadError, 45000);
   checkNewsAlertsForArticles(liveNews);
   renderNewsContent();
+  if (currentDetailIdx !== null) refreshMarketNewsSection(MARKETS[currentDetailIdx]);
 }
 
 function renderNews(filter, search) {
@@ -2591,6 +2694,8 @@ function openStockDetail(idx) {
       ${TIMEFRAMES.map(tf => `<button class="tf-btn ${tf==='1D'?(up?'active-up':'active-dn'):''}" style="min-width:0;width:100%;padding:8px 4px;font-size:11px;border-radius:8px" onclick="switchDetailTF(${idx},'${tf}')">${tf}</button>`).join('')}
     </div>
 
+    ${renderMarketNewsSection(stock)}
+
     <!-- 52-week range bar -->
     <div style="padding:16px 20px 12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -2683,6 +2788,9 @@ function openStockDetail(idx) {
       });
     }
   });
+  if ((!liveNews.length || (Date.now() - newsLastFetched) > 5 * 60 * 1000) && newsLoadState !== 'loading') {
+    fetchLiveNews();
+  }
 }
 
 function syncStockDetailSummary(stock, points) {
