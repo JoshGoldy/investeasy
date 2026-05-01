@@ -675,6 +675,11 @@ const UI_ICON_PATHS = {
   news: ['M18 15V9C18 6.17157 18 4.75736 17.1213 3.87868C16.2426 3 14.8284 3 12 3H8C5.17157 3 3.75736 3 2.87868 3.87868C2 4.75736 2 6.17157 2 9V15C2 17.8284 2 19.2426 2.87868 20.1213C3.75736 21 5.17157 21 8 21H20', 'M6 8L14 8', 'M6 12L14 12', 'M6 16L10 16', 'M18 8H19C20.4142 8 21.1213 8 21.5607 8.43934C22 8.87868 22 9.58579 22 11V19C22 20.1046 21.1046 21 20 21C18.8954 21 18 20.1046 18 19V8Z'],
   "money-exchange-03": ['M3 11C3 8.23571 5.23571 6 8 6L7 8.5', 'M21 13C21 15.7643 18.7643 18 16 18L17 15.5', 'M18.3333 10H14.6667C12.9382 10 12.0739 10 11.537 9.48744C11 8.97487 11 8.14992 11 6.5C11 4.85008 11 4.02513 11.537 3.51256C12.0739 3 12.9382 3 14.6667 3H18.3333C20.0618 3 20.9261 3 21.463 3.51256C22 4.02513 22 4.85008 22 6.5C22 8.14992 22 8.97487 21.463 9.48744C20.9261 10 20.0618 10 18.3333 10Z', 'M9.33333 21H5.66667C3.93818 21 3.07394 21 2.53697 20.4874C2 19.9749 2 19.1499 2 17.5C2 15.8501 2 15.0251 2.53697 14.5126C3.07394 14 3.93818 14 5.66667 14H9.33333C11.0618 14 11.9261 14 12.463 14.5126C13 15.0251 13 15.8501 13 17.5C13 19.1499 13 19.9749 12.463 20.4874C11.9261 21 11.0618 21 9.33333 21Z', 'M7.75 17.5H7.5M8 17.5C8 17.7761 7.77614 18 7.5 18C7.22386 18 7 17.7761 7 17.5C7 17.2239 7.22386 17 7.5 17C7.77614 17 8 17.2239 8 17.5Z', 'M16.75 6.5H16.5M17 6.5C17 6.77614 16.7761 7 16.5 7C16.2239 7 16 6.77614 16 6.5C16 6.22386 16.2239 6 16.5 6C16.7761 6 17 6.22386 17 6.5Z'],
   "view-off": ['M22 8C22 8 18 14 12 14C6 14 2 8 2 8', 'M15 13.5L16.5 16', 'M20 11L22 13', 'M2 13L4 11', 'M9 13.5L7.5 16'],
+  "balance-scale": ['M12 5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0', 'M10 5H4M14 5H20', 'M17 21H7', 'M12 7V21', 'M22 14C22 15.6569 20.6569 17 19 17C17.3431 17 16 15.6569 16 14M22 14L19.5 8H18.5L16 14M22 14H16', 'M8 14C8 15.6569 6.65685 17 5 17C3.34315 17 2 15.6569 2 14M8 14L5.5 8H4.5L2 14M8 14H2'],
+  "time-04": ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z', 'M9.5 9.5L12.9999 12.9996M16 8L11 13'],
+  chart: ['M15 21V6C15 5.06812 15 4.60218 14.8478 4.23463C14.6448 3.74458 14.2554 3.35523 13.7654 3.15224C13.3978 3 12.9319 3 12 3C11.0681 3 10.6022 3 10.2346 3.15224C9.74458 3.35523 9.35523 3.74458 9.15224 4.23463C9 4.60218 9 5.06812 9 6V21H15Z', 'M17 8H15V21H17C18.8856 21 19.8284 21 20.4142 20.4142C21 19.8284 21 18.8856 21 17V12C21 10.1144 21 9.17157 20.4142 8.58579C19.8284 8 18.8856 8 17 8Z', 'M9 13H7C5.11438 13 4.17157 13 3.58579 13.5858C3 14.1716 3 15.1144 3 17C3 18.8856 3 19.8284 3.58579 20.4142C4.17157 21 5.11438 21 7 21H9V13Z'],
+  "crown-03": ['M5 20.5H19', 'M16.8717 17.5H7.1283C6.10017 17.5 5.58611 17.5 5.19623 17.2234C4.80634 16.9468 4.63649 16.4616 4.29679 15.4912L2.05123 9.07668C1.93172 8.72325 2.02503 8.3336 2.29225 8.07016C2.62854 7.73864 3.15545 7.6872 3.55117 7.94727L4.78349 8.75718C6.02739 9.5747 6.64935 9.98345 7.27815 9.83488C7.90696 9.68631 8.28019 9.04241 9.02665 7.75461L11.2412 3.93412C11.3968 3.66567 11.6864 3.5 12 3.5C12.3136 3.5 12.6032 3.66567 12.7588 3.93412L14.9733 7.75461C15.7198 9.04241 16.093 9.68631 16.7218 9.83488C17.3507 9.98345 17.9726 9.5747 19.2165 8.75718L20.4488 7.94727C20.8445 7.6872 21.3715 7.73864 21.7078 8.07016C21.975 8.3336 22.0683 8.72325 21.9488 9.07668L19.7032 15.4912C19.3635 16.4616 19.1937 16.9468 18.8038 17.2234C18.4139 17.5 17.8998 17.5 16.8717 17.5Z'],
+  "coins-01": ['M15.5 13a6.5 2 0 1 0 0-4 6.5 2 0 0 0 0 4z', 'M22 15.5C22 16.6046 19.0899 17.5 15.5 17.5C11.9101 17.5 9 16.6046 9 15.5', 'M22 11V19.8C22 21.015 19.0899 22 15.5 22C11.9101 22 9 21.015 9 19.8V11', 'M8.5 6a6.5 2 0 1 0 0-4 6.5 2 0 0 0 0 4z', 'M6 11C4.10819 10.7698 2.36991 10.1745 2 9M6 16C4.10819 15.7698 2.36991 15.1745 2 14', 'M6 21C4.10819 20.7698 2.36991 20.1745 2 19L2 4', 'M15 6V4'],
   "eye-off": ['M3 3l18 18', 'M10.6 10.6a3 3 0 1 0 4.2 4.2', 'M9.9 5.1A10.9 10.9 0 0 1 12 5c5 0 9 4 10 7a18.3 18.3 0 0 1-4.3 4.9', 'M6.6 6.6A18.2 18.2 0 0 0 2 12c1 3 5 7 10 7 1.6 0 3.1-.4 4.5-1.1'],
   clock: ['M12 7v5l3 3', 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z'],
   rocket: ['M5 19c1.5-1 3-1.5 4.5-1.5L18 9c.2-2.5-.5-4.5-2-6-1.5 1.5-3.5 2.2-6 2L1.5 13.5C1.5 15 1 16.5 0 18c2 0 3.5-.5 5-1.5z', 'M14 10l4 4', 'M7 17l-2 2'],
@@ -7188,7 +7193,7 @@ function renderSettings() {
         </div>
         <div class="settings-row">
           <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:#8b5cf614;color:#7c3aed">${iconMarkup('news', 'settings-icon-glyph')}</div>
+            <div class="settings-row-icon" style="background:#8b5cf614;color:#7c3aed">${iconMarkup('chart', 'settings-icon-glyph')}</div>
             <div><p class="settings-row-title">Weekly Newsletter</p><p class="settings-row-sub">Top picks & market recap</p></div>
           </div>
           <label class="toggle">
@@ -7248,7 +7253,7 @@ function renderSettings() {
       <div class="settings-group">
         <div class="settings-row">
           <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:#10b98114">⚖️</div>
+            <div class="settings-row-icon" style="background:#10b98114;color:#06b6d4">${iconMarkup('balance-scale', 'settings-icon-glyph')}</div>
             <div><p class="settings-row-title">Default Risk</p><p class="settings-row-sub">Pre-fill risk tolerance</p></div>
           </div>
           <select class="settings-select" onchange="saveSettings({defaultRisk:this.value})">
@@ -7259,7 +7264,7 @@ function renderSettings() {
         </div>
         <div class="settings-row">
           <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:#3b82f614">🕐</div>
+            <div class="settings-row-icon" style="background:#3b82f614;color:#64748b">${iconMarkup('time-04', 'settings-icon-glyph')}</div>
             <div><p class="settings-row-title">Time Horizon</p><p class="settings-row-sub">Default investment horizon</p></div>
           </div>
           <select class="settings-select" onchange="saveSettings({defaultHorizon:this.value})">
@@ -7270,7 +7275,7 @@ function renderSettings() {
         </div>
         <div class="settings-row">
           <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:#8b5cf614">🏢</div>
+            <div class="settings-row-icon" style="background:#8b5cf614;color:#7c3aed">${iconMarkup('chart', 'settings-icon-glyph')}</div>
             <div>
               <p class="settings-row-title">Preferred Sectors</p>
               <p class="settings-row-sub">${s.defaultSectors || 'Not set'}</p>
@@ -7288,7 +7293,7 @@ function renderSettings() {
       <div class="settings-group settings-group-pad settings-group-stack settings-billing-group" style="overflow:hidden">
         <div class="settings-row">
           <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:${tierInfo.iconBg}">${tierInfo.icon}</div>
+            <div class="settings-row-icon" style="background:${tierInfo.iconBg};color:${tierInfo.chipColor}">${iconMarkup('crown-03', 'settings-icon-glyph')}</div>
             <div>
               <p class="settings-row-title">Current Plan</p>
               <p class="settings-row-sub">${tierInfo.sub}</p>
@@ -7298,7 +7303,7 @@ function renderSettings() {
         </div>
         <div class="settings-row">
           <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:#10b98114">⚡</div>
+            <div class="settings-row-icon" style="background:#10b98114;color:#10b981">${iconMarkup('coins-01', 'settings-icon-glyph')}</div>
             <div>
               <p class="settings-row-title">Credits Remaining</p>
               <p class="settings-row-sub">Resets monthly · 5 per analysis, 2 per news AI</p>
