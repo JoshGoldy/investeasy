@@ -682,6 +682,7 @@ const UI_ICON_PATHS = {
   "notification-off-01": ['M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18', 'M2 2L22 22', 'M21 16.2311C21 15.762 20.8136 15.3121 20.4819 14.9803L19.8787 14.3771C19.3161 13.8145 19 13.0514 19 12.2558V9.5C19 5.634 15.866 2.5 12 2.5C10.4497 2.5 9.01706 3.00399 7.85707 3.85707M4.76887 18C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 8.20839 5.34981 6.99849 5.95987 5.95987L18 18H4.76887Z'],
   eye: ['M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z', 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'],
   refresh: ['M21 12a9 9 0 1 1-2.6-6.4', 'M21 3v6h-6'],
+  "external-link": ['M14 4h6v6', 'M20 4l-9 9', 'M20 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5'],
   compare: ['M4 7h10', 'M10 3l4 4-4 4', 'M20 17H10', 'M14 13l-4 4 4 4'],
   list: ['M8 6h13', 'M8 12h13', 'M8 18h13', 'M3 6h.01', 'M3 12h.01', 'M3 18h.01'],
   grid: ['M4 4h7v7H4z', 'M13 4h7v7h-7z', 'M4 13h7v7H4z', 'M13 13h7v7h-7z'],
@@ -739,6 +740,10 @@ function marketAlertIcon(hasAlert) {
 
 function starIcon(className = 'star-icon') {
   return iconMarkup('star', className);
+}
+
+function closeIcon(className = 'close-icon') {
+  return iconMarkup('close', className);
 }
 
 function stripLeadingDecorativeIcon(line) {
@@ -1621,18 +1626,17 @@ function renderNews(filter, search) {
           style="position:relative;display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--radius-xs);
                  background:${alertCount>0?'#ef444418':'var(--border)'};color:${alertCount>0?'var(--red)':'var(--muted)'};
                  font-size:11px;font-weight:600;border:none;cursor:pointer;transition:all .2s">
-          🔔 Alerts${alertCount > 0 ? ` <span style="background:#ef4444;color:#fff;border-radius:8px;padding:1px 5px;font-size:9px;font-weight:800">${alertCount}</span>` : ''}
+          ${iconMarkup('notification-01', 'inline-icon')} Alerts${alertCount > 0 ? ` <span style="background:#ef4444;color:#fff;border-radius:8px;padding:1px 5px;font-size:9px;font-weight:800">${alertCount}</span>` : ''}
         </button>
         <button class="news-refresh-btn" id="refresh-btn" onclick="refreshNews()" title="Refresh news">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-          Refresh
+          ${iconMarkup('refresh', 'inline-icon')} Refresh
         </button>
       </div>
     </div>
     <div class="filter-row">
       ${cats.map(c => `<button class="news-filter-btn ${newsFilter===c&&!myStocksActive&&!bookmarksActive?'active':''}" onclick="setNewsFilter('${c}')">${c}</button>`).join('')}
       <button class="news-filter-btn ${myStocksActive?'mystocks-active':''}" onclick="setNewsFilter('My Stocks')" title="Articles mentioning your portfolio & watchlist tickers">${starIcon('inline-star-icon')} My Stocks</button>
-      <button class="news-filter-btn ${bookmarksActive?'bookmarks-active':''}" onclick="toggleNewsBookmarksView()">🔖 Bookmarks${Object.keys(bookmarkedArticles).length > 0 ? ' ('+Object.keys(bookmarkedArticles).length+')' : ''}</button>
+      <button class="news-filter-btn ${bookmarksActive?'bookmarks-active':''}" onclick="toggleNewsBookmarksView()">${bookmarkNewsIcon(bookmarksActive)} Bookmarks${Object.keys(bookmarkedArticles).length > 0 ? ' ('+Object.keys(bookmarkedArticles).length+')' : ''}</button>
     </div>
     <div class="time-range-row">
       <span style="font-size:11px;font-weight:700;color:var(--faint);flex-shrink:0">Time:</span>
@@ -1772,7 +1776,7 @@ function renderNewsContent() {
                  font-size:11px;font-weight:700;border:1px solid #7c3aed30;cursor:pointer;
                  display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s"
           onmouseenter="this.style.background='#7c3aed22'" onmouseleave="this.style.background='#7c3aed14'">
-          🤖 Analyze with FinBot <span style="font-size:10px;font-weight:600;opacity:.7">· 2 credits</span>
+        ${iconMarkup('bot', 'btn-icon')} Analyze with FinBot
         </button>
       </div>`;
     }).join('')}
@@ -2009,16 +2013,16 @@ function openNewsArticle(idx, fromLive) {
       <div class="news-sheet-title">${escHtml(n.title)}</div>
       ${cleanTickers.length ? `<div class="news-sheet-tickers">${cleanTickers.map(t=>`<span class="news-ticker-chip">${escHtml(t)}</span>`).join('')}</div>` : ''}
       <div id="news-body-box" style="margin:14px 0 16px">${bodyHtml}</div>
-      <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">2 credits</strong></p>
+      <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">${iconMarkup('bolt', 'inline-icon')} This analysis uses <strong style="color:var(--text)">2 credits</strong></p>
       <button onclick="confirmAndAnalyzeNews(${idx})"
         style="width:100%;padding:14px;border-radius:var(--radius-sm);background:linear-gradient(135deg,#7c3aed,#6d28d9);
                color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;margin-bottom:10px;
                display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s"
         onmouseenter="this.style.opacity='.9'" onmouseleave="this.style.opacity='1'">
-        🤖 Analyze with FinBot
+        ${iconMarkup('bot', 'btn-icon')} Analyze with FinBot
       </button>
       <a class="news-btn-primary" href="${escHtml(articleLink)}" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">
-        Read Full Article on ${escHtml(n.publisher || 'Publisher')} ↗
+        Read Full Article on ${escHtml(n.publisher || 'Publisher')} ${iconMarkup('external-link', 'inline-icon')}
       </a>
     `;
   }
@@ -2193,7 +2197,7 @@ function renderFinBotNewsResult(idx, text, articleLink, n) {
         <a href="${escHtml(articleLink)}" target="_blank" rel="noopener"
           style="width:100%;padding:13px;border-radius:12px;background:var(--green);color:#fff;
                  font-size:13px;font-weight:700;text-align:center;text-decoration:none;display:block;box-sizing:border-box">
-          Read Full Article on ${escHtml(n.publisher || 'Publisher')} ↗
+        Read Full Article on ${escHtml(n.publisher || 'Publisher')} ${iconMarkup('external-link', 'inline-icon')}
         </a>
       </div>
     </div>`;
@@ -2927,7 +2931,7 @@ function openAlertModal(ticker, name, currentPrice) {
   const market = MARKETS.find(m => m.ticker === ticker);
   document.getElementById('alert-ticker').value = ticker;
   document.getElementById('alert-ticker-name').value = name;
-  document.getElementById('alert-modal-title').textContent = `🔔 Alert - ${ticker}`;
+  document.getElementById('alert-modal-title').innerHTML = `${iconMarkup('notification-01', 'alert-title-icon')} Alert - ${escHtml(ticker)}`;
   document.getElementById('alert-modal-sub').textContent = 'Current price: ' + fmtMarketUnitPrice(market, currentPrice);
   document.getElementById('alert-target').value = '';
   alertDirection = 'above';
@@ -2982,8 +2986,8 @@ function renderAlertList(ticker) {
   if (!alerts.length) { list.innerHTML = ''; return; }
   list.innerHTML = alerts.map(a => `
     <div class="alert-item">
-      <span class="alert-txt">${a.direction === 'above' ? '📈 Above' : '📉 Below'} ${fmtMarketUnitPrice(MARKETS.find(m => m.ticker === ticker), normalizedAlertTarget(a, ticker))}${a.triggered ? ' ✓' : ''}</span>
-      <button class="alert-del" onclick="deleteAlert(${a.id},'${ticker}')" title="Delete">✕</button>
+      <span class="alert-txt">${iconMarkup(a.direction === 'above' ? 'trend-up' : 'trend-down', 'inline-icon')} ${a.direction === 'above' ? 'Above' : 'Below'} ${fmtMarketUnitPrice(MARKETS.find(m => m.ticker === ticker), normalizedAlertTarget(a, ticker))}${a.triggered ? ` ${iconMarkup('check', 'inline-icon')}` : ''}</span>
+      <button class="alert-del" onclick="deleteAlert(${a.id},'${ticker}')" title="Delete">${closeIcon('inline-icon')}</button>
     </div>`).join('');
 }
 

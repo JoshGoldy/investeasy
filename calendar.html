@@ -101,17 +101,18 @@
   <!-- Price Alert Modal -->
   <div id="alert-modal-bg" class="alert-modal-bg hidden" onclick="if(event.target===this)closeAlertModal()">
     <div class="alert-modal">
-      <h3 id="alert-modal-title">Set Price Alert</h3>
+      <button class="popup-close-btn alert-close-btn" onclick="closeAlertModal()" title="Close" aria-label="Close alert popup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg></button>
+      <h3 id="alert-modal-title"><span class="alert-title-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18"/><path d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z"/></svg></span> Set Price Alert</h3>
       <p class="alert-sub" id="alert-modal-sub">Current price: —</p>
       <input type="hidden" id="alert-ticker">
       <input type="hidden" id="alert-ticker-name">
       <div class="alert-dir-btns">
-        <button class="alert-dir-btn selected" id="alert-dir-above" onclick="selectAlertDir('above')">📈 Above</button>
-        <button class="alert-dir-btn" id="alert-dir-below" onclick="selectAlertDir('below')">📉 Below</button>
+        <button class="alert-dir-btn selected" id="alert-dir-above" onclick="selectAlertDir('above')"><span class="alert-dir-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l6-6 4 4 6-8"/><path d="M14 6h6v6"/></svg></span> Above</button>
+        <button class="alert-dir-btn" id="alert-dir-below" onclick="selectAlertDir('below')"><span class="alert-dir-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8l6 6 4-4 6 8"/><path d="M14 18h6v-6"/></svg></span> Below</button>
       </div>
       <label class="form-label" style="font-size:12px;color:var(--text2);margin-bottom:6px;display:block">Target Price</label>
       <input class="form-input" id="alert-target" type="number" placeholder="e.g. 80000" step="any">
-      <button class="alert-save-btn" onclick="saveAlert()">🔔 Set Alert</button>
+      <button class="alert-save-btn" onclick="saveAlert()"><span class="alert-save-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18"/><path d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z"/></svg></span> Set Alert</button>
       <div id="alert-list" class="alert-list"></div>
     </div>
   </div>
@@ -142,6 +143,7 @@
   <!-- News Detail Overlay -->
   <div id="news-overlay" class="news-overlay hidden" onclick="if(event.target===this)closeNewsOverlay()">
     <div class="news-sheet">
+      <button class="popup-close-btn news-sheet-close" onclick="closeNewsOverlay()" title="Close" aria-label="Close article popup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg></button>
       <div class="news-sheet-handle"></div>
       <div class="news-sheet-inner" id="news-sheet-inner"></div>
     </div>
@@ -151,8 +153,8 @@
   <div id="news-alerts-modal-bg" class="news-alerts-modal-bg hidden" onclick="if(event.target===this)closeNewsAlertsModal()">
     <div class="news-alerts-modal">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <h3>🔔 News Alerts</h3>
-        <button onclick="closeNewsAlertsModal()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--faint);padding:2px 6px">✕</button>
+        <h3><span class="alert-title-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18"/><path d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z"/></svg></span> News Alerts</h3>
+        <button onclick="closeNewsAlertsModal()" class="popup-close-btn inline-popup-close" title="Close" aria-label="Close news alerts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg></button>
       </div>
       <p class="sub">Get in-app badges when articles match your tickers or keywords.</p>
       <div id="news-alerts-list"></div>
@@ -488,14 +490,11 @@
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px;
                 border-bottom:1px solid var(--border);flex-shrink:0">
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#6d28d9);
-                    display:flex;align-items:center;justify-content:center;font-size:16px">🤖</div>
+        <div class="finbot-modal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4V2"/><path d="M20 22C20 17.5817 16.4183 14 12 14C7.58172 14 4 17.5817 4 22"/><path d="M9.375 8.25H9.25"/><path d="M9.5 8.25C9.5 8.38807 9.38807 8.5 9.25 8.5C9.11193 8.5 9 8.38807 9 8.25C9 8.11193 9.11193 8 9.25 8C9.38807 8 9.5 8.11193 9.5 8.25Z"/><path d="M14.875 8.25H14.75"/><path d="M15 8.25C15 8.38807 14.8881 8.5 14.75 8.5C14.6119 8.5 14.5 8.38807 14.5 8.25C14.5 8.11193 14.6119 8 14.75 8C14.8881 8 15 8.11193 15 8.25Z"/><path d="M15.1538 4H8.84615C7.59095 4 6.96334 4 6.47397 4.22025C5.91693 4.47095 5.47095 4.91693 5.22025 5.47397C5 5.96334 5 6.59095 5 7.84615C5 9.85448 5 10.8586 5.3524 11.6417C5.75353 12.5329 6.46709 13.2465 7.35835 13.6476C8.14135 14 9.14552 14 11.1538 14H12.8462C14.8545 14 15.8586 14 16.6417 13.6476C17.5329 13.2465 18.2465 12.5329 18.6476 11.6417C19 10.8586 19 9.85448 19 7.84615C19 6.59095 19 5.96334 18.7797 5.47397C18.529 4.91693 18.0831 4.47095 17.526 4.22025C17.0367 4 16.4091 4 15.1538 4Z"/></svg></div>
         <span style="font-weight:800;font-size:16px;color:var(--text)">FinBot</span>
         <span style="font-size:12px;color:#a78bfa;font-weight:600">AI Analyst</span>
       </div>
-      <button onclick="closeFinBotNewsModal()"
-        style="width:32px;height:32px;border-radius:50%;background:var(--border);color:var(--muted);
-               font-size:17px;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer">✕</button>
+      <button onclick="closeFinBotNewsModal()" class="popup-close-btn inline-popup-close" title="Close" aria-label="Close FinBot popup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg></button>
     </div>
     <div id="finbot-news-content" style="padding:0 28px 32px;overflow-y:auto;flex:1"></div>
   </div>
