@@ -1173,7 +1173,7 @@ function setupMobileChrome() {
     bubble.className = 'mobile-finbot-bubble';
     bubble.setAttribute('aria-label', 'Open FinBot');
     bubble.innerHTML = `
-      <span class="mobile-finbot-bubble-emoji">🤖</span>
+      ${iconMarkup('bot', 'mobile-finbot-bubble-icon')}
       <span class="mobile-finbot-bubble-label">FinBot</span>
     `;
     bubble.addEventListener('click', () => {
