@@ -1987,12 +1987,12 @@ body[data-ui-mode="terminal"] .header{background:#071018!important;border-bottom
 .time-filter-btn,
 .perf-tab,
 .import-tab,
-.saved-folder-tab,
 .auth-tab,
 .auth-method-btn{
-  border-radius:999px;
+  border-radius:14px;
   color:var(--muted);
 }
+.saved-folder-tab{border-radius:8px;color:var(--muted)}
 .filter-btn,
 .news-filter-btn,
 .time-filter-btn{
@@ -2009,6 +2009,7 @@ body[data-ui-mode="terminal"] .header{background:#071018!important;border-bottom
 .perf-tabs,.auth-tabs,.import-tabs{
   background:#eee7d9;
   border:1px solid var(--border);
+  border-radius:14px;
 }
 .perf-tab.active,.auth-tab.active,.import-tab.active{
   background:var(--card);
