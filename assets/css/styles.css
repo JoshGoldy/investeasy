@@ -97,7 +97,7 @@ body[data-ui-mode="terminal"] .nav button[data-tab="learn"]{display:none!importa
 .saved-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:10px;text-align:center}
 .saved-empty-icon{font-size:48px;opacity:.35;line-height:1}
 .saved-guest-icon{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#0d9488,#10b981);color:#fff;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
-.saved-guest-icon-glyph svg{width:38px;height:38px;stroke-width:1.7}
+.saved-guest-icon-glyph svg{width:44px;height:44px;stroke-width:1.8}
 .saved-lock-note{font-size:12px;color:var(--faint);line-height:1.6;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}
 .saved-lock-note strong{color:var(--text)}
 .saved-lock-icon svg{width:15px;height:15px;stroke-width:1.8}

@@ -6142,7 +6142,7 @@ function renderPortfolio() {
 function renderPortfolioGuestWall() {
   document.getElementById('tab-portfolio').innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 20px 24px">
-      <div class="saved-guest-icon">${iconMarkup('lock-password', 'saved-guest-icon-glyph')}</div>
+      <div class="saved-guest-icon">${iconMarkup('wallet', 'saved-guest-icon-glyph')}</div>
       <h2 style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px">Portfolio</h2>
       <p style="font-size:13.5px;color:var(--muted);line-height:1.65;max-width:340px;margin-bottom:24px">
         Create a free account to save holdings, import your portfolio, track allocation, and keep everything synced across devices.
