@@ -666,6 +666,7 @@ const UI_ICON_PATHS = {
   folder: ['M3 7h5l2 2h11v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z'],
   tag: ['M20 10l-8 8-8-8V4h6l10 10z', 'M7.5 7.5h.01'],
   lock: ['M7 11V8a5 5 0 0 1 10 0v3', 'M5 11h14v10H5z'],
+  "lock-password": ['M4.26781 18.8447C4.49269 20.515 5.87613 21.8235 7.55966 21.9009C8.97627 21.966 10.4153 22 12 22C13.5847 22 15.0237 21.966 16.4403 21.9009C18.1239 21.8235 19.5073 20.515 19.7322 18.8447C19.879 17.7547 20 16.6376 20 15.5C20 14.3624 19.879 13.2453 19.7322 12.1553C19.5073 10.485 18.1239 9.17649 16.4403 9.09909C15.0237 9.03397 13.5847 9 12 9C10.4153 9 8.97627 9.03397 7.55966 9.09909C5.87613 9.17649 4.49269 10.485 4.26781 12.1553C4.12105 13.2453 4 14.3624 4 15.5C4 16.6376 4.12105 17.7547 4.26781 18.8447Z', 'M7.5 9V6.5C7.5 4.01472 9.51472 2 12 2C14.4853 2 16.5 4.01472 16.5 6.5V9', 'M12.125 15.5H12M12.25 15.5C12.25 15.6381 12.1381 15.75 12 15.75C11.8619 15.75 11.75 15.6381 11.75 15.5C11.75 15.3619 11.8619 15.25 12 15.25C12.1381 15.25 12.25 15.3619 12.25 15.5Z', 'M8.125 15.5H8M8.25 15.5C8.25 15.6381 8.13807 15.75 8 15.75C7.86193 15.75 7.75 15.6381 7.75 15.5C7.75 15.3619 7.86193 15.25 8 15.25C8.13807 15.25 8.25 15.3619 8.25 15.5Z', 'M16.125 15.5H16M16.25 15.5C16.25 15.6381 16.1381 15.75 16 15.75C15.8619 15.75 15.75 15.6381 15.75 15.5C15.75 15.3619 15.8619 15.25 16 15.25C16.1381 15.25 16.25 15.3619 16.25 15.5Z'],
   trash: ['M4 7h16', 'M9 7V4h6v3', 'M8 7l1 13h6l1-13'],
   mail: ['M4 6h16v12H4z', 'M4 7l8 6 8-6'],
   wallet: ['M13 3.5H14C14.93 3.5 15.395 3.5 15.7765 3.60222C16.8117 3.87962 17.6204 4.68827 17.8978 5.72354C18 6.10504 18 6.57003 18 7.5H5C3.89543 7.5 3 6.60457 3 5.5C3 4.39543 3.89543 3.5 5 3.5H8', 'M3 5.5V15.5C3 18.3284 3 19.7426 3.87868 20.6213C4.75736 21.5 6.17157 21.5 9 21.5H15C17.8284 21.5 19.2426 21.5 20.1213 20.6213C21 19.7426 21 18.3284 21 15.5V13.5C21 10.6716 21 9.25736 20.1213 8.37868C19.2426 7.5 17.8284 7.5 15 7.5H7', 'M21 12.5H19C18.535 12.5 18.3025 12.5 18.1118 12.5511C17.5941 12.6898 17.1898 13.0941 17.0511 13.6118C17 13.8025 17 14.035 17 14.5C17 14.965 17 15.1975 17.0511 15.3882C17.1898 15.9059 17.5941 16.3102 18.1118 16.4489C18.3025 16.5 18.535 16.5 19 16.5H21', 'M10.5 2.5C12.433 2.5 14 4.067 14 6C14 6.5368 13.8792 7.04537 13.6632 7.5H7.33682C7.12085 7.04537 7 6.5368 7 6C7 4.067 8.567 2.5 10.5 2.5Z'],
@@ -4875,8 +4876,7 @@ function renderSaved(filter) {
   if (!currentUser) {
     el.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 20px 24px">
-        <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#0d9488,#10b981);
-                    display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px">🔖</div>
+        <div class="saved-guest-icon">${iconMarkup('bookmark-add-01', 'saved-guest-icon-glyph')}</div>
         <h2 style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px">Saved Reports</h2>
         <p style="font-size:13.5px;color:var(--muted);line-height:1.65;max-width:300px;margin-bottom:24px">
           Save any FinBot analysis or news breakdown and access it from any device. Reports are stored securely with your account.
@@ -4903,8 +4903,8 @@ function renderSaved(filter) {
         </div>
       `).join('')}
       <div style="margin-top:12px;padding:14px 16px;border-radius:14px;background:var(--card);border:1px solid var(--border)">
-        <p style="font-size:12px;color:var(--faint);line-height:1.6;text-align:center">
-          🔒 <strong style="color:var(--text)">Free account required</strong> — sign up in seconds, no credit card needed
+        <p class="saved-lock-note">
+          ${iconMarkup('lock-password', 'saved-lock-icon')} <strong>Free account required</strong> — sign up in seconds, no credit card needed
         </p>
       </div>
     `;
@@ -4917,10 +4917,10 @@ function renderSaved(filter) {
     el.innerHTML = `
       <div class="section-title"><h2>Saved Reports</h2></div>
       <div class="saved-empty">
-        <div class="saved-empty-icon">🔖</div>
+        <div class="saved-empty-icon">${iconMarkup('bookmark-add-01', 'saved-empty-icon-glyph')}</div>
         <p style="font-size:15px;font-weight:700;color:var(--text)">No saved reports yet</p>
         <p style="font-size:13px;color:var(--faint);line-height:1.6;max-width:280px">
-          Run any analysis in FinBot or analyze a news article and tap <strong style="color:var(--text)">🔖 Save</strong> to keep it here.
+          Run any analysis in FinBot or analyze a news article and tap <strong style="color:var(--text)">${iconMarkup('bookmark-add-01', 'saved-inline-bookmark')} Save</strong> to keep it here.
         </p>
       </div>`;
     return;

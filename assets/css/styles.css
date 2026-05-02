@@ -96,6 +96,13 @@ body[data-ui-mode="terminal"] .nav button[data-tab="learn"]{display:none!importa
 .nav-dot{display:none}
 .saved-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:10px;text-align:center}
 .saved-empty-icon{font-size:48px;opacity:.35;line-height:1}
+.saved-guest-icon{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#0d9488,#10b981);color:#fff;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.saved-guest-icon-glyph svg{width:30px;height:30px;stroke-width:1.8}
+.saved-lock-note{font-size:12px;color:var(--faint);line-height:1.6;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}
+.saved-lock-note strong{color:var(--text)}
+.saved-lock-icon svg{width:15px;height:15px;stroke-width:1.8}
+.saved-inline-bookmark{margin-right:4px;color:var(--green)}
+.saved-inline-bookmark svg{width:14px;height:14px;stroke-width:1.8}
 .saved-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px 18px;margin-bottom:12px}
 .saved-card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
 .saved-card-meta{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
