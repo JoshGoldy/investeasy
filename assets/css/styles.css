@@ -386,7 +386,7 @@ body.stock-detail-open{overflow:hidden;max-width:100vw}
 .portfolio-welcome h2{font-size:20px;font-weight:800;color:var(--text)}
 .portfolio-welcome p{margin-top:6px;font-size:14px;color:var(--muted)}
 .portfolio-action-group{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-.portfolio-action{padding:12px 18px;border-radius:14px;background:var(--green);color:#fff;font-size:13px;font-weight:800;box-shadow:0 8px 20px rgba(76,122,88,.18);white-space:nowrap}
+.portfolio-action{padding:12px 18px;border-radius:14px;background:var(--green);color:#fff;font-size:13px;font-weight:800;box-shadow:none;white-space:nowrap}
 .portfolio-action-secondary{background:var(--border);color:var(--text2);box-shadow:none;border:1px solid var(--border2)}
 .portfolio-currency-row{display:flex;gap:8px;overflow-x:auto;margin-bottom:20px;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .dashboard-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:18px}
@@ -1804,7 +1804,7 @@ body[data-ui-mode="terminal"] .portfolio-action,
 body[data-ui-mode="terminal"] .run-btn{
   background:#22c55e!important;
   color:#04110a!important;
-  box-shadow:0 10px 22px rgba(34,197,94,.16)!important;
+  box-shadow:none!important;
 }
 body[data-ui-mode="terminal"] .portfolio-action-secondary{
   background:#13202b!important;
@@ -1956,7 +1956,7 @@ body[data-ui-mode="terminal"] .header{background:#071018!important;border-bottom
   background:linear-gradient(180deg,var(--green),var(--green-2))!important;
   color:#fff!important;
   border:1px solid rgba(255,255,255,.16);
-  box-shadow:0 10px 24px rgba(40,122,85,.18);
+  box-shadow:none;
 }
 .portfolio-action:hover,
 .auth-btn:hover,
@@ -2177,7 +2177,7 @@ body[data-ui-mode="terminal"] .finbot-chat-send{
   background:#19c37d!important;
   color:#03110a!important;
   border-color:#19c37d!important;
-  box-shadow:0 10px 22px rgba(25,195,125,.14)!important;
+  box-shadow:none!important;
 }
 body[data-ui-mode="terminal"] .portfolio-action-secondary,
 body[data-ui-mode="terminal"] .auth-secondary-btn,
