@@ -97,10 +97,12 @@ body[data-ui-mode="terminal"] .nav button[data-tab="learn"]{display:none!importa
 .saved-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:10px;text-align:center}
 .saved-empty-icon{font-size:48px;opacity:.35;line-height:1}
 .saved-guest-icon{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#0d9488,#10b981);color:#fff;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
-.saved-guest-icon-glyph svg{width:30px;height:30px;stroke-width:1.8}
+.saved-guest-icon-glyph svg{width:38px;height:38px;stroke-width:1.7}
 .saved-lock-note{font-size:12px;color:var(--faint);line-height:1.6;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}
 .saved-lock-note strong{color:var(--text)}
 .saved-lock-icon svg{width:15px;height:15px;stroke-width:1.8}
+.signin-required-icon{margin-right:5px;color:#2563eb}
+.signin-required-icon svg{width:15px;height:15px;stroke-width:1.8}
 .saved-inline-bookmark{margin-right:4px;color:var(--green)}
 .saved-inline-bookmark svg{width:14px;height:14px;stroke-width:1.8}
 .saved-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px 18px;margin-bottom:12px}
@@ -2010,10 +2012,13 @@ body[data-ui-mode="terminal"] .header{background:#071018!important;border-bottom
 }
 .filter-btn.active,
 .news-filter-btn.active,
-.time-filter-btn.active{
-  background:var(--dark);
-  color:#fff;
-  border-color:var(--dark);
+.time-filter-btn.active,
+.news-filter-btn.mystocks-active,
+.news-filter-btn.bookmarks-active{
+  background:linear-gradient(135deg,#edf6ef,#dfeada);
+  color:var(--green);
+  border-color:rgba(76,122,88,.18);
+  box-shadow:inset 0 0 0 1px rgba(76,122,88,.06);
 }
 .perf-tabs,.auth-tabs,.import-tabs{
   background:#eee7d9;

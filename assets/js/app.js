@@ -4,6 +4,7 @@
 
 let currentUser   = null;          // {id, name, email, username, tier, finbot_credits} when logged in
 const REMEMBER_ME_KEY = 'fs_remember_me';
+const GUEST_PORTFOLIO_KEY = 'ie_guest_portfolio';
 let dbPortfolio   = [];            // [{ticker,name,shares,avg_cost}]
 let watchlistSet  = new Set();     // Set of tickers on watchlist
 let dbSavedReports = null;         // null = guest/fallback (localStorage), array = logged-in (DB)
@@ -2353,7 +2354,7 @@ function renderMarkets(filter) {
 
   // ── Portfolio overlap map ──────────────────────────────────────────────────
   const portfolioMap = {};
-  if (currentUser && dbPortfolio.length) {
+  if (dbPortfolio.length) {
     const totalValue = dbPortfolio.reduce((s, h) => {
       const mkt = MARKETS.find(x => x.ticker === h.ticker);
       const unitUsd = mkt ? marketNativeToUsd(mkt, mkt.val) : h.avg_cost;
@@ -2795,23 +2796,20 @@ function openStockDetail(idx) {
       ${stock.exchange === 'JSE' ? `<div style="padding:8px 12px;border-radius:10px;background:#f59e0b14;border:1px solid #f59e0b30;text-align:center">
         <p style="font-size:11px;color:#f59e0b;font-weight:700">🇿🇦 JSE Listed · Prices in ZAR (R)</p>
       </div>` : ''}
-      ${currentUser ? `<div class="sd-actions-row" style="display:flex;gap:10px">
-        <button onclick="toggleWatchlist('${stock.ticker}','${stock.name.replace(/'/g,"\\'")}')"
+      <div class="sd-actions-row" style="display:flex;gap:10px">
+        ${currentUser ? `<button onclick="toggleWatchlist('${stock.ticker}','${stock.name.replace(/'/g,"\\'")}')"
           style="flex:1;padding:13px;border-radius:13px;background:${watchlistSet.has(stock.ticker)?'#10b98118':'#1e293b'};border:1.5px solid ${watchlistSet.has(stock.ticker)?'#10b981':'#ffffff0a'};font-size:13px;font-weight:700;color:${watchlistSet.has(stock.ticker)?'#10b981':'#64748b'};cursor:pointer;transition:all .2s">
           ${starIcon('inline-star-icon')} Watchlist
-        </button>
+        </button>` : ''}
         <button onclick="openAddHoldingModal('${stock.ticker}','${stock.name.replace(/'/g,"\\'")}')"
           style="flex:1;padding:13px;border-radius:13px;background:var(--green);color:#fff;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .2s">
           + Portfolio
         </button>
-        <button onclick="openAlertModal('${stock.ticker}','${stock.name.replace(/'/g,"\\'")}',${stock.val})"
+        ${currentUser ? `<button onclick="openAlertModal('${stock.ticker}','${stock.name.replace(/'/g,"\\'")}',${stock.val})"
           style="padding:13px 16px;border-radius:13px;background:${(alertsMap[stock.ticker]||[]).filter(a=>!a.triggered).length?'#f59e0b18':'#1e293b'};border:1.5px solid ${(alertsMap[stock.ticker]||[]).filter(a=>!a.triggered).length?'#f59e0b':'#ffffff0a'};font-size:16px;cursor:pointer;transition:all .2s" title="Set price alert">
           ${(alertsMap[stock.ticker]||[]).filter(a=>!a.triggered).length?'🔔':'🔕'}
-        </button>
-      </div>` : `<button onclick="document.getElementById('auth-overlay').classList.remove('hidden');showAuthTab('login')"
-        style="width:100%;padding:13px;border-radius:13px;background:var(--green);color:#fff;font-size:13px;font-weight:700;cursor:pointer;border:none">
-        Log in to track & set alerts
-      </button>`}
+        </button>` : ''}
+      </div>
     </div>
   `;
 
@@ -4278,7 +4276,7 @@ function renderFinBot() {
       `).join('')}
       <div style="margin-top:20px;padding:14px 16px;border-radius:14px;background:var(--card);border:1px solid var(--border)">
         <p style="font-size:12px;color:var(--faint);line-height:1.6;text-align:center">
-          🔒 <strong style="color:var(--text)">Sign in required</strong> — create an account, then upgrade to Pro or Enterprise
+          ${iconMarkup('lock-password', 'signin-required-icon')} <strong style="color:var(--text)">Sign in required</strong> — create an account, then upgrade to Pro or Enterprise
         </p>
       </div>
     `;
@@ -5970,18 +5968,13 @@ function renderEmptyPortfolioDashboard() {
 }
 
 function renderPortfolio() {
-  // If logged in and have DB portfolio data, render that instead of demo data
-  if (currentUser && dbPortfolio.length > 0) {
+  // Render the same editable portfolio surface for signed-in users and guests.
+  // Guests use localStorage; signed-in users sync with the database.
+  if (dbPortfolio.length > 0) {
     renderDBPortfolio();
     return;
   }
-  // If logged in but empty portfolio, show onboarding
-  if (currentUser && dbPortfolio.length === 0) {
-    renderEmptyPortfolio();
-    return;
-  }
-
-  renderPortfolioDemoDashboard();
+  renderEmptyPortfolio();
   return;
 
   // Demo portfolio (not logged in)
@@ -8351,7 +8344,10 @@ function bindSupabaseAuthListener() {
   sb.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT' || !session?.user) {
       currentUser = null;
+      loadGuestPortfolio();
       updateHeaderUser();
+      const activeTab = document.querySelector('.tab-content.active');
+      if (activeTab?.id === 'tab-portfolio') renderPortfolio();
       return;
     }
     window.setTimeout(async () => {
@@ -8605,6 +8601,7 @@ async function checkAuth() {
   if (!shouldRememberSession() && isSupabaseConfigured()) {
     try { await getSupabase().auth.signOut(); } catch (e) {}
     currentUser = null;
+    loadGuestPortfolio();
     updateHeaderUser();
     return;
   }
@@ -8616,6 +8613,7 @@ async function checkAuth() {
       await syncAfterLogin();
     }
   } catch(e) { /* db.php not set up yet — run in demo mode */ }
+  if (!currentUser) loadGuestPortfolio();
   // Always go to home page — no login required
   document.getElementById('auth-overlay').classList.add('hidden');
   updateHeaderUser();
@@ -8792,15 +8790,17 @@ async function doLogout() {
   compareMode            = false;
   dbSavedReports         = null;
   dbSavedReportsLoading  = false;
-  // Portfolio/settings require login — redirect; finbot/saved show their own guest wall
+  loadGuestPortfolio();
+  // Settings require login; portfolio stays usable with local guest holdings.
   const activeTab = document.querySelector('.tab-content.active');
-  if (activeTab && (activeTab.id === 'tab-portfolio' || activeTab.id === 'tab-settings')) {
+  if (activeTab?.id === 'tab-settings') {
     switchTab('news');
   }
+  if (activeTab?.id === 'tab-portfolio') renderPortfolio();
   if (activeTab?.id === 'tab-finbot') renderFinBot();
   if (activeTab?.id === 'tab-saved')  renderSaved();
   updateHeaderUser();
-  document.getElementById('auth-overlay').classList.remove('hidden');
+  document.getElementById('auth-overlay').classList.add('hidden');
   showAuthTab('login');
 }
 
@@ -8892,6 +8892,31 @@ async function loadPortfolioFromDB() {
   try {
     const d = await dataRequest('portfolio');
     if (d.success) dbPortfolio = d.portfolio;
+  } catch(e) {}
+}
+
+function loadGuestPortfolio() {
+  if (currentUser) return;
+  try {
+    const rows = JSON.parse(localStorage.getItem(GUEST_PORTFOLIO_KEY) || '[]');
+    dbPortfolio = Array.isArray(rows)
+      ? rows.map(h => ({
+          ticker: String(h.ticker || '').trim().toUpperCase(),
+          name: String(h.name || h.ticker || '').trim(),
+          shares: Number(h.shares),
+          avg_cost: Number(h.avg_cost),
+          currency: h.currency || undefined,
+        })).filter(h => h.ticker && Number.isFinite(h.shares) && h.shares > 0 && Number.isFinite(h.avg_cost))
+      : [];
+  } catch(e) {
+    dbPortfolio = [];
+  }
+}
+
+function saveGuestPortfolio() {
+  if (currentUser) return;
+  try {
+    localStorage.setItem(GUEST_PORTFOLIO_KEY, JSON.stringify(dbPortfolio));
   } catch(e) {}
 }
 
@@ -9322,10 +9347,16 @@ async function savePortfolioImportRows() {
           avg_cost: totalShares > 0 ? totalCost / totalShares : row.avg_cost,
         };
       }
+      if (!currentUser) {
+        if (existing) Object.assign(existing, payload);
+        else dbPortfolio.push(payload);
+        continue;
+      }
       const d = await dataRequest('portfolio', 'POST', payload);
       if (!d.success) throw new Error(d.error || `Could not import ${row.ticker}`);
     }
-    await loadPortfolioFromDB();
+    if (currentUser) await loadPortfolioFromDB();
+    else saveGuestPortfolio();
     closeImportPortfolioModal();
     renderPortfolio();
     showToast(`Imported ${rows.length} holding${rows.length === 1 ? '' : 's'}`);
@@ -9389,6 +9420,17 @@ async function saveHolding() {
     return;
   }
 
+  if (!currentUser) {
+    const existing = dbPortfolio.find(h => h.ticker === ticker);
+    const payload = { ticker, name, shares, avg_cost: avgCost };
+    if (existing) Object.assign(existing, payload);
+    else dbPortfolio.push(payload);
+    saveGuestPortfolio();
+    closeAddHoldingModal();
+    renderPortfolio();
+    return;
+  }
+
   try {
     const d = await dataRequest('portfolio', 'POST', { ticker, name, shares, avg_cost: avgCost });
     if (d.success) {
@@ -9407,6 +9449,12 @@ async function saveHolding() {
 
 async function removeHolding(ticker) {
   if (!confirm('Remove ' + ticker + ' from your portfolio?')) return;
+  if (!currentUser) {
+    dbPortfolio = dbPortfolio.filter(h => h.ticker !== ticker);
+    saveGuestPortfolio();
+    renderPortfolio();
+    return;
+  }
   try {
     await dataRequest('portfolio', 'DELETE', { ticker });
     await loadPortfolioFromDB();
@@ -11485,6 +11533,7 @@ hydrateStaticUiIcons();
 setupMobileChrome();
 applyUiMode();
 ensureNotificationCenter();
+loadGuestPortfolio();
 // Pre-render the default tab
 renderNews();
 // Check auth — shows login overlay if not logged in, syncs data if session exists
