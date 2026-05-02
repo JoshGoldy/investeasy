@@ -1788,10 +1788,10 @@ ${list.length === 0 ? `<div style="text-align:center;padding:40px;color:var(--fa
           <span style="font-size:11px;color:${isRead?'var(--faint)':'var(--green)'};font-weight:600">${isRead?'Read ✓':'Read more →'}</span>
         </div>
         <button onclick="event.stopPropagation();confirmAndAnalyzeNews(${actualIdx})"
-          style="margin-top:8px;width:100%;padding:7px;border-radius:10px;background:#7c3aed14;color:#a78bfa;
-                 font-size:11px;font-weight:700;border:1px solid #7c3aed30;cursor:pointer;
+          style="margin-top:8px;width:100%;padding:7px;border-radius:10px;background:#3b82f614;color:#2563eb;
+                 font-size:11px;font-weight:700;border:1px solid #3b82f630;cursor:pointer;
                  display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s"
-          onmouseenter="this.style.background='#7c3aed22'" onmouseleave="this.style.background='#7c3aed14'">
+          onmouseenter="this.style.background='#3b82f622'" onmouseleave="this.style.background='#3b82f614'">
         ${iconMarkup('bot', 'btn-icon')} Analyze with FinBot
         </button>
       </div>`;
@@ -2031,7 +2031,7 @@ function openNewsArticle(idx, fromLive) {
       <div id="news-body-box" style="margin:14px 0 16px">${bodyHtml}</div>
       <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">${iconMarkup('bolt', 'inline-icon')} This analysis uses <strong style="color:var(--text)">2 credits</strong></p>
       <button onclick="confirmAndAnalyzeNews(${idx})"
-        style="width:100%;padding:14px;border-radius:var(--radius-sm);background:linear-gradient(135deg,#7c3aed,#6d28d9);
+        style="width:100%;padding:14px;border-radius:var(--radius-sm);background:linear-gradient(135deg,#3b82f6,#2563eb);
                color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;margin-bottom:10px;
                display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s"
         onmouseenter="this.style.opacity='.9'" onmouseleave="this.style.opacity='1'">
@@ -2148,12 +2148,12 @@ Keep the tone professional but accessible. Use Markdown formatting. End with exa
   // Loading state
   content.innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;padding:48px 20px;gap:14px">
-      <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#6d28d9);
+      <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#2563eb);
                   display:flex;align-items:center;justify-content:center;font-size:24px">🤖</div>
       <p style="font-weight:800;font-size:16px;color:var(--text)">Analyzing article…</p>
       <p style="font-size:12px;color:var(--faint);text-align:center;line-height:1.6">FinBot is reading and breaking down<br>this article for you</p>
       <div class="loading-dots" style="margin-top:4px">
-        ${[0,1,2].map(i=>`<span style="background:#7c3aed;animation:bd 1.4s ease-in-out ${i*0.2}s infinite"></span>`).join('')}
+        ${[0,1,2].map(i=>`<span style="background:#3b82f6;animation:bd 1.4s ease-in-out ${i*0.2}s infinite"></span>`).join('')}
       </div>
     </div>`;
 
@@ -2192,7 +2192,7 @@ function renderFinBotNewsResult(idx, text, articleLink, n) {
         🤖
         <div>
           <p style="font-weight:800;font-size:14px;color:var(--text)">FinBot Analysis</p>
-          <p style="font-size:11px;color:#a78bfa;font-weight:600">AI Financial Analyst</p>
+          <p style="font-size:11px;color:#2563eb;font-weight:600">AI Financial Analyst</p>
         </div>
         <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;font-weight:700;color:#10b981;background:#10b98115;padding:3px 10px;border-radius:20px">✓ Complete</span>
@@ -2206,7 +2206,7 @@ function renderFinBotNewsResult(idx, text, articleLink, n) {
       <div class="result-content" style="font-size:13.5px;line-height:1.75">${parseMd(text)}</div>
       <div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px">
         <button onclick="saveNewsAnalysis(${idx})" id="finbot-news-save-btn-big"
-          style="width:100%;padding:13px;border-radius:12px;${isSaved ? 'background:#10b98122;color:#10b981;border:1.5px solid #10b981' : 'background:#7c3aed18;color:#a78bfa;border:1.5px solid #7c3aed40'};
+          style="width:100%;padding:13px;border-radius:12px;${isSaved ? 'background:#10b98122;color:#10b981;border:1.5px solid #10b981' : 'background:#3b82f618;color:#2563eb;border:1.5px solid #3b82f640'};
                  font-size:13px;font-weight:700;cursor:pointer;transition:all .2s">
           ${isSaved ? '🔖 View in Saved Reports →' : '🔖 Save Report'}
         </button>
@@ -2230,7 +2230,7 @@ async function saveNewsAnalysis(idx) {
     modeId:       'news',
     modeTitle:    n.title,
     modeSub:      n.publisher || 'News',
-    modeCol:      '#7c3aed',
+    modeCol:      '#2563eb',
     modeIcon:     '📰',
     content:      finbotNewsState.result,
     articleLink,
@@ -4453,9 +4453,9 @@ function renderFinBot() {
         </div>` : ''}
       </div>
       ${finbotState.error === 'upgrade_required' ? `
-        <div class="error-box" style="background:#7c3aed14;border-color:#7c3aed44">
-          <p style="font-weight:700;font-size:14px;color:#a78bfa">Upgrade Required</p>
-          <p style="margin:6px 0 16px;font-size:13px;color:#c4b5fd;line-height:1.5">FinBot is only available on paid plans. Choose Basic, Pro, or Enterprise to continue.</p>
+        <div class="error-box" style="background:#3b82f614;border-color:#3b82f644">
+          <p style="font-weight:700;font-size:14px;color:#2563eb">Upgrade Required</p>
+          <p style="margin:6px 0 16px;font-size:13px;color:#3b82f6;line-height:1.5">FinBot is only available on paid plans. Choose Basic, Pro, or Enterprise to continue.</p>
           ${renderBillingPlanCards(currentUser?.tier || 'free')}
         </div>
       ` : finbotState.error === 'no_credits' ? `
@@ -6630,11 +6630,11 @@ function renderDBPortfolio() {
     </div>
 
     <button onclick="analyzePortfolioWithFinBot()"
-      style="width:100%;padding:13px;border-radius:14px;background:linear-gradient(135deg,#7c3aed18,#6d28d918);
-             color:#a78bfa;font-size:13px;font-weight:700;border:1.5px solid #7c3aed30;cursor:pointer;
+      style="width:100%;padding:13px;border-radius:14px;background:linear-gradient(135deg,#3b82f618,#2563eb18);
+             color:#2563eb;font-size:13px;font-weight:700;border:1.5px solid #3b82f630;cursor:pointer;
              margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s"
-      onmouseenter="this.style.background='linear-gradient(135deg,#7c3aed28,#6d28d928)'"
-      onmouseleave="this.style.background='linear-gradient(135deg,#7c3aed18,#6d28d918)'">
+      onmouseenter="this.style.background='linear-gradient(135deg,#3b82f628,#2563eb28)'"
+      onmouseleave="this.style.background='linear-gradient(135deg,#3b82f618,#2563eb18)'">
       🤖 Analyze Portfolio with FinBot →
     </button>
 
