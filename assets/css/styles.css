@@ -159,7 +159,8 @@ body[data-ui-mode="terminal"] .nav button[data-tab="learn"]{display:none!importa
 .mode-icon-glyph svg,.loading-icon-glyph svg,.pill-icon .ui-icon svg{width:1.15em;height:1.15em}
 .learn-topic-icon-glyph svg,.badge-icon-glyph svg,.path-node-icon svg,.learn-detail-icon svg,.modal-header-icon svg,.saved-card-icon-glyph svg,.saved-empty-icon-glyph svg,.saved-feature-icon svg,.finbot-analysis-icon svg,.settings-row-icon .ui-icon svg,.finbot-icon .ui-icon svg,.streak-flame .ui-icon svg,.news-bookmark-btn .ui-icon svg,.alert-bell .ui-icon svg,.saved-card-star .ui-icon svg{width:1.1em;height:1.1em}
 .settings-icon-glyph svg{width:18px;height:18px;stroke-width:1.8}
-.finbot-hero-icon svg{width:26px;height:26px;stroke-width:1.75}
+.finbot-hero-icon{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px}
+.finbot-hero-icon svg{width:46px!important;height:46px!important;stroke-width:1.85}
 .finbot-main-icon svg{width:23px;height:23px;stroke-width:1.7}
 .finbot-avatar-icon svg{width:17px;height:17px;stroke-width:1.8}
 .learn-topic-emoji,.learn-detail-emoji,.path-node-emoji,.badge-emoji{display:inline-flex;align-items:center;justify-content:center;line-height:1}
