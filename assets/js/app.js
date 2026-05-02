@@ -2489,7 +2489,7 @@ function renderMarkets(filter) {
                title="${hasAlert?'Manage alerts':'Set price alert'}">${marketAlertIcon(hasAlert)}</button>`
           : '';
         const overlapBadge = overlapPct
-          ? `<div class="overlap-badge" title="In Portfolio · ${overlapPct}%">Portfolio · ${overlapPct}%</div>`
+          ? `<div class="overlap-badge" title="In Portfolio · ${overlapPct}%"><span class="overlap-badge-full">In Portfolio · ${overlapPct}%</span><span class="overlap-badge-mobile">In Portfolio</span></div>`
           : '';
 
         return `
@@ -4376,7 +4376,7 @@ function renderFinBot() {
             <h2>FinBot</h2>
             <p style="font-size:11px;color:var(--faint)">Quick chat + 6 elite analysis modes</p>
           </div>
-          <div style="display:flex;align-items:center;gap:6px">
+          <div class="finbot-account-pills" style="display:flex;align-items:center;gap:6px">
             <span style="font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${getTierPresentation(currentUser.tier).chipBg};color:${getTierPresentation(currentUser.tier).chipColor}">${getTierPresentation(currentUser.tier).label}</span>
             <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:#10b98122;color:#10b981">⚡ ${currentUser.finbot_credits??0} credits</span>
           </div>
