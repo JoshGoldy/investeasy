@@ -4,7 +4,6 @@
 
 let currentUser   = null;          // {id, name, email, username, tier, finbot_credits} when logged in
 const REMEMBER_ME_KEY = 'fs_remember_me';
-const GUEST_PORTFOLIO_KEY = 'ie_guest_portfolio';
 let dbPortfolio   = [];            // [{ticker,name,shares,avg_cost}]
 let watchlistSet  = new Set();     // Set of tickers on watchlist
 let dbSavedReports = null;         // null = guest/fallback (localStorage), array = logged-in (DB)
@@ -2354,7 +2353,7 @@ function renderMarkets(filter) {
 
   // ── Portfolio overlap map ──────────────────────────────────────────────────
   const portfolioMap = {};
-  if (dbPortfolio.length) {
+  if (currentUser && dbPortfolio.length) {
     const totalValue = dbPortfolio.reduce((s, h) => {
       const mkt = MARKETS.find(x => x.ticker === h.ticker);
       const unitUsd = mkt ? marketNativeToUsd(mkt, mkt.val) : h.avg_cost;
@@ -2801,7 +2800,7 @@ function openStockDetail(idx) {
           style="flex:1;padding:13px;border-radius:13px;background:${watchlistSet.has(stock.ticker)?'#10b98118':'#1e293b'};border:1.5px solid ${watchlistSet.has(stock.ticker)?'#10b981':'#ffffff0a'};font-size:13px;font-weight:700;color:${watchlistSet.has(stock.ticker)?'#10b981':'#64748b'};cursor:pointer;transition:all .2s">
           ${starIcon('inline-star-icon')} Watchlist
         </button>` : ''}
-        <button onclick="openAddHoldingModal('${stock.ticker}','${stock.name.replace(/'/g,"\\'")}')"
+        <button onclick="${currentUser ? `openAddHoldingModal('${stock.ticker}','${stock.name.replace(/'/g,"\\'")}')` : `document.getElementById('auth-overlay').classList.remove('hidden');showAuthTab('register')`}"
           style="flex:1;padding:13px;border-radius:13px;background:var(--green);color:#fff;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .2s">
           + Portfolio
         </button>
@@ -5968,8 +5967,10 @@ function renderEmptyPortfolioDashboard() {
 }
 
 function renderPortfolio() {
-  // Render the same editable portfolio surface for signed-in users and guests.
-  // Guests use localStorage; signed-in users sync with the database.
+  if (!currentUser) {
+    renderPortfolioGuestWall();
+    return;
+  }
   if (dbPortfolio.length > 0) {
     renderDBPortfolio();
     return;
@@ -6136,6 +6137,40 @@ function renderPortfolio() {
     if (donut) makeDonut(donut, HOLDINGS.map((h, i) => ({ label: h.ticker, pct: h.alloc, color: ALLOC_COLORS[i] })));
     animatePnlBars();
   });
+}
+
+function renderPortfolioGuestWall() {
+  document.getElementById('tab-portfolio').innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 20px 24px">
+      <div class="saved-guest-icon">${iconMarkup('lock-password', 'saved-guest-icon-glyph')}</div>
+      <h2 style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px">Portfolio</h2>
+      <p style="font-size:13.5px;color:var(--muted);line-height:1.65;max-width:340px;margin-bottom:24px">
+        Create a free account to save holdings, import your portfolio, track allocation, and keep everything synced across devices.
+      </p>
+      <button onclick="document.getElementById('auth-overlay').classList.remove('hidden');showAuthTab('register')"
+        style="padding:14px 32px;border-radius:14px;background:var(--green);color:#fff;
+               font-size:14px;font-weight:800;border:none;cursor:pointer;margin-bottom:32px;width:100%;max-width:320px">
+        Sign Up to Use Portfolio
+      </button>
+    </div>
+    <p style="font-weight:700;font-size:11px;color:var(--faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;padding:0 4px">What you unlock</p>
+    ${[
+      { icon:'wallet-02', col:'#10b981', title:'Real holdings', desc:'Add stocks, ETFs, crypto and JSE shares with units and average cost.' },
+      { icon:'pie-chart-09', col:'#3b82f6', title:'Portfolio analytics', desc:'See allocation, returns, categories, concentration and diversification insights.' },
+    ].map(f => `
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:14px;
+                  background:var(--card);border:1px solid var(--border);margin-bottom:10px">
+        <div class="mode-icon" style="background:${f.col}18;color:${f.col};width:42px;height:42px;border-radius:14px;flex-shrink:0">
+          ${iconMarkup(f.icon, 'mode-icon-glyph')}
+        </div>
+        <div>
+          <p style="font-size:14px;font-weight:900;color:var(--text);margin-bottom:4px">${f.title}</p>
+          <p style="font-size:12.5px;color:var(--muted);line-height:1.55">${f.desc}</p>
+        </div>
+      </div>
+    `).join('')}
+  `;
+  scheduleUiIconRefresh(document.getElementById('tab-portfolio'));
 }
 
 function renderEmptyPortfolio() {
@@ -8344,7 +8379,6 @@ function bindSupabaseAuthListener() {
   sb.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT' || !session?.user) {
       currentUser = null;
-      loadGuestPortfolio();
       updateHeaderUser();
       const activeTab = document.querySelector('.tab-content.active');
       if (activeTab?.id === 'tab-portfolio') renderPortfolio();
@@ -8601,7 +8635,6 @@ async function checkAuth() {
   if (!shouldRememberSession() && isSupabaseConfigured()) {
     try { await getSupabase().auth.signOut(); } catch (e) {}
     currentUser = null;
-    loadGuestPortfolio();
     updateHeaderUser();
     return;
   }
@@ -8613,7 +8646,6 @@ async function checkAuth() {
       await syncAfterLogin();
     }
   } catch(e) { /* db.php not set up yet — run in demo mode */ }
-  if (!currentUser) loadGuestPortfolio();
   // Always go to home page — no login required
   document.getElementById('auth-overlay').classList.add('hidden');
   updateHeaderUser();
@@ -8790,8 +8822,7 @@ async function doLogout() {
   compareMode            = false;
   dbSavedReports         = null;
   dbSavedReportsLoading  = false;
-  loadGuestPortfolio();
-  // Settings require login; portfolio stays usable with local guest holdings.
+  // Portfolio/settings require login; portfolio shows its own guest wall.
   const activeTab = document.querySelector('.tab-content.active');
   if (activeTab?.id === 'tab-settings') {
     switchTab('news');
@@ -8892,31 +8923,6 @@ async function loadPortfolioFromDB() {
   try {
     const d = await dataRequest('portfolio');
     if (d.success) dbPortfolio = d.portfolio;
-  } catch(e) {}
-}
-
-function loadGuestPortfolio() {
-  if (currentUser) return;
-  try {
-    const rows = JSON.parse(localStorage.getItem(GUEST_PORTFOLIO_KEY) || '[]');
-    dbPortfolio = Array.isArray(rows)
-      ? rows.map(h => ({
-          ticker: String(h.ticker || '').trim().toUpperCase(),
-          name: String(h.name || h.ticker || '').trim(),
-          shares: Number(h.shares),
-          avg_cost: Number(h.avg_cost),
-          currency: h.currency || undefined,
-        })).filter(h => h.ticker && Number.isFinite(h.shares) && h.shares > 0 && Number.isFinite(h.avg_cost))
-      : [];
-  } catch(e) {
-    dbPortfolio = [];
-  }
-}
-
-function saveGuestPortfolio() {
-  if (currentUser) return;
-  try {
-    localStorage.setItem(GUEST_PORTFOLIO_KEY, JSON.stringify(dbPortfolio));
   } catch(e) {}
 }
 
@@ -9347,16 +9353,10 @@ async function savePortfolioImportRows() {
           avg_cost: totalShares > 0 ? totalCost / totalShares : row.avg_cost,
         };
       }
-      if (!currentUser) {
-        if (existing) Object.assign(existing, payload);
-        else dbPortfolio.push(payload);
-        continue;
-      }
       const d = await dataRequest('portfolio', 'POST', payload);
       if (!d.success) throw new Error(d.error || `Could not import ${row.ticker}`);
     }
-    if (currentUser) await loadPortfolioFromDB();
-    else saveGuestPortfolio();
+    await loadPortfolioFromDB();
     closeImportPortfolioModal();
     renderPortfolio();
     showToast(`Imported ${rows.length} holding${rows.length === 1 ? '' : 's'}`);
@@ -9368,6 +9368,11 @@ async function savePortfolioImportRows() {
 }
 
 function openAddHoldingModal(ticker = '', name = '') {
+  if (!currentUser) {
+    document.getElementById('auth-overlay').classList.remove('hidden');
+    showAuthTab('register');
+    return;
+  }
   const asset = getQuickHoldingAsset(ticker, name);
   const existing = asset.ticker ? dbPortfolio.find(h => h.ticker === asset.ticker) : null;
   const sharesValue = existing ? Number(existing.shares) : '';
@@ -9420,17 +9425,6 @@ async function saveHolding() {
     return;
   }
 
-  if (!currentUser) {
-    const existing = dbPortfolio.find(h => h.ticker === ticker);
-    const payload = { ticker, name, shares, avg_cost: avgCost };
-    if (existing) Object.assign(existing, payload);
-    else dbPortfolio.push(payload);
-    saveGuestPortfolio();
-    closeAddHoldingModal();
-    renderPortfolio();
-    return;
-  }
-
   try {
     const d = await dataRequest('portfolio', 'POST', { ticker, name, shares, avg_cost: avgCost });
     if (d.success) {
@@ -9449,12 +9443,6 @@ async function saveHolding() {
 
 async function removeHolding(ticker) {
   if (!confirm('Remove ' + ticker + ' from your portfolio?')) return;
-  if (!currentUser) {
-    dbPortfolio = dbPortfolio.filter(h => h.ticker !== ticker);
-    saveGuestPortfolio();
-    renderPortfolio();
-    return;
-  }
   try {
     await dataRequest('portfolio', 'DELETE', { ticker });
     await loadPortfolioFromDB();
@@ -11533,7 +11521,6 @@ hydrateStaticUiIcons();
 setupMobileChrome();
 applyUiMode();
 ensureNotificationCenter();
-loadGuestPortfolio();
 // Pre-render the default tab
 renderNews();
 // Check auth — shows login overlay if not logged in, syncs data if session exists
