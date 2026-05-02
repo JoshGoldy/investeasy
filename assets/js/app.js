@@ -4383,12 +4383,12 @@ function renderFinBot() {
         </div>
       </div>
       <div class="disclaimer-box">
-        <div style="display:flex;gap:10px;align-items:flex-start">
-          <span style="font-size:18px;flex-shrink:0">⚖️</span>
+        <div class="disclaimer-inner">
+          <span class="disclaimer-icon">${iconMarkup('balance-scale', 'disclaimer-icon-glyph')}</span>
           <div>
-            <p style="font-weight:800;font-size:12px;color:var(--border);margin-bottom:4px">Educational Tool Only</p>
-            <p style="font-size:11.5px;color:var(--faint);line-height:1.65">
-              FinScope FinBot is an <strong style="color:#e2e8f0">educational tool</strong>. It does not constitute financial advice. Always consult a licensed professional before making investment decisions.
+            <p class="disclaimer-title">Educational Tool Only</p>
+            <p class="disclaimer-text">
+              FinScope FinBot is an <strong>educational tool</strong>. It does not constitute financial advice. Always consult a licensed professional before making investment decisions.
             </p>
           </div>
         </div>
