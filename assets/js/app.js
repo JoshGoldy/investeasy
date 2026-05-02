@@ -4248,14 +4248,14 @@ function renderFinBot() {
   if (!currentUser) {
     el.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 20px 24px">
-        <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#7c3aed,#6d28d9);
+        <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#3b82f6,#2563eb);
                     display:flex;align-items:center;justify-content:center;color:#fff;margin-bottom:16px">${iconMarkup('bot', 'finbot-hero-icon')}</div>
         <h2 style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px">Meet FinBot</h2>
         <p style="font-size:13.5px;color:var(--muted);line-height:1.65;max-width:300px;margin-bottom:24px">
           Your personal AI financial analyst. Run deep analysis on stocks, portfolios, news, and more — all in seconds.
         </p>
         <button onclick="document.getElementById('auth-overlay').classList.remove('hidden');showAuthTab('login')"
-          style="padding:14px 32px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;
+          style="padding:14px 32px;border-radius:14px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;
                  font-size:14px;font-weight:800;border:none;cursor:pointer;margin-bottom:32px;width:100%;max-width:320px">
           Sign In to Use FinBot
         </button>
@@ -4289,7 +4289,7 @@ function renderFinBot() {
   if (userTier === 'free') {
     el.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 20px 24px">
-        <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#7c3aed,#6d28d9);
+        <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#3b82f6,#2563eb);
                     display:flex;align-items:center;justify-content:center;color:#fff;margin-bottom:16px">${iconMarkup('bot', 'finbot-hero-icon')}</div>
         <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:#64748b22;margin-bottom:12px">
           <span style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em">Free Plan</span>
