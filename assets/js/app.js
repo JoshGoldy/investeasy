@@ -5695,7 +5695,7 @@ function portfolioCategoryRows(items) {
         <div class="category-item">
           <div class="category-name">${item.name}</div>
           <div class="category-track">
-            <div class="category-fill" style="width:${Math.max((item.pct / max) * 100, item.pct > 0 ? 10 : 0)}%"></div>
+            <div class="category-fill" style="width:${Math.max((item.pct / max) * 100, item.pct > 0 ? 10 : 0)}%;background:${item.color || 'var(--green)'}"></div>
           </div>
           <div class="category-value">${item.value}</div>
         </div>
@@ -6286,7 +6286,7 @@ function renderDBPortfolio() {
     value: index === 5 ? holdings.length : Math.max(0, Math.round((holdings.length / 6) * index * 0.2)),
     display: index === 5 ? String(holdings.length) : String(Math.max(0, Math.round((holdings.length / 6) * index * 0.2)))
   }));
-  const topCategories = sectorList.slice(0, 4).map(s => ({ name: s.name, pct: s.pct, value: s.pct.toFixed(1) + '%' }));
+  const topCategories = sectorList.slice(0, 4).map(s => ({ name: s.name, pct: s.pct, value: s.pct.toFixed(1) + '%', color: SECTOR_COLORS[s.name] || '#94a3b8' }));
   const allocations = holdings
     .map((h, i) => ({
       ...h,
