@@ -553,17 +553,17 @@ const CAT_COLORS = {
 };
 
 const FINBOT_MODES = [
-  { id:'screener', icon:'📊', title:'Stock Screener', sub:'Jake', col:'#10b981',
+  { id:'screener', icon:'chart', title:'Stock Screener', sub:'Jake', col:'#10b981',
     desc:"I'm Jake — been hunting stocks for 15 years. Tell me your budget and risk appetite and I'll dig through thousands of companies to hand you a shortlist worth your time." },
-  { id:'dcf', icon:'📈', title:'DCF Valuation', sub:'Emily', col:'#3b82f6',
+  { id:'dcf', icon:'calculate', title:'DCF Valuation', sub:'Emily', col:'#3b82f6',
     desc:"I'm Emily — I live in spreadsheets so you don't have to. Give me a ticker and I'll build the full cash flow model and tell you exactly what it's actually worth." },
-  { id:'risk', icon:'🛡', title:'Risk Assessment', sub:'Marcus', col:'#f59e0b',
+  { id:'risk', icon:'security-warning', title:'Risk Assessment', sub:'Marcus', col:'#f59e0b',
     desc:"I'm Marcus — I've seen every kind of portfolio blow up. Drop your holdings and I'll map every hidden risk before the market finds it for you." },
-  { id:'earnings', icon:'📋', title:'Earnings Preview', sub:'Priya', col:'#8b5cf6',
+  { id:'earnings', icon:'search-list-02', title:'Earnings Preview', sub:'Priya', col:'#8b5cf6',
     desc:"I'm Priya — earnings season is my favourite time of year. I'll break down the history, set the bar, and tell you exactly how to play the announcement." },
-  { id:'builder', icon:'🏗', title:'Portfolio Builder', sub:'Leo', col:'#06b6d4',
+  { id:'builder', icon:'briefcase-dollar', title:'Portfolio Builder', sub:'Leo', col:'#06b6d4',
     desc:"I'm Leo — I build portfolios people actually stick to. Share your goals and I'll put together a real plan with specific ETFs, a timeline, and a strategy that fits your life." },
-  { id:'technical', icon:'📉', title:'Technical Analysis', sub:'Zoe', col:'#ec4899',
+  { id:'technical', icon:'chart-line-data-02', title:'Technical Analysis', sub:'Zoe', col:'#ec4899',
     desc:"I'm Zoe — I read charts the way others read books. Give me a ticker and I'll map the trend, the key levels, and tell you exactly where to get in and out." },
 ];
 
@@ -678,6 +678,11 @@ const UI_ICON_PATHS = {
   "balance-scale": ['M12 5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0', 'M10 5H4M14 5H20', 'M17 21H7', 'M12 7V21', 'M22 14C22 15.6569 20.6569 17 19 17C17.3431 17 16 15.6569 16 14M22 14L19.5 8H18.5L16 14M22 14H16', 'M8 14C8 15.6569 6.65685 17 5 17C3.34315 17 2 15.6569 2 14M8 14L5.5 8H4.5L2 14M8 14H2'],
   "time-04": ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z', 'M9.5 9.5L12.9999 12.9996M16 8L11 13'],
   chart: ['M15 21V6C15 5.06812 15 4.60218 14.8478 4.23463C14.6448 3.74458 14.2554 3.35523 13.7654 3.15224C13.3978 3 12.9319 3 12 3C11.0681 3 10.6022 3 10.2346 3.15224C9.74458 3.35523 9.35523 3.74458 9.15224 4.23463C9 4.60218 9 5.06812 9 6V21H15Z', 'M17 8H15V21H17C18.8856 21 19.8284 21 20.4142 20.4142C21 19.8284 21 18.8856 21 17V12C21 10.1144 21 9.17157 20.4142 8.58579C19.8284 8 18.8856 8 17 8Z', 'M9 13H7C5.11438 13 4.17157 13 3.58579 13.5858C3 14.1716 3 15.1144 3 17C3 18.8856 3 19.8284 3.58579 20.4142C4.17157 21 5.11438 21 7 21H9V13Z'],
+  calculate: ['M21.5 12.95V11.05C21.5 7.01949 21.5 5.00424 20.1088 3.75212C18.7175 2.5 16.4783 2.5 12 2.5C7.52166 2.5 5.28249 2.5 3.89124 3.75212C2.5 5.00424 2.5 7.01949 2.5 11.05V12.95C2.5 16.9805 2.5 18.9958 3.89124 20.2479C5.28249 21.5 7.52166 21.5 12 21.5C16.4783 21.5 18.7175 21.5 20.1088 20.2479C21.5 18.9958 21.5 16.9805 21.5 12.95Z', 'M18 8H14M16 6L16 10', 'M18 17.5H14', 'M18 14.5H14', 'M10 17.5L8.25 15.75M8.25 15.75L6.5 14M8.25 15.75L10 14M8.25 15.75L6.5 17.5', 'M10 8H6'],
+  "security-warning": ['M18.7088 3.49534C16.8165 2.55382 14.5009 2 12 2C9.4991 2 7.1835 2.55382 5.29116 3.49534C4.36318 3.95706 3.89919 4.18792 3.4496 4.91378C3 5.63965 3 6.34248 3 7.74814V11.2371C3 16.9205 7.54236 20.0804 10.173 21.4338C10.9067 21.8113 11.2735 22 12 22C12.7265 22 13.0933 21.8113 13.8269 21.4338C16.4576 20.0804 21 16.9205 21 11.2371L21 7.74814C21 6.34249 21 5.63966 20.5504 4.91378C20.1008 4.18791 19.6368 3.95706 18.7088 3.49534Z', 'M12 11V7', 'M12.125 14.75H12M12.25 14.75C12.25 14.8881 12.1381 15 12 15C11.8619 15 11.75 14.8881 11.75 14.75C11.75 14.6119 11.8619 14.5 12 14.5C12.1381 14.5 12.25 14.6119 12.25 14.75Z'],
+  "search-list-02": ['M2.5 9.5H6.5', 'M2.5 14.5H6.5', 'M2.5 19.5H18.5', 'M18.5355 13.0355L21.5 16M20 9.5C20 6.73858 17.7614 4.5 15 4.5C12.2386 4.5 10 6.73858 10 9.5C10 12.2614 12.2386 14.5 15 14.5C17.7614 14.5 20 12.2614 20 9.5Z'],
+  "briefcase-dollar": ['M2 14C2 10.4934 2 8.74003 2.90796 7.55992C3.07418 7.34388 3.25989 7.14579 3.46243 6.96849C4.56878 6 6.21252 6 9.5 6H14.5C17.7875 6 19.4312 6 20.5376 6.96849C20.7401 7.14579 20.9258 7.34388 21.092 7.55992C22 8.74003 22 10.4934 22 14C22 17.5066 22 19.26 21.092 20.4401C20.9258 20.6561 20.7401 20.8542 20.5376 21.0315C19.4312 22 17.7875 22 14.5 22H9.5C6.21252 22 4.56878 22 3.46243 21.0315C3.25989 20.8542 3.07418 20.6561 2.90796 20.4401C2 19.26 2 17.5066 2 14Z', 'M16 6C16 4.11438 16 3.17157 15.4142 2.58579C14.8284 2 13.8856 2 12 2C10.1144 2 9.17157 2 8.58579 2.58579C8 3.17157 8 4.11438 8 6', 'M12 11C10.8954 11 10 11.6716 10 12.5C10 13.3284 10.8954 14 12 14C13.1046 14 14 14.6716 14 15.5C14 16.3284 13.1046 17 12 17M12 11C12.8708 11 13.6116 11.4174 13.8862 12M12 11V10M12 17C11.1292 17 10.3884 16.5826 10.1138 16M12 17V18', 'M6 12H2', 'M22 12L18 12'],
+  "chart-line-data-02": ['M8.5 12a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z', 'M14.5 17a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z', 'M18.5 9a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z', 'M15.4341 14.2963L18 9M9.58251 11.5684L13.2038 14.2963M3 19L7.58957 11.8792', 'M20 21H9C5.70017 21 4.05025 21 3.02513 19.9749C2 18.9497 2 17.2998 2 14V3'],
   "crown-03": ['M5 20.5H19', 'M16.8717 17.5H7.1283C6.10017 17.5 5.58611 17.5 5.19623 17.2234C4.80634 16.9468 4.63649 16.4616 4.29679 15.4912L2.05123 9.07668C1.93172 8.72325 2.02503 8.3336 2.29225 8.07016C2.62854 7.73864 3.15545 7.6872 3.55117 7.94727L4.78349 8.75718C6.02739 9.5747 6.64935 9.98345 7.27815 9.83488C7.90696 9.68631 8.28019 9.04241 9.02665 7.75461L11.2412 3.93412C11.3968 3.66567 11.6864 3.5 12 3.5C12.3136 3.5 12.6032 3.66567 12.7588 3.93412L14.9733 7.75461C15.7198 9.04241 16.093 9.68631 16.7218 9.83488C17.3507 9.98345 17.9726 9.5747 19.2165 8.75718L20.4488 7.94727C20.8445 7.6872 21.3715 7.73864 21.7078 8.07016C21.975 8.3336 22.0683 8.72325 21.9488 9.07668L19.7032 15.4912C19.3635 16.4616 19.1937 16.9468 18.8038 17.2234C18.4139 17.5 17.8998 17.5 16.8717 17.5Z'],
   "coins-01": ['M15.5 13a6.5 2 0 1 0 0-4 6.5 2 0 0 0 0 4z', 'M22 15.5C22 16.6046 19.0899 17.5 15.5 17.5C11.9101 17.5 9 16.6046 9 15.5', 'M22 11V19.8C22 21.015 19.0899 22 15.5 22C11.9101 22 9 21.015 9 19.8V11', 'M8.5 6a6.5 2 0 1 0 0-4 6.5 2 0 0 0 0 4z', 'M6 11C4.10819 10.7698 2.36991 10.1745 2 9M6 16C4.10819 15.7698 2.36991 15.1745 2 14', 'M6 21C4.10819 20.7698 2.36991 20.1745 2 19L2 4', 'M15 6V4'],
   "eye-off": ['M3 3l18 18', 'M10.6 10.6a3 3 0 1 0 4.2 4.2', 'M9.9 5.1A10.9 10.9 0 0 1 12 5c5 0 9 4 10 7a18.3 18.3 0 0 1-4.3 4.9', 'M6.6 6.6A18.2 18.2 0 0 0 2 12c1 3 5 7 10 7 1.6 0 3.1-.4 4.5-1.1'],
@@ -8813,7 +8818,7 @@ function updateHeaderUser() {
   if (currentUser) {
     authBtns.style.display = 'none';
     userEl.style.display = 'flex';
-    un.textContent = '@' + currentUser.username;
+    un.textContent = String(currentUser.username || '').replace(/^@+/, '');
     av.textContent = (currentUser.name || currentUser.username)[0].toUpperCase();
     const ddName  = document.getElementById('dd-name');
     const ddEmail = document.getElementById('dd-email');
