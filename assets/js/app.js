@@ -555,7 +555,7 @@ const CAT_COLORS = {
 const FINBOT_MODES = [
   { id:'screener', icon:'chart', title:'Stock Screener', sub:'Jake', col:'#10b981',
     desc:"I'm Jake — been hunting stocks for 15 years. Tell me your budget and risk appetite and I'll dig through thousands of companies to hand you a shortlist worth your time." },
-  { id:'dcf', icon:'calculate', title:'DCF Valuation', sub:'Emily', col:'#3b82f6',
+  { id:'dcf', icon:'calculate', title:'DCF Valuation', sub:'Emily', col:'#0f766e',
     desc:"I'm Emily — I live in spreadsheets so you don't have to. Give me a ticker and I'll build the full cash flow model and tell you exactly what it's actually worth." },
   { id:'risk', icon:'security-warning', title:'Risk Assessment', sub:'Marcus', col:'#f59e0b',
     desc:"I'm Marcus — I've seen every kind of portfolio blow up. Drop your holdings and I'll map every hidden risk before the market finds it for you." },
