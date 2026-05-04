@@ -106,6 +106,8 @@ body[data-ui-mode="terminal"] .nav button[data-tab="learn"]{display:none!importa
 .signin-required-icon svg{width:15px;height:15px;stroke-width:1.8}
 .saved-inline-bookmark{margin-right:4px;color:var(--green)}
 .saved-inline-bookmark svg{width:14px;height:14px;stroke-width:1.8}
+.report-save-icon{margin-right:5px;color:currentColor}
+.report-save-icon svg{width:14px;height:14px;stroke-width:1.9}
 .saved-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px 18px;margin-bottom:12px}
 .saved-card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
 .saved-card-meta{display:flex;align-items:center;gap:10px;flex:1;min-width:0}

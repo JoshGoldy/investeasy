@@ -751,6 +751,10 @@ function bookmarkNewsIcon(isSaved) {
   return iconMarkup(isSaved ? 'bookmark-check-01' : 'bookmark-add-01', 'news-bookmark-icon');
 }
 
+function reportSaveIcon(isSaved) {
+  return iconMarkup(isSaved ? 'bookmark-check-01' : 'bookmark-add-01', 'report-save-icon');
+}
+
 function marketAlertIcon(hasAlert) {
   return iconMarkup(hasAlert ? 'notification-01' : 'notification-off-01', 'market-alert-icon');
 }
@@ -2200,7 +2204,7 @@ function renderFinBotNewsResult(idx, text, articleLink, n) {
           <button id="finbot-news-save-btn" onclick="saveNewsAnalysis(${idx})"
             style="padding:5px 12px;border-radius:10px;${isSaved ? 'background:#10b98122;color:#10b981' : 'background:var(--border);color:var(--text)'};
                    font-size:12px;font-weight:700;border:none;cursor:pointer;white-space:nowrap">
-            ${isSaved ? '🔖 Saved' : '🔖 Save'}
+            ${reportSaveIcon(isSaved)} ${isSaved ? 'Saved' : 'Save'}
           </button>
         </div>
       </div>
@@ -2209,7 +2213,7 @@ function renderFinBotNewsResult(idx, text, articleLink, n) {
         <button onclick="saveNewsAnalysis(${idx})" id="finbot-news-save-btn-big"
           style="width:100%;padding:13px;border-radius:12px;${isSaved ? 'background:#10b98122;color:#10b981;border:1.5px solid #10b981' : 'background:#3b82f618;color:#2563eb;border:1.5px solid #3b82f640'};
                  font-size:13px;font-weight:700;cursor:pointer;transition:all .2s">
-          ${isSaved ? '🔖 View in Saved Reports →' : '🔖 Save Report'}
+          ${reportSaveIcon(isSaved)} ${isSaved ? 'View in Saved Reports →' : 'Save Report'}
         </button>
         <a href="${escHtml(articleLink)}" target="_blank" rel="noopener"
           style="width:100%;padding:13px;border-radius:12px;background:var(--green);color:#fff;
@@ -4446,7 +4450,7 @@ function renderFinBot() {
           <span class="chip chip-green">✓ Complete</span>
           <button id="finbot-save-btn-top" onclick="saveFinBotReport()"
             style="padding:5px 11px;border-radius:10px;${isSaved ? 'background:#10b98122;color:#10b981' : 'background:var(--border);color:var(--text)'};font-size:12px;font-weight:700;border:none;cursor:pointer;white-space:nowrap">
-            ${isSaved ? '🔖 Saved' : '🔖 Save'}
+            ${reportSaveIcon(isSaved)} ${isSaved ? 'Saved' : 'Save'}
           </button>
         </div>` : ''}
       </div>
@@ -4474,7 +4478,7 @@ function renderFinBot() {
         ${finbotState.result ? `
           <button onclick="saveFinBotReport()" class="finbot-save-btn-big"
             style="${isSaved ? 'background:#10b98122;color:#10b981;border:1.5px solid #10b981' : 'background:var(--green-bg);color:var(--green);border:1.5px solid var(--green)'}">
-            ${isSaved ? '🔖 View in Saved →' : '🔖 Save Report'}
+            ${reportSaveIcon(isSaved)} ${isSaved ? 'View in Saved →' : 'Save Report'}
           </button>
         ` : ''}
         <button onclick="backFromFinBotResult()"
