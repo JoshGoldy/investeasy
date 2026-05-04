@@ -4424,7 +4424,7 @@ function renderFinBot() {
         <p style="font-weight:800;font-size:18px;color:var(--text);margin-top:20px">Analyzing…</p>
         <p style="font-size:13px;color:var(--faint);margin-top:8px;text-align:center;line-height:1.6">
           Generating your <strong>${modeObj.title}</strong><br>
-          <span style="font-size:11px;color:var(--border)">This may take 15–30 seconds</span>
+          <span style="font-size:11px;color:var(--muted);font-weight:700">This may take 15–30 seconds</span>
         </p>
         <div class="loading-dots">
           ${[0,1,2].map(i => `<span style="background:${modeObj.col};animation:bd 1.4s ease-in-out ${i*0.2}s infinite"></span>`).join('')}
