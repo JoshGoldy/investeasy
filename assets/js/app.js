@@ -2270,12 +2270,56 @@ function closeCreditConfirm() {
   document.getElementById('credit-confirm-modal').classList.add('hidden');
 }
 
+function getFinBotValidationMessage(modeId) {
+  const f = finbotForm;
+  if (modeId === 'dcf' && !f.ticker.trim()) return 'Enter a stock ticker first.';
+  if (modeId === 'risk' && !f.portfolio.trim()) return 'Add your holdings first, or import your portfolio.';
+  if (modeId === 'earnings' && !f.company.trim()) return 'Enter a company name or ticker first.';
+  if (modeId === 'builder') {
+    const missing = [];
+    if (!f.age.trim()) missing.push('age');
+    if (!f.income.trim()) missing.push('monthly income');
+    if (!f.savings.trim()) missing.push('amount to invest');
+    if (missing.length) return `Add your ${missing.join(', ')} first.`;
+  }
+  if (modeId === 'technical' && !f.techTicker.trim()) return 'Enter a stock ticker first.';
+  return '';
+}
+
+function isFinBotModeReady(modeId) {
+  return !getFinBotValidationMessage(modeId);
+}
+
+function updateFinBotRunButton(modeId, buttonId) {
+  const button = document.getElementById(buttonId);
+  if (button) button.disabled = !isFinBotModeReady(modeId);
+}
+
+function updateFinBotField(input, key, modeId, buttonId) {
+  finbotForm[key] = input.value;
+  updateFinBotRunButton(modeId, buttonId);
+}
+
 function confirmAndRunFinBot(modeId) {
+  const message = getFinBotValidationMessage(modeId);
+  if (message) {
+    showToast(message);
+    updateFinBotRunButton(modeId, `finbot-${modeId}-run-btn`);
+    return;
+  }
   showCreditConfirm(5, 'This analysis', () => runFinBot(modeId));
 }
 
 function confirmAndAnalyzeNews(idx) {
   showCreditConfirm(2, 'This news analysis', () => analyzeArticleWithFinBot(idx));
+}
+
+function updateFinBotTickerInput(input, key, modeId, buttonId) {
+  const value = input.value.replace(/[^a-zA-Z]/g, '').toUpperCase();
+  input.value = value;
+  finbotForm[key] = value;
+
+  updateFinBotRunButton(modeId, buttonId);
 }
 
 function analyseNewsWithFinBot(headline) {
@@ -3414,7 +3458,7 @@ let finbotChatState = {
 };
 let finbotForm = {
   risk: 'moderate', amount: '', horizon: 'medium', sectors: '',
-  ticker: '', portfolio: 'AAPL 28%, MSFT 26%, NVDA 22%, TSLA 13%, AMZN 11%', portVal: '',
+  ticker: '', portfolio: '', portVal: '',
   company: '', earnDate: '', ePos: 'none',
   age: '', income: '', savings: '', goal: 'wealth', bRisk: 'moderate', acct: 'taxable',
   techTicker: '', techPos: 'none', techLivePrice: null, techLiveChg: null, techHi52: null, techLo52: null, builderHoldings: '',
@@ -4031,6 +4075,13 @@ Include:
 }
 
 async function runFinBot(modeId) {
+  const message = getFinBotValidationMessage(modeId);
+  if (message) {
+    showToast(message);
+    updateFinBotRunButton(modeId, `finbot-${modeId}-run-btn`);
+    return;
+  }
+
   finbotState.loading = true;
   finbotState.result = null;
   finbotState.error = null;
@@ -4535,10 +4586,10 @@ function renderFinBot() {
         <p style="font-size:13px;color:#1e40af;line-height:1.6">Enter a stock ticker to get a full DCF valuation model with 5-year projections, WACC analysis, and a clear buy/hold/sell verdict.</p>
       </div>
       <div><label class="form-label">Stock Ticker — one at a time</label>
-        <input class="form-input mono" placeholder="e.g. AAPL, HSBA, SAP" value="${finbotForm.ticker}" oninput="finbotForm.ticker=this.value.replace(/[^a-zA-Z]/g,'').toUpperCase()"></div>
+        <input class="form-input mono" placeholder="e.g. AAPL, HSBA, SAP" value="${finbotForm.ticker}" oninput="updateFinBotTickerInput(this,'ticker','dcf','finbot-dcf-run-btn')"></div>
       <div style="margin-top:20px">
         <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
-        <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!finbotForm.ticker.trim()?'disabled':''} onclick="confirmAndRunFinBot('dcf')">Run DCF Valuation →</button>
+        <button id="finbot-dcf-run-btn" class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!isFinBotModeReady('dcf')?'disabled':''} onclick="confirmAndRunFinBot('dcf')">Run DCF Valuation →</button>
       </div>`;
   } else if (mode === 'risk') {
     const riskCanImport = currentUser && dbPortfolio.length > 0;
@@ -4555,26 +4606,26 @@ function renderFinBot() {
           </div>
           <textarea id="risk-holdings-ta" class="form-textarea" rows="3"
             placeholder="e.g. AAPL 20%, NESN 15%, BTC 10%, GLD 5%"
-            oninput="finbotForm.portfolio=this.value">${finbotForm.portfolio}</textarea>
+            oninput="updateFinBotField(this,'portfolio','risk','finbot-risk-run-btn')">${finbotForm.portfolio}</textarea>
           <p class="form-hint">Stocks, ETFs, crypto, commodities — any mix works</p>
         </div>
         ${currencySelectHtml()}
         <div><label class="form-label">Total Portfolio Value (optional)</label>
           <input class="form-input mono" placeholder="e.g. 50,000" value="${finbotForm.portVal}" oninput="finbotForm.portVal=this.value"></div>
         <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
-        <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" onclick="confirmAndRunFinBot('risk')">Run Risk Assessment →</button>
+        <button id="finbot-risk-run-btn" class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!isFinBotModeReady('risk')?'disabled':''} onclick="confirmAndRunFinBot('risk')">Run Risk Assessment →</button>
       </div>`;
   } else if (mode === 'earnings') {
     el.innerHTML = `${backBtn}
       <div style="display:flex;flex-direction:column;gap:16px">
         <div><label class="form-label">Company Name or Ticker</label>
-          <input class="form-input" placeholder="e.g. Apple, AAPL, Nestlé, NESN" value="${finbotForm.company}" oninput="finbotForm.company=this.value"></div>
+          <input class="form-input" placeholder="e.g. Apple, AAPL, Nestlé, NESN" value="${finbotForm.company}" oninput="updateFinBotField(this,'company','earnings','finbot-earnings-run-btn')"></div>
         <div><label class="form-label">Earnings Date (optional)</label>
           <input class="form-input" placeholder="e.g. Jan 25, 2025" value="${finbotForm.earnDate}" oninput="finbotForm.earnDate=this.value"></div>
         <div><label class="form-label">Your Position</label>
           ${pillsHtml('ePos', [{k:'none',l:'None'},{k:'Long',e:'📈',l:'Long'},{k:'Short',e:'📉',l:'Short'}])}</div>
         <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
-        <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!finbotForm.company.trim()?'disabled':''} onclick="confirmAndRunFinBot('earnings')">Run Earnings Preview →</button>
+        <button id="finbot-earnings-run-btn" class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!isFinBotModeReady('earnings')?'disabled':''} onclick="confirmAndRunFinBot('earnings')">Run Earnings Preview →</button>
       </div>`;
   } else if (mode === 'builder') {
     const bldrCanImport = currentUser && dbPortfolio.length > 0;
@@ -4582,11 +4633,11 @@ function renderFinBot() {
       <div style="display:flex;flex-direction:column;gap:16px">
         ${currencySelectHtml()}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div><label class="form-label">Age</label><input class="form-input" placeholder="e.g. 23" value="${finbotForm.age}" oninput="finbotForm.age=this.value"></div>
-          <div><label class="form-label">Monthly Income</label><input class="form-input" placeholder="e.g. 5,000" value="${finbotForm.income}" oninput="finbotForm.income=this.value"></div>
+          <div><label class="form-label">Age</label><input class="form-input" placeholder="e.g. 23" value="${finbotForm.age}" oninput="updateFinBotField(this,'age','builder','finbot-builder-run-btn')"></div>
+          <div><label class="form-label">Monthly Income</label><input class="form-input" placeholder="e.g. 5,000" value="${finbotForm.income}" oninput="updateFinBotField(this,'income','builder','finbot-builder-run-btn')"></div>
         </div>
         <div><label class="form-label">Amount to Invest</label>
-          <input class="form-input" placeholder="e.g. 20,000 lump + 500/mo" value="${finbotForm.savings}" oninput="finbotForm.savings=this.value"></div>
+          <input class="form-input" placeholder="e.g. 20,000 lump + 500/mo" value="${finbotForm.savings}" oninput="updateFinBotField(this,'savings','builder','finbot-builder-run-btn')"></div>
         <div><label class="form-label">Investment Goal</label>
           ${pillsHtml('goal', [{k:'wealth',l:'Build Wealth'},{k:'retirement',l:'Retirement'},{k:'income',l:'Passive Income'}])}</div>
         <div><label class="form-label">Risk Tolerance</label>
@@ -4608,7 +4659,7 @@ function renderFinBot() {
           <p class="form-hint">Leo will build around what you already own</p>
         </div>
         <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
-        <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" onclick="confirmAndRunFinBot('builder')">Build My Portfolio →</button>
+        <button id="finbot-builder-run-btn" class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!isFinBotModeReady('builder')?'disabled':''} onclick="confirmAndRunFinBot('builder')">Build My Portfolio →</button>
       </div>`;
   } else if (mode === 'technical') {
     el.innerHTML = `${backBtn}
@@ -4617,11 +4668,11 @@ function renderFinBot() {
       </div>
       <div style="display:flex;flex-direction:column;gap:16px">
         <div><label class="form-label">Stock Ticker</label>
-          <input class="form-input mono" placeholder="e.g. TSLA, BABA, VOW3" value="${finbotForm.techTicker}" oninput="finbotForm.techTicker=this.value.replace(/[^a-zA-Z]/g,'').toUpperCase()"></div>
+          <input class="form-input mono" placeholder="e.g. TSLA, BABA, VOW3" value="${finbotForm.techTicker}" oninput="updateFinBotTickerInput(this,'techTicker','technical','finbot-technical-run-btn')"></div>
         <div><label class="form-label">Current Position</label>
           ${pillsHtml('techPos', [{k:'none',l:'No Position'},{k:'Long',e:'📈',l:'Currently Long'},{k:'Short',e:'📉',l:'Currently Short'}])}</div>
         <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">⚡ This analysis uses <strong style="color:var(--text)">5 credits</strong></p>
-        <button class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!finbotForm.techTicker.trim()?'disabled':''} onclick="confirmAndRunFinBot('technical')">Run Technical Analysis →</button>
+        <button id="finbot-technical-run-btn" class="run-btn" style="background:linear-gradient(135deg,${modeObj.col},${modeObj.col}dd)" ${!isFinBotModeReady('technical')?'disabled':''} onclick="confirmAndRunFinBot('technical')">Run Technical Analysis →</button>
       </div>
       ${!isLive && calendarLoadError ? `
         <div class="error-box" style="margin-bottom:14px;background:#f59e0b12;border-color:#f59e0b44">
