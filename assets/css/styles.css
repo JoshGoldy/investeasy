@@ -2357,9 +2357,9 @@ body[data-ui-mode="terminal"] .saved-preview::after{
   --card-soft:#f8fbfb;
   --dark:#0f172a;
   --dark2:#334155;
-  --border:#dbe5e7;
-  --border2:#c8d5d8;
-  --border-strong:#94a3b8;
+  --border:#e2e8f0;
+  --border2:#cbd5e1;
+  --border-strong:#cbd5e1;
   --green:var(--primary);
   --green-2:var(--secondary);
   --green-bg:#0d948812;
@@ -2610,13 +2610,15 @@ body[data-ui-mode="terminal"] .nav button.active svg{color:#fff!important;stroke
 }
 .nav-brand{
   justify-content:center;
+  min-height:96px;
+  padding:18px 20px;
 }
 .nav-brand-logo{
   display:block;
   width:100%;
-  max-width:190px;
+  max-width:240px;
   height:auto;
-  max-height:48px;
+  max-height:72px;
   object-fit:contain;
 }
 @media(max-width:768px){
