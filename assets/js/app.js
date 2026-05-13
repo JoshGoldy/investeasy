@@ -463,7 +463,7 @@ function buildStaticFallbackNews() {
     {
       uuid: 'fallback-fed-rate-path',
       title: 'Markets weigh the next rate path as inflation data cools',
-      publisher: 'FinScope Briefing',
+      publisher: 'EZvest Briefing',
       link: '',
       description: 'Investors are watching whether softer inflation is enough to support rate-cut expectations across equities, bonds, and growth stocks.',
       tickers: ['SPX', 'QQQ', 'TLT'],
@@ -475,7 +475,7 @@ function buildStaticFallbackNews() {
     {
       uuid: 'fallback-ai-megacaps',
       title: 'AI spending stays in focus as mega-cap earnings approach',
-      publisher: 'FinScope Briefing',
+      publisher: 'EZvest Briefing',
       link: '',
       description: 'Chip demand, cloud budgets, and margin guidance remain central themes for investors tracking large-cap tech leaders.',
       tickers: ['NVDA', 'MSFT', 'GOOGL', 'AMZN'],
@@ -487,7 +487,7 @@ function buildStaticFallbackNews() {
     {
       uuid: 'fallback-oil-gold-dollar',
       title: 'Oil, gold, and the dollar move as traders reassess growth signals',
-      publisher: 'FinScope Briefing',
+      publisher: 'EZvest Briefing',
       link: '',
       description: 'Commodities and currencies are reacting to shifting expectations around global demand, policy, and risk appetite.',
       tickers: ['XAU', 'CL1', 'DXY'],
@@ -499,7 +499,7 @@ function buildStaticFallbackNews() {
     {
       uuid: 'fallback-bank-earnings',
       title: 'Bank earnings set the tone for credit quality and consumer resilience',
-      publisher: 'FinScope Briefing',
+      publisher: 'EZvest Briefing',
       link: '',
       description: 'Financials are being judged on loan growth, deposit trends, and whether consumer balance sheets are holding up.',
       tickers: ['JPM', 'GS', 'BAC'],
@@ -511,7 +511,7 @@ function buildStaticFallbackNews() {
     {
       uuid: 'fallback-bitcoin-risk',
       title: 'Bitcoin volatility rises as traders rotate between risk and safety',
-      publisher: 'FinScope Briefing',
+      publisher: 'EZvest Briefing',
       link: '',
       description: 'Crypto remains sensitive to liquidity expectations, ETF flows, and broader appetite for speculative assets.',
       tickers: ['BTC', 'ETH', 'COIN'],
@@ -523,7 +523,7 @@ function buildStaticFallbackNews() {
     {
       uuid: 'fallback-housing-rates',
       title: 'Housing and REIT sentiment remain tied to long-term yield moves',
-      publisher: 'FinScope Briefing',
+      publisher: 'EZvest Briefing',
       link: '',
       description: 'Real-estate investors continue to watch mortgage costs and financing conditions for signs of improving activity.',
       tickers: ['VNQ', 'XLRE'],
@@ -4441,7 +4441,7 @@ function renderFinBot() {
           <div>
             <p class="disclaimer-title">Educational Tool Only</p>
             <p class="disclaimer-text">
-              FinScope FinBot is an <strong>educational tool</strong>. It does not constitute financial advice. Always consult a licensed professional before making investment decisions.
+              EZvest FinBot is an <strong>educational tool</strong>. It does not constitute financial advice. Always consult a licensed professional before making investment decisions.
             </p>
           </div>
         </div>
@@ -6969,7 +6969,7 @@ const UI_MODES = {
   standard: {
     label: 'Standard',
     level: 'Everyday',
-    sub: 'The current FinScope experience with balanced tools and detail.',
+    sub: 'The current EZvest experience with balanced tools and detail.',
   },
   terminal: {
     label: 'Advanced',
@@ -7845,7 +7845,7 @@ async function invokeBillingFunction(payload) {
 }
 
 function openBillingSupport() {
-  window.location.href = 'mailto:support@investeasy.app?subject=FinScope billing help';
+  window.location.href = 'mailto:support@investeasy.app?subject=EZvest billing help';
 }
 
 async function startTierCheckout(targetTier) {

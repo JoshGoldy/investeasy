@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FinScope - Markets</title>
+<title>EZvest - Markets</title>
 <meta name="description" content="AI-powered investment analysis, real-time market data, and portfolio tracking.">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#0d9488">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="FinScope">
-<meta property="og:title" content="FinScope — Your Financial View">
+<meta name="apple-mobile-web-app-title" content="EZvest">
+<meta property="og:title" content="EZvest — Your Financial View">
 <meta property="og:description" content="AI-powered investment analysis with 6 elite analysis modes, real-time market data, and portfolio tracking.">
 <meta property="og:type" content="website">
-<meta property="og:image" content="og-image.png">
+<meta property="og:image" content="assets/images/ezvest-logo.png">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'><line x1='57' y1='57' x2='74' y2='74' stroke='%2343A047' stroke-width='10' stroke-linecap='round'/><circle cx='34' cy='34' r='28' fill='white' stroke='%2343A047' stroke-width='8'/><rect x='15' y='41' width='8' height='13' rx='1.5' fill='%231E88E5'/><rect x='27' y='33' width='8' height='21' rx='1.5' fill='%231E88E5'/><rect x='39' y='26' width='8' height='28' rx='1.5' fill='%231E88E5'/><polyline points='19,37 31,27 43,20' fill='none' stroke='%231E88E5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/><circle cx='19' cy='37' r='2.5' fill='%231E88E5'/><circle cx='31' cy='27' r='2.5' fill='%231E88E5'/><circle cx='43' cy='20' r='2.5' fill='%231E88E5'/></svg>">
+<link rel="icon" type="image/png" href="assets/images/ezvest-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -23,6 +23,7 @@
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/js/supabase-config.js"></script>
+<link rel="apple-touch-icon" href="assets/images/ezvest-icon.png">
 <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body data-initial-tab="markets">
@@ -31,17 +32,8 @@
   <!-- Header -->
   <div class="header">
     <div class="header-brand">
-      <div class="header-brand-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="28" height="28">
-          <line x1="57" y1="57" x2="74" y2="74" stroke="#0d9488" stroke-width="10" stroke-linecap="round"/>
-          <circle cx="34" cy="34" r="28" fill="white" stroke="#0d9488" stroke-width="8"/>
-          <rect x="15" y="41" width="8" height="13" rx="1.5" fill="#334155"/>
-          <rect x="27" y="33" width="8" height="21" rx="1.5" fill="#334155"/>
-          <rect x="39" y="26" width="8" height="28" rx="1.5" fill="#334155"/>
-          <polyline points="19,37 31,27 43,20" fill="none" stroke="#334155" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <span class="header-brand-name">FinScope</span>
+      <div class="header-brand-icon"><img src="assets/images/ezvest-icon.png" alt="EZvest icon"></div>
+      <span class="header-brand-name">EZvest</span>
     </div>
     <div class="header-right" style="display:flex;align-items:center;gap:14px">
       <div id="header-auth-btns" style="display:flex;align-items:center;gap:8px">
@@ -174,20 +166,8 @@
     <div class="auth-popup">
       <button class="auth-close" onclick="document.getElementById('auth-overlay').classList.add('hidden')">✕</button>
       <div class="auth-logo">
-        <div class="auth-logo-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="70" height="70">
-            <line x1="57" y1="57" x2="74" y2="74" stroke="#0d9488" stroke-width="10" stroke-linecap="round"/>
-            <circle cx="34" cy="34" r="28" fill="white" stroke="#0d9488" stroke-width="8"/>
-            <rect x="15" y="41" width="8" height="13" rx="1.5" fill="#334155"/>
-            <rect x="27" y="33" width="8" height="21" rx="1.5" fill="#334155"/>
-            <rect x="39" y="26" width="8" height="28" rx="1.5" fill="#334155"/>
-            <polyline points="19,37 31,27 43,20" fill="none" stroke="#334155" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="19" cy="37" r="2.5" fill="#334155"/>
-            <circle cx="31" cy="27" r="2.5" fill="#334155"/>
-            <circle cx="43" cy="20" r="2.5" fill="#334155"/>
-          </svg>
-        </div>
-        <h2>FinScope</h2>
+        <div class="auth-logo-icon"><img src="assets/images/ezvest-icon.png" alt="EZvest icon"></div>
+        <h2>EZvest</h2>
         <p>Smart investing made simple</p>
       </div>
       <div class="auth-card">
@@ -363,7 +343,7 @@
   <!-- Nav -->
   <nav class="nav">
     <div class="nav-brand">
-      <img src="assets/images/logo.svg" alt="FinScope" style="height:36px;width:auto">
+      <img class="nav-brand-logo" src="assets/images/ezvest-logo.png" alt="EZvest">
     </div>
     <button class="active" data-tab="news" style="position:relative">
       <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M18 18h-8M18 10h-8"/></svg>
