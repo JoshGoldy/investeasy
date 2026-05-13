@@ -45,16 +45,16 @@ const BILLING_PLANS = {
     label: 'Basic',
     priceZar: 199,
     credits: 50,
-    tone: '#10b981',
-    badgeBg: '#10b98122',
+    tone: '#0d9488',
+    badgeBg: '#0d948822',
     desc: 'Starter AI access with monthly credits',
   },
   pro: {
     label: 'Pro',
     priceZar: 399,
     credits: 100,
-    tone: '#7c3aed',
-    badgeBg: '#7c3aed22',
+    tone: '#334155',
+    badgeBg: '#33415522',
     desc: 'Full FinBot access with a larger credit pool',
   },
   enterprise: {
@@ -546,22 +546,22 @@ const HOLDINGS = [
 ];
 
 const PORT_HIST = [{t:'Jan',v:8200},{t:'Feb',v:8800},{t:'Mar',v:8400},{t:'Apr',v:9100},{t:'May',v:9600},{t:'Jun',v:9200},{t:'Jul',v:9900},{t:'Aug',v:10200},{t:'Sep',v:9800},{t:'Oct',v:10500},{t:'Nov',v:10900},{t:'Dec',v:11240}];
-const ALLOC_COLORS = ['#10b981','#3b82f6','#8b5cf6','#f59e0b','#ef4444'];
+const ALLOC_COLORS = ['#0d9488','#334155','#475569','#f59e0b','#ef4444'];
 const CAT_COLORS = {
-  Markets:'#10b981', Economy:'#3b82f6', Tech:'#8b5cf6', Crypto:'#f59e0b',
-  Earnings:'#ec4899', Commodities:'#d97706', Forex:'#06b6d4', 'Real Estate':'#84cc16'
+  Markets:'#0d9488', Economy:'#334155', Tech:'#475569', Crypto:'#f59e0b',
+  Earnings:'#ec4899', Commodities:'#d97706', Forex:'#14b8a6', 'Real Estate':'#84cc16'
 };
 
 const FINBOT_MODES = [
-  { id:'screener', icon:'chart', title:'Stock Screener', sub:'Jake', col:'#10b981',
+  { id:'screener', icon:'chart', title:'Stock Screener', sub:'Jake', col:'#0d9488',
     desc:"I'm Jake — been hunting stocks for 15 years. Tell me your budget and risk appetite and I'll dig through thousands of companies to hand you a shortlist worth your time." },
   { id:'dcf', icon:'calculate', title:'DCF Valuation', sub:'Emily', col:'#0f766e',
     desc:"I'm Emily — I live in spreadsheets so you don't have to. Give me a ticker and I'll build the full cash flow model and tell you exactly what it's actually worth." },
   { id:'risk', icon:'security-warning', title:'Risk Assessment', sub:'Marcus', col:'#f59e0b',
     desc:"I'm Marcus — I've seen every kind of portfolio blow up. Drop your holdings and I'll map every hidden risk before the market finds it for you." },
-  { id:'earnings', icon:'search-list-02', title:'Earnings Preview', sub:'Priya', col:'#8b5cf6',
+  { id:'earnings', icon:'search-list-02', title:'Earnings Preview', sub:'Priya', col:'#475569',
     desc:"I'm Priya — earnings season is my favourite time of year. I'll break down the history, set the bar, and tell you exactly how to play the announcement." },
-  { id:'builder', icon:'briefcase-dollar', title:'Portfolio Builder', sub:'Leo', col:'#06b6d4',
+  { id:'builder', icon:'briefcase-dollar', title:'Portfolio Builder', sub:'Leo', col:'#14b8a6',
     desc:"I'm Leo — I build portfolios people actually stick to. Share your goals and I'll put together a real plan with specific ETFs, a timeline, and a strategy that fits your life." },
   { id:'technical', icon:'chart-line-data-02', title:'Technical Analysis', sub:'Zoe', col:'#ec4899',
     desc:"I'm Zoe — I read charts the way others read books. Give me a ticker and I'll map the trend, the key levels, and tell you exactly where to get in and out." },
@@ -1040,7 +1040,7 @@ function createFullChart(container, data, color, height = 300, currency = loadSe
   container.style.height = `${chartHeight}px`;
   const chart = LightweightCharts.createChart(container, {
     width: container.clientWidth, height: chartHeight,
-    layout: { background: { type: 'solid', color: '#0c1320' }, textColor: '#64748b', fontFamily: 'DM Mono, monospace' },
+    layout: { background: { type: 'solid', color: '#0c1320' }, textColor: '#475569', fontFamily: 'DM Mono, monospace' },
     grid: { vertLines: { color: '#ffffff08' }, horzLines: { color: '#ffffff08' } },
     crosshair: {
       mode: 1,
@@ -1115,7 +1115,7 @@ function switchTab(id) {
   navBtns.forEach(b => {
     const isActive = b.dataset.tab === id;
     b.classList.toggle('active', isActive);
-    b.querySelector('svg').setAttribute('stroke', isActive ? '#10b981' : '#94a3b8');
+    b.querySelector('svg').setAttribute('stroke', isActive ? '#0d9488' : '#94a3b8');
   });
   tabPanels.forEach(p => p.classList.toggle('active', p.id === 'tab-' + id));
   if (id === 'news') renderNews();
@@ -1518,7 +1518,7 @@ function renderMarketNewsSection(market) {
               liveNews.push(article);
               idx = liveNews.length - 1;
             }
-            const catColor = CAT_COLORS[article.cat] || '#10b981';
+            const catColor = CAT_COLORS[article.cat] || '#0d9488';
             return `
               <button class="sd-related-news-item" onclick="openNewsArticle(${idx},true)">
                 <span class="sd-related-news-cat" style="background:${catColor}22;color:${catColor}">${escHtml(article.cat || 'Markets')}</span>
@@ -1774,7 +1774,7 @@ ${list.length === 0 ? `<div style="text-align:center;padding:40px;color:var(--fa
       const isRead = readArticles.has(n.uuid);
       const isBookmarked = !!bookmarkedArticles[n.uuid];
       const isAlert = newsAlertMatches.has(n.uuid);
-      const catColor = CAT_COLORS[n.cat] || '#10b981';
+      const catColor = CAT_COLORS[n.cat] || '#0d9488';
       return `
       <div class="card news-card${isRead?' read':''}" style="break-inside:avoid;margin-bottom:12px;${isAlert?'border:1.5px solid #ef444440;':''}" onclick="openNewsArticle(${actualIdx},true)">
         ${isAlert ? '<div style="font-size:10px;font-weight:800;color:#ef4444;margin-bottom:6px;letter-spacing:.04em">🔔 ALERT MATCH</div>' : ''}
@@ -1793,10 +1793,10 @@ ${list.length === 0 ? `<div style="text-align:center;padding:40px;color:var(--fa
           <span style="font-size:11px;color:${isRead?'var(--faint)':'var(--green)'};font-weight:600">${isRead?'Read ✓':'Read more →'}</span>
         </div>
         <button onclick="event.stopPropagation();confirmAndAnalyzeNews(${actualIdx})"
-          style="margin-top:8px;width:100%;padding:7px;border-radius:10px;background:#3b82f614;color:#2563eb;
-                 font-size:11px;font-weight:700;border:1px solid #3b82f630;cursor:pointer;
+          style="margin-top:8px;width:100%;padding:7px;border-radius:10px;background:#33415514;color:#334155;
+                 font-size:11px;font-weight:700;border:1px solid #33415530;cursor:pointer;
                  display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s"
-          onmouseenter="this.style.background='#3b82f622'" onmouseleave="this.style.background='#3b82f614'">
+          onmouseenter="this.style.background='#33415522'" onmouseleave="this.style.background='#33415514'">
         ${iconMarkup('bot', 'btn-icon')} Analyze with FinBot
         </button>
       </div>`;
@@ -2036,7 +2036,7 @@ function openNewsArticle(idx, fromLive) {
       <div id="news-body-box" style="margin:14px 0 16px">${bodyHtml}</div>
       <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">${iconMarkup('bolt', 'inline-icon')} This analysis uses <strong style="color:var(--text)">2 credits</strong></p>
       <button onclick="confirmAndAnalyzeNews(${idx})"
-        style="width:100%;padding:14px;border-radius:var(--radius-sm);background:linear-gradient(135deg,#3b82f6,#2563eb);
+        style="width:100%;padding:14px;border-radius:var(--radius-sm);background:linear-gradient(135deg,#334155,#334155);
                color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;margin-bottom:10px;
                display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s"
         onmouseenter="this.style.opacity='.9'" onmouseleave="this.style.opacity='1'">
@@ -2153,12 +2153,12 @@ Keep the tone professional but accessible. Use Markdown formatting. End with exa
   // Loading state
   content.innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;padding:48px 20px;gap:14px">
-      <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#2563eb);
+      <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#334155,#334155);
                   display:flex;align-items:center;justify-content:center;font-size:24px">🤖</div>
       <p style="font-weight:800;font-size:16px;color:var(--text)">Analyzing article…</p>
       <p style="font-size:12px;color:var(--faint);text-align:center;line-height:1.6">FinBot is reading and breaking down<br>this article for you</p>
       <div class="loading-dots" style="margin-top:4px">
-        ${[0,1,2].map(i=>`<span style="background:#3b82f6;animation:bd 1.4s ease-in-out ${i*0.2}s infinite"></span>`).join('')}
+        ${[0,1,2].map(i=>`<span style="background:#334155;animation:bd 1.4s ease-in-out ${i*0.2}s infinite"></span>`).join('')}
       </div>
     </div>`;
 
@@ -2197,12 +2197,12 @@ function renderFinBotNewsResult(idx, text, articleLink, n) {
         🤖
         <div>
           <p style="font-weight:800;font-size:14px;color:var(--text)">FinBot Analysis</p>
-          <p style="font-size:11px;color:#2563eb;font-weight:600">AI Financial Analyst</p>
+          <p style="font-size:11px;color:#334155;font-weight:600">AI Financial Analyst</p>
         </div>
         <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;font-weight:700;color:#10b981;background:#10b98115;padding:3px 10px;border-radius:20px">✓ Complete</span>
+          <span style="font-size:11px;font-weight:700;color:#0d9488;background:#0d948815;padding:3px 10px;border-radius:20px">✓ Complete</span>
           <button id="finbot-news-save-btn" onclick="saveNewsAnalysis(${idx})"
-            style="padding:5px 12px;border-radius:10px;${isSaved ? 'background:#10b98122;color:#10b981' : 'background:var(--border);color:var(--text)'};
+            style="padding:5px 12px;border-radius:10px;${isSaved ? 'background:#0d948822;color:#0d9488' : 'background:var(--border);color:var(--text)'};
                    font-size:12px;font-weight:700;border:none;cursor:pointer;white-space:nowrap">
             ${reportSaveIcon(isSaved)} ${isSaved ? 'Saved' : 'Save'}
           </button>
@@ -2211,7 +2211,7 @@ function renderFinBotNewsResult(idx, text, articleLink, n) {
       <div class="result-content" style="font-size:13.5px;line-height:1.75">${parseMd(text)}</div>
       <div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px">
         <button onclick="saveNewsAnalysis(${idx})" id="finbot-news-save-btn-big"
-          style="width:100%;padding:13px;border-radius:12px;${isSaved ? 'background:#10b98122;color:#10b981;border:1.5px solid #10b981' : 'background:#3b82f618;color:#2563eb;border:1.5px solid #3b82f640'};
+          style="width:100%;padding:13px;border-radius:12px;${isSaved ? 'background:#0d948822;color:#0d9488;border:1.5px solid #0d9488' : 'background:#33415518;color:#334155;border:1.5px solid #33415540'};
                  font-size:13px;font-weight:700;cursor:pointer;transition:all .2s">
           ${reportSaveIcon(isSaved)} ${isSaved ? 'View in Saved Reports →' : 'Save Report'}
         </button>
@@ -2235,7 +2235,7 @@ async function saveNewsAnalysis(idx) {
     modeId:       'news',
     modeTitle:    n.title,
     modeSub:      n.publisher || 'News',
-    modeCol:      '#2563eb',
+    modeCol:      '#334155',
     modeIcon:     '📰',
     content:      finbotNewsState.result,
     articleLink,
@@ -2443,7 +2443,7 @@ function renderMarkets(filter) {
     <div class="compare-bar">
       <p>Select up to 3:</p>
       <div class="compare-chips">
-        ${compareSet.size === 0 ? '<span style="font-size:11px;color:#64748b">None selected yet</span>' :
+        ${compareSet.size === 0 ? '<span style="font-size:11px;color:#475569">None selected yet</span>' :
           [...compareSet].map(t => `<span class="compare-chip">${t}
             <button onclick="event.stopPropagation();toggleCompareAsset('${t}')" title="Remove">✕</button>
           </span>`).join('')}
@@ -2456,8 +2456,8 @@ function renderMarkets(filter) {
     <div class="featured-grid">
       ${featuredAssets.map(m => {
         const up  = m.chg >= 0;
-        const col = up ? '#10b981' : '#ef4444';
-        const bgCol = up ? '#10b98120' : '#ef444420';
+        const col = up ? '#0d9488' : '#ef4444';
+        const bgCol = up ? '#0d948820' : '#ef444420';
         const idx = MARKETS.indexOf(m);
         const lo = parseFloat(m.lo52); const hi = parseFloat(m.hi52);
         const pct52 = lo && hi && hi > lo ? Math.max(0, Math.min(100, ((m.val - lo) / (hi - lo)) * 100)).toFixed(1) : 50;
@@ -2476,18 +2476,18 @@ function renderMarkets(filter) {
             </div>
           </div>
           <div style="margin-top:auto">
-            <div style="display:flex;justify-content:space-between;font-size:9px;color:#64748b;font-family:var(--mono);margin-bottom:4px">
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:#475569;font-family:var(--mono);margin-bottom:4px">
               <span>${lo ? lo.toLocaleString() : '—'}</span>
               <span style="color:#94a3b8;font-size:9px">52W RANGE</span>
               <span>${hi ? hi.toLocaleString() : '—'}</span>
             </div>
             <div style="height:4px;background:#ffffff0f;border-radius:4px;position:relative">
               <div style="position:absolute;left:0;top:0;height:4px;width:${pct52}%;background:linear-gradient(90deg,${col}80,${col});border-radius:4px;transition:width .4s"></div>
-              <div style="position:absolute;top:-3px;width:10px;height:10px;border-radius:50%;background:${col};border:2px solid #1e293b;left:calc(${pct52}% - 5px);box-shadow:0 0 6px ${col}80"></div>
+              <div style="position:absolute;top:-3px;width:10px;height:10px;border-radius:50%;background:${col};border:2px solid #334155;left:calc(${pct52}% - 5px);box-shadow:0 0 6px ${col}80"></div>
             </div>
             <div style="display:flex;justify-content:space-between;margin-top:10px">
-              <div style="font-size:10px;color:#64748b">Vol <span style="color:#94a3b8;font-weight:600">${m.vol}</span></div>
-              ${m.pe !== '—' ? `<div style="font-size:10px;color:#64748b">P/E <span style="color:#94a3b8;font-weight:600">${m.pe}</span></div>` : `<div style="font-size:10px;color:#64748b">Mkt Cap <span style="color:#94a3b8;font-weight:600">${m.mktcap}</span></div>`}
+              <div style="font-size:10px;color:#475569">Vol <span style="color:#94a3b8;font-weight:600">${m.vol}</span></div>
+              ${m.pe !== '—' ? `<div style="font-size:10px;color:#475569">P/E <span style="color:#94a3b8;font-weight:600">${m.pe}</span></div>` : `<div style="font-size:10px;color:#475569">Mkt Cap <span style="color:#94a3b8;font-weight:600">${m.mktcap}</span></div>`}
             </div>
           </div>
         </div>`;
@@ -2498,12 +2498,12 @@ function renderMarkets(filter) {
       <p style="font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">🔥 Top Movers</p>
       <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none">
         ${topGain.map(m => `
-          <div onclick="${compareMode?`toggleCompareAsset('${m.ticker}')`:`openStockDetail(${MARKETS.indexOf(m)})`}" style="flex-shrink:0;background:var(--card);border:1px solid #10b98130;border-radius:12px;padding:8px 12px;cursor:pointer;min-width:90px${compareSet.has(m.ticker)?';border-color:#3b82f6':''}">
+          <div onclick="${compareMode?`toggleCompareAsset('${m.ticker}')`:`openStockDetail(${MARKETS.indexOf(m)})`}" style="flex-shrink:0;background:var(--card);border:1px solid #0d948830;border-radius:12px;padding:8px 12px;cursor:pointer;min-width:90px${compareSet.has(m.ticker)?';border-color:#334155':''}">
             <p style="font-size:10px;font-weight:700;color:var(--muted);font-family:var(--mono)">${m.ticker}</p>
-            <p style="font-size:12px;font-weight:800;color:#10b981;margin-top:2px">▲ ${m.chg}%</p>
+            <p style="font-size:12px;font-weight:800;color:#0d9488;margin-top:2px">▲ ${m.chg}%</p>
           </div>`).join('')}
         ${topLoss.map(m => `
-          <div onclick="${compareMode?`toggleCompareAsset('${m.ticker}')`:`openStockDetail(${MARKETS.indexOf(m)})`}" style="flex-shrink:0;background:var(--card);border:1px solid #ef444430;border-radius:12px;padding:8px 12px;cursor:pointer;min-width:90px${compareSet.has(m.ticker)?';border-color:#3b82f6':''}">
+          <div onclick="${compareMode?`toggleCompareAsset('${m.ticker}')`:`openStockDetail(${MARKETS.indexOf(m)})`}" style="flex-shrink:0;background:var(--card);border:1px solid #ef444430;border-radius:12px;padding:8px 12px;cursor:pointer;min-width:90px${compareSet.has(m.ticker)?';border-color:#334155':''}">
             <p style="font-size:10px;font-weight:700;color:var(--muted);font-family:var(--mono)">${m.ticker}</p>
             <p style="font-size:12px;font-weight:800;color:#ef4444;margin-top:2px">▼ ${Math.abs(m.chg)}%</p>
           </div>`).join('')}
@@ -2572,7 +2572,7 @@ function renderMarkets(filter) {
     shown.forEach(m => {
       const el = document.getElementById('mini-' + m.ticker);
       if (el) {
-        const color = m.chg >= 0 ? '#10b981' : '#ef4444';
+        const color = m.chg >= 0 ? '#0d9488' : '#ef4444';
         const c = createMiniChart(el, m.charts['1D'].slice(-20), color, 32);
         if (c) miniCharts.push(c);
       }
@@ -2716,8 +2716,8 @@ function renderNavPulse() {
   const day = et.getDay(); // 0=Sun,6=Sat
   const mins = et.getHours() * 60 + et.getMinutes();
   const isOpen = day >= 1 && day <= 5 && mins >= 570 && mins < 960;
-  statusEl.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:${isOpen ? '#10b981' : '#ef4444'};display:inline-block"></span>
-    <span style="color:${isOpen ? '#10b981' : '#94a3b8'}">${isOpen ? 'Open' : 'Closed'}</span>`;
+  statusEl.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:${isOpen ? '#0d9488' : '#ef4444'};display:inline-block"></span>
+    <span style="color:${isOpen ? '#0d9488' : '#94a3b8'}">${isOpen ? 'Open' : 'Closed'}</span>`;
 
   // Show SPX, NDX, BTC, XAU
   const tickers = ['SPX', 'NDX', 'BTC', 'XAU'];
@@ -2732,7 +2732,7 @@ function renderNavPulse() {
       <span style="font-size:11px;font-weight:600;color:var(--text)">${labels[t]}</span>
       <div style="text-align:right">
         <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--text)">${disp}</div>
-        <div style="font-size:10px;font-weight:600;color:${pos ? '#10b981' : '#ef4444'}">${pos ? '+' : ''}${m.chg.toFixed(2)}%</div>
+        <div style="font-size:10px;font-weight:600;color:${pos ? '#0d9488' : '#ef4444'}">${pos ? '+' : ''}${m.chg.toFixed(2)}%</div>
       </div>
     </div>`;
   }).join('');
@@ -2742,7 +2742,7 @@ function openStockDetail(idx) {
   currentDetailIdx = idx;
   const stock = MARKETS[idx];
   const up    = stock.chg >= 0;
-  const color = up ? '#10b981' : '#ef4444';
+  const color = up ? '#0d9488' : '#ef4444';
   const overlay = document.getElementById('stock-detail');
   document.body.classList.add('stock-detail-open');
   overlay.classList.remove('hidden');
@@ -2795,16 +2795,16 @@ function openStockDetail(idx) {
     <!-- 52-week range bar -->
     <div style="padding:16px 20px 12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">52-Week Range</span>
+        <span style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em">52-Week Range</span>
         <span id="sd-range-pct" style="font-size:10px;font-weight:700;color:#94a3b8;font-family:var(--mono)">${rangePct}% of range</span>
       </div>
-      <div style="height:5px;background:#1e293b;border-radius:4px;position:relative">
+      <div style="height:5px;background:#334155;border-radius:4px;position:relative">
         <div id="sd-range-fill" style="position:absolute;left:0;width:${rangePct}%;height:100%;background:linear-gradient(90deg,${color}50,${color});border-radius:4px"></div>
         <div id="sd-range-dot" style="position:absolute;left:${rangePct}%;transform:translateX(-50%);top:-4px;width:12px;height:12px;background:${color};border-radius:50%;border:2px solid #0c1320;box-shadow:0 0 6px ${color}80"></div>
       </div>
       <div style="display:flex;justify-content:space-between;margin-top:6px">
-        <span style="font-size:11px;color:#64748b;font-family:var(--mono)">${fmtMarketUnitPrice(stock, parseFloat(stock.lo52))}</span>
-        <span style="font-size:11px;color:#64748b;font-family:var(--mono)">${fmtMarketUnitPrice(stock, parseFloat(stock.hi52))}</span>
+        <span style="font-size:11px;color:#475569;font-family:var(--mono)">${fmtMarketUnitPrice(stock, parseFloat(stock.lo52))}</span>
+        <span style="font-size:11px;color:#475569;font-family:var(--mono)">${fmtMarketUnitPrice(stock, parseFloat(stock.hi52))}</span>
       </div>
     </div>
 
@@ -2814,7 +2814,7 @@ function openStockDetail(idx) {
         {l:'Market Cap',  v:stock.mktcap || '—', c:''},
         {l:'P/E Ratio',   v:stock.pe     || '—', c:''},
         {l:'Volume',      v:stock.vol    || '—', c:''},
-        {l:'52W High',    v:fmtMarketUnitPrice(stock, parseFloat(stock.hi52)), c:'#10b981'},
+        {l:'52W High',    v:fmtMarketUnitPrice(stock, parseFloat(stock.hi52)), c:'#0d9488'},
         {l:'52W Low',     v:fmtMarketUnitPrice(stock, parseFloat(stock.lo52)), c:'#ef4444'},
         {l:'Day Change',  v:(stock.chg>0?'+':'')+stock.chg+'%', c:color, id:'sd-stat-day-change'},
       ].map(s => `<div class="stat-box">
@@ -2825,14 +2825,14 @@ function openStockDetail(idx) {
 
     <!-- Timeframe performance -->
     <div style="padding:10px 20px 16px">
-      <p style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Performance</p>
+      <p style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Performance</p>
       <div class="sd-performance-row" style="display:flex;gap:8px">
         ${returns.map(({tf, r}) => {
           if (r === null) return '';
           const pos = parseFloat(r) >= 0;
-          return `<div class="sd-performance-card" style="flex:1;background:#1e293b;border:1px solid #ffffff0a;border-radius:10px;padding:10px 6px;text-align:center">
-            <p style="font-size:10px;color:#64748b;margin-bottom:4px;font-weight:600">${tf}</p>
-            <p style="font-size:12px;font-weight:800;font-family:var(--mono);color:${pos?'#10b981':'#ef4444'}">${pos?'+':''}${r}%</p>
+          return `<div class="sd-performance-card" style="flex:1;background:#334155;border:1px solid #ffffff0a;border-radius:10px;padding:10px 6px;text-align:center">
+            <p style="font-size:10px;color:#475569;margin-bottom:4px;font-weight:600">${tf}</p>
+            <p style="font-size:12px;font-weight:800;font-family:var(--mono);color:${pos?'#0d9488':'#ef4444'}">${pos?'+':''}${r}%</p>
           </div>`;
         }).join('')}
       </div>
@@ -2845,7 +2845,7 @@ function openStockDetail(idx) {
       </div>` : ''}
       <div class="sd-actions-row" style="display:flex;gap:10px">
         ${currentUser ? `<button onclick="toggleWatchlist('${stock.ticker}','${stock.name.replace(/'/g,"\\'")}')"
-          style="flex:1;padding:13px;border-radius:13px;background:${watchlistSet.has(stock.ticker)?'#10b98118':'#1e293b'};border:1.5px solid ${watchlistSet.has(stock.ticker)?'#10b981':'#ffffff0a'};font-size:13px;font-weight:700;color:${watchlistSet.has(stock.ticker)?'#10b981':'#64748b'};cursor:pointer;transition:all .2s">
+          style="flex:1;padding:13px;border-radius:13px;background:${watchlistSet.has(stock.ticker)?'#0d948818':'#334155'};border:1.5px solid ${watchlistSet.has(stock.ticker)?'#0d9488':'#ffffff0a'};font-size:13px;font-weight:700;color:${watchlistSet.has(stock.ticker)?'#0d9488':'#475569'};cursor:pointer;transition:all .2s">
           ${starIcon('inline-star-icon')} Watchlist
         </button>` : ''}
         <button onclick="${currentUser ? `openAddHoldingModal('${stock.ticker}','${stock.name.replace(/'/g,"\\'")}')` : `document.getElementById('auth-overlay').classList.remove('hidden');showAuthTab('register')`}"
@@ -2853,7 +2853,7 @@ function openStockDetail(idx) {
           + Portfolio
         </button>
         ${currentUser ? `<button onclick="openAlertModal('${stock.ticker}','${stock.name.replace(/'/g,"\\'")}',${stock.val})"
-          style="padding:13px 16px;border-radius:13px;background:${(alertsMap[stock.ticker]||[]).filter(a=>!a.triggered).length?'#f59e0b18':'#1e293b'};border:1.5px solid ${(alertsMap[stock.ticker]||[]).filter(a=>!a.triggered).length?'#f59e0b':'#ffffff0a'};font-size:16px;cursor:pointer;transition:all .2s" title="Set price alert">
+          style="padding:13px 16px;border-radius:13px;background:${(alertsMap[stock.ticker]||[]).filter(a=>!a.triggered).length?'#f59e0b18':'#334155'};border:1.5px solid ${(alertsMap[stock.ticker]||[]).filter(a=>!a.triggered).length?'#f59e0b':'#ffffff0a'};font-size:16px;cursor:pointer;transition:all .2s" title="Set price alert">
           ${(alertsMap[stock.ticker]||[]).filter(a=>!a.triggered).length?'🔔':'🔕'}
         </button>` : ''}
       </div>
@@ -2897,7 +2897,7 @@ function syncStockDetailSummary(stock, points) {
 
   const dayChange = ((last - first) / first) * 100;
   const up = dayChange >= 0;
-  const color = up ? '#10b981' : '#ef4444';
+  const color = up ? '#0d9488' : '#ef4444';
   const rangePct = hi52n > lo52n
     ? Math.max(0, Math.min(100, Math.round((last - lo52n) / (hi52n - lo52n) * 100)))
     : 50;
@@ -2929,7 +2929,7 @@ function syncStockDetailSummary(stock, points) {
 function switchDetailTF(idx, tf) {
   const stock = MARKETS[idx];
   const up = stock.chg >= 0;
-  const color = up ? '#10b981' : '#ef4444';
+  const color = up ? '#0d9488' : '#ef4444';
 
   document.querySelectorAll('.tf-btn').forEach(b => {
     b.className = 'tf-btn' + (b.textContent === tf ? (up ? ' active-up' : ' active-dn') : '');
@@ -3140,7 +3140,7 @@ function closeCompareMode() {
   if (compareChart) { compareChart.remove(); compareChart = null; }
 }
 
-const COMPARE_COLORS = ['#10b981','#3b82f6','#f59e0b','#ec4899','#8b5cf6'];
+const COMPARE_COLORS = ['#0d9488','#334155','#f59e0b','#ec4899','#475569'];
 
 function renderCompareChart(tf) {
   compareTF = tf;
@@ -3169,7 +3169,7 @@ function renderCompareChart(tf) {
 
   compareChart = LightweightCharts.createChart(container, {
     width: container.clientWidth || 600, height: 320,
-    layout: { background: { type: 'solid', color: '#0c1320' }, textColor: '#64748b', fontFamily: 'DM Mono, monospace' },
+    layout: { background: { type: 'solid', color: '#0c1320' }, textColor: '#475569', fontFamily: 'DM Mono, monospace' },
     grid: { vertLines: { color: '#ffffff08' }, horzLines: { color: '#ffffff08' } },
     crosshair: { mode: 1 },
     rightPriceScale: { borderVisible: false, textColor: '#475569',
@@ -3201,13 +3201,13 @@ function renderCompareChart(tf) {
     if (!pts || pts.length < 2) return '';
     const ret = ((pts[pts.length-1].value - pts[0].value) / pts[0].value * 100);
     const pos = ret >= 0;
-    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:10px;background:#1e293b">
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:10px;background:#334155">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:8px;height:8px;border-radius:50%;background:${COMPARE_COLORS[i]}"></div>
         <span style="font-size:13px;font-weight:700;color:#e2e8f0;font-family:var(--mono)">${a.ticker}</span>
-        <span style="font-size:11px;color:#64748b">${a.name}</span>
+        <span style="font-size:11px;color:#475569">${a.name}</span>
       </div>
-      <span style="font-size:14px;font-weight:800;font-family:var(--mono);color:${pos?'#10b981':'#ef4444'}">${pos?'+':''}${ret.toFixed(2)}%</span>
+      <span style="font-size:14px;font-weight:800;font-family:var(--mono);color:${pos?'#0d9488':'#ef4444'}">${pos?'+':''}${ret.toFixed(2)}%</span>
     </div>`;
   }).join('');
 }
@@ -3315,7 +3315,7 @@ function renderIndicators(idx) {
   if (!insertBefore) return;
 
   // Bollinger — overlaid on main chart (re-render it)
-  const col = stock.chg >= 0 ? '#10b981' : '#ef4444';
+  const col = stock.chg >= 0 ? '#0d9488' : '#ef4444';
   if (activeIndicators.has('boll')) {
     const el = document.getElementById('sd-chart-canvas');
     if (el && detailChart) {
@@ -3337,23 +3337,23 @@ function renderIndicators(idx) {
       rsiEl.style.height = '100px';
       insertBefore.parentNode.insertBefore(rsiEl, insertBefore);
       const rsiLbl = document.createElement('p');
-      rsiLbl.style.cssText = 'font-size:9px;font-weight:700;color:#8b5cf6;text-transform:uppercase;letter-spacing:.06em;padding:4px 20px 0;background:#0c1320';
+      rsiLbl.style.cssText = 'font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;padding:4px 20px 0;background:#0c1320';
       rsiLbl.textContent = 'RSI (14)';
       insertBefore.parentNode.insertBefore(rsiLbl, rsiEl);
       indicatorCharts.rsi = LightweightCharts.createChart(rsiEl, {
         width: rsiEl.clientWidth || 600, height: 100,
-        layout: { background: { type:'solid', color:'#0c1320' }, textColor:'#64748b' },
+        layout: { background: { type:'solid', color:'#0c1320' }, textColor:'#475569' },
         grid: { vertLines:{visible:false}, horzLines:{color:'#ffffff08'} },
         rightPriceScale: { borderVisible:false, textColor:'#475569', scaleMargins:{top:0.1,bottom:0.1} },
         timeScale: { visible:false }, crosshair:{mode:1}, handleScroll:{mouseWheel:false}, handleScale:{mouseWheel:false},
       });
-      const rsiS = indicatorCharts.rsi.addLineSeries({ color:'#8b5cf6', lineWidth:2, priceLineVisible:false, lastValueVisible:true });
+      const rsiS = indicatorCharts.rsi.addLineSeries({ color:'#475569', lineWidth:2, priceLineVisible:false, lastValueVisible:true });
       rsiS.setData(rsiData);
       // Overbought/oversold lines
       const refData = rsiData.map(p => ({ time: p.time, value: 70 }));
       const refData2 = rsiData.map(p => ({ time: p.time, value: 30 }));
       indicatorCharts.rsi.addLineSeries({ color:'#ef444450', lineWidth:1, lineStyle:2, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false }).setData(refData);
-      indicatorCharts.rsi.addLineSeries({ color:'#10b98150', lineWidth:1, lineStyle:2, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false }).setData(refData2);
+      indicatorCharts.rsi.addLineSeries({ color:'#0d948850', lineWidth:1, lineStyle:2, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false }).setData(refData2);
       indicatorCharts.rsi.timeScale().fitContent();
     }
   }
@@ -3367,20 +3367,20 @@ function renderIndicators(idx) {
       macdEl.style.height = '100px';
       insertBefore.parentNode.insertBefore(macdEl, insertBefore);
       const macdLbl = document.createElement('p');
-      macdLbl.style.cssText = 'font-size:9px;font-weight:700;color:#06b6d4;text-transform:uppercase;letter-spacing:.06em;padding:4px 20px 0;background:#0c1320';
+      macdLbl.style.cssText = 'font-size:9px;font-weight:700;color:#14b8a6;text-transform:uppercase;letter-spacing:.06em;padding:4px 20px 0;background:#0c1320';
       macdLbl.textContent = 'MACD (12,26,9)';
       insertBefore.parentNode.insertBefore(macdLbl, macdEl);
       indicatorCharts.macd = LightweightCharts.createChart(macdEl, {
         width: macdEl.clientWidth || 600, height: 100,
-        layout: { background: { type:'solid', color:'#0c1320' }, textColor:'#64748b' },
+        layout: { background: { type:'solid', color:'#0c1320' }, textColor:'#475569' },
         grid: { vertLines:{visible:false}, horzLines:{color:'#ffffff08'} },
         rightPriceScale: { borderVisible:false, textColor:'#475569', scaleMargins:{top:0.1,bottom:0.1} },
         timeScale: { visible:false }, crosshair:{mode:1}, handleScroll:{mouseWheel:false}, handleScale:{mouseWheel:false},
       });
-      indicatorCharts.macd.addLineSeries({ color:'#06b6d4', lineWidth:2, priceLineVisible:false, lastValueVisible:true }).setData(macd);
+      indicatorCharts.macd.addLineSeries({ color:'#14b8a6', lineWidth:2, priceLineVisible:false, lastValueVisible:true }).setData(macd);
       indicatorCharts.macd.addLineSeries({ color:'#f59e0b', lineWidth:1, priceLineVisible:false, lastValueVisible:false }).setData(signal);
-      const histS = indicatorCharts.macd.addHistogramSeries({ color:'#06b6d440', priceLineVisible:false, lastValueVisible:false });
-      histS.setData(hist.map(p => ({ ...p, color: p.value >= 0 ? '#10b98160' : '#ef444460' })));
+      const histS = indicatorCharts.macd.addHistogramSeries({ color:'#14b8a640', priceLineVisible:false, lastValueVisible:false });
+      histS.setData(hist.map(p => ({ ...p, color: p.value >= 0 ? '#0d948860' : '#ef444460' })));
       indicatorCharts.macd.timeScale().fitContent();
     }
   }
@@ -4301,14 +4301,14 @@ function renderFinBot() {
   if (!currentUser) {
     el.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 20px 24px">
-        <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#3b82f6,#2563eb);
+        <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#334155,#334155);
                     display:flex;align-items:center;justify-content:center;color:#fff;margin-bottom:16px">${iconMarkup('bot', 'finbot-hero-icon')}</div>
         <h2 style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px">Meet FinBot</h2>
         <p style="font-size:13.5px;color:var(--muted);line-height:1.65;max-width:300px;margin-bottom:24px">
           Your personal AI financial analyst. Run deep analysis on stocks, portfolios, news, and more — all in seconds.
         </p>
         <button onclick="document.getElementById('auth-overlay').classList.remove('hidden');showAuthTab('login')"
-          style="padding:14px 32px;border-radius:14px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;
+          style="padding:14px 32px;border-radius:14px;background:linear-gradient(135deg,#334155,#334155);color:#fff;
                  font-size:14px;font-weight:800;border:none;cursor:pointer;margin-bottom:32px;width:100%;max-width:320px">
           Sign In to Use FinBot
         </button>
@@ -4342,21 +4342,21 @@ function renderFinBot() {
   if (userTier === 'free') {
     el.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 20px 24px">
-        <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#3b82f6,#2563eb);
+        <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#334155,#334155);
                     display:flex;align-items:center;justify-content:center;color:#fff;margin-bottom:16px">${iconMarkup('bot', 'finbot-hero-icon')}</div>
-        <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:#64748b22;margin-bottom:12px">
+        <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:#47556922;margin-bottom:12px">
           <span style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em">Free Plan</span>
         </div>
         <h2 style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px">Upgrade to Unlock FinBot</h2>
         <p style="font-size:13.5px;color:var(--muted);line-height:1.65;max-width:320px;margin-bottom:24px">
-          FinBot is available on paid plans. Start with <strong style="color:#10b981">Basic</strong>, or move up to <strong style="color:#7c3aed">Pro</strong> and <strong style="color:#d97706">Enterprise</strong> for larger monthly credit pools.
+          FinBot is available on paid plans. Start with <strong style="color:#0d9488">Basic</strong>, or move up to <strong style="color:#334155">Pro</strong> and <strong style="color:#d97706">Enterprise</strong> for larger monthly credit pools.
         </p>
         <div style="width:100%;max-width:720px;margin-bottom:20px">${renderBillingPlanCards(userTier)}</div>
         <button onclick="openBillingSupport()" style="width:100%;max-width:360px;padding:13px 20px;border-radius:14px;background:var(--card);color:var(--text);font-size:13px;font-weight:800;border:1px solid var(--border);cursor:pointer;margin-bottom:8px">
           Need help choosing a plan?
         </button>
         <div style="display:none;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:360px;margin-bottom:28px">
-          <div style="padding:16px;border-radius:14px;background:linear-gradient(135deg,#7c3aed18,#6d28d918);border:1px solid #7c3aed44">
+          <div style="padding:16px;border-radius:14px;background:linear-gradient(135deg,#33415518,#6d28d918);border:1px solid #33415544">
             <div style="font-size:20px;margin-bottom:6px">⚡</div>
             <p style="font-weight:800;font-size:13px;color:#a78bfa;margin-bottom:4px">Pro</p>
             <p style="font-size:11.5px;color:var(--faint);line-height:1.5">100 credits<br>News AI: 2 credits<br>Analysis: 5 credits</p>
@@ -4431,7 +4431,7 @@ function renderFinBot() {
           </div>
           <div class="finbot-account-pills" style="display:flex;align-items:center;gap:6px">
             <span style="font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${getTierPresentation(currentUser.tier).chipBg};color:${getTierPresentation(currentUser.tier).chipColor}">${getTierPresentation(currentUser.tier).label}</span>
-            <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:#10b98122;color:#10b981">⚡ ${currentUser.finbot_credits??0} credits</span>
+            <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:#0d948822;color:#0d9488">⚡ ${currentUser.finbot_credits??0} credits</span>
           </div>
         </div>
       </div>
@@ -4500,15 +4500,15 @@ function renderFinBot() {
         ${finbotState.result ? `<div style="display:flex;align-items:center;gap:8px">
           <span class="chip chip-green">✓ Complete</span>
           <button id="finbot-save-btn-top" onclick="saveFinBotReport()"
-            style="padding:5px 11px;border-radius:10px;${isSaved ? 'background:#10b98122;color:#10b981' : 'background:var(--border);color:var(--text)'};font-size:12px;font-weight:700;border:none;cursor:pointer;white-space:nowrap">
+            style="padding:5px 11px;border-radius:10px;${isSaved ? 'background:#0d948822;color:#0d9488' : 'background:var(--border);color:var(--text)'};font-size:12px;font-weight:700;border:none;cursor:pointer;white-space:nowrap">
             ${reportSaveIcon(isSaved)} ${isSaved ? 'Saved' : 'Save'}
           </button>
         </div>` : ''}
       </div>
       ${finbotState.error === 'upgrade_required' ? `
-        <div class="error-box" style="background:#3b82f614;border-color:#3b82f644">
-          <p style="font-weight:700;font-size:14px;color:#2563eb">Upgrade Required</p>
-          <p style="margin:6px 0 16px;font-size:13px;color:#3b82f6;line-height:1.5">FinBot is only available on paid plans. Choose Basic, Pro, or Enterprise to continue.</p>
+        <div class="error-box" style="background:#33415514;border-color:#33415544">
+          <p style="font-weight:700;font-size:14px;color:#334155">Upgrade Required</p>
+          <p style="margin:6px 0 16px;font-size:13px;color:#334155;line-height:1.5">FinBot is only available on paid plans. Choose Basic, Pro, or Enterprise to continue.</p>
           ${renderBillingPlanCards(currentUser?.tier || 'free')}
         </div>
       ` : finbotState.error === 'no_credits' ? `
@@ -4528,7 +4528,7 @@ function renderFinBot() {
       <div class="finbot-save-row">
         ${finbotState.result ? `
           <button onclick="saveFinBotReport()" class="finbot-save-btn-big"
-            style="${isSaved ? 'background:#10b98122;color:#10b981;border:1.5px solid #10b981' : 'background:var(--green-bg);color:var(--green);border:1.5px solid var(--green)'}">
+            style="${isSaved ? 'background:#0d948822;color:#0d9488;border:1.5px solid #0d9488' : 'background:var(--green-bg);color:var(--green);border:1.5px solid var(--green)'}">
             ${reportSaveIcon(isSaved)} ${isSaved ? 'View in Saved →' : 'Save Report'}
           </button>
         ` : ''}
@@ -4583,7 +4583,7 @@ function renderFinBot() {
   } else if (mode === 'dcf') {
     el.innerHTML = `${backBtn}
       <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:14px;margin-bottom:16px">
-        <p style="font-size:13px;color:#1e40af;line-height:1.6">Enter a stock ticker to get a full DCF valuation model with 5-year projections, WACC analysis, and a clear buy/hold/sell verdict.</p>
+        <p style="font-size:13px;color:#334155;line-height:1.6">Enter a stock ticker to get a full DCF valuation model with 5-year projections, WACC analysis, and a clear buy/hold/sell verdict.</p>
       </div>
       <div><label class="form-label">Stock Ticker — one at a time</label>
         <input class="form-input mono" placeholder="e.g. AAPL, HSBA, SAP" value="${finbotForm.ticker}" oninput="updateFinBotTickerInput(this,'ticker','dcf','finbot-dcf-run-btn')"></div>
@@ -4721,7 +4721,7 @@ async function persistReport(report) {
         modeId:      report.modeId,
         modeTitle:   report.modeTitle,
         modeSub:     report.modeSub     || '',
-        modeCol:     report.modeCol     || '#10b981',
+        modeCol:     report.modeCol     || '#0d9488',
         modeIcon:    report.modeIcon    || '🤖',
         content:     report.content,
         articleLink: report.articleLink || '',
@@ -4941,8 +4941,8 @@ function renderSaved(filter) {
       </div>
       <p style="font-weight:700;font-size:11px;color:var(--faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;padding:0 4px">What gets saved</p>
       ${[
-        { icon:'🤖', col:'#6366f1', title:'FinBot Analyses', desc:'Stock screeners, DCF valuations, risk assessments, earnings previews, portfolio blueprints and technical analyses' },
-        { icon:'📰', col:'#7c3aed', title:'News Breakdowns', desc:'AI-powered article summaries with market impact, investor takeaways, and relevant tickers — one tap to re-read' },
+        { icon:'🤖', col:'#334155', title:'FinBot Analyses', desc:'Stock screeners, DCF valuations, risk assessments, earnings previews, portfolio blueprints and technical analyses' },
+        { icon:'📰', col:'#334155', title:'News Breakdowns', desc:'AI-powered article summaries with market impact, investor takeaways, and relevant tickers — one tap to re-read' },
       ].map(f => `
         <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:14px;
                     background:var(--card);border:1px solid var(--border);margin-bottom:10px;opacity:.7">
@@ -5050,8 +5050,8 @@ function renderSaved(filter) {
     <!-- Segmented type filter -->
     <div style="background:var(--border);border-radius:13px;padding:4px;display:flex;gap:2px;margin-bottom:12px">
       ${filterBtn('all',    'All',       allReports.length, 'var(--green)')}
-      ${filterBtn('finbot', iconMarkup('bot', 'inline-icon') + ' FinBot', finbotCount,       '#6366f1')}
-      ${filterBtn('news',   '📰 News',   newsCount,         '#7c3aed')}
+      ${filterBtn('finbot', iconMarkup('bot', 'inline-icon') + ' FinBot', finbotCount,       '#334155')}
+      ${filterBtn('news',   '📰 News',   newsCount,         '#334155')}
       ${starCount ? filterBtn('starred', starIcon('inline-star-icon') + ' Starred', starCount, '#f59e0b') : ''}
     </div>
 
@@ -5384,8 +5384,8 @@ function makeDonut(canvasEl, segments) {
 
   function draw() {
     const styles = getComputedStyle(document.body);
-    const textCol = styles.getPropertyValue('--text').trim() || '#1e293b';
-    const mutedCol = styles.getPropertyValue('--muted').trim() || '#64748b';
+    const textCol = styles.getPropertyValue('--text').trim() || '#334155';
+    const mutedCol = styles.getPropertyValue('--muted').trim() || '#475569';
     const faintCol = styles.getPropertyValue('--faint').trim() || '#94a3b8';
     ctx.clearRect(0, 0, SIZE, SIZE);
     let start = -Math.PI / 2;
@@ -5468,7 +5468,7 @@ function makePortfolioMiniDonut(canvasEl, segments, centerLabel = 'EXPOSURE') {
   ctx.clearRect(0, 0, SIZE, SIZE);
   const styles = getComputedStyle(document.body);
   const labelCol = styles.getPropertyValue('--faint').trim() || '#94a3b8';
-  const valueCol = styles.getPropertyValue('--muted').trim() || '#64748b';
+  const valueCol = styles.getPropertyValue('--muted').trim() || '#475569';
   let start = -Math.PI / 2;
   segments.forEach(seg => {
     const sweep = (Math.max(0, seg.pct) / 100) * Math.PI * 2;
@@ -5476,7 +5476,7 @@ function makePortfolioMiniDonut(canvasEl, segments, centerLabel = 'EXPOSURE') {
     ctx.arc(cx, cy, outer, start, start + sweep);
     ctx.arc(cx, cy, inner, start + sweep, start, true);
     ctx.closePath();
-    ctx.fillStyle = seg.color || '#287a55';
+    ctx.fillStyle = seg.color || '#0d9488';
     ctx.globalAlpha = 0.9;
     ctx.fill();
     start += sweep;
@@ -5509,7 +5509,7 @@ function makePortfolioConcentrationChart(canvasEl, rows) {
   const text = styles.getPropertyValue('--text').trim() || '#17231d';
   const muted = styles.getPropertyValue('--muted').trim() || '#647266';
   const grid = styles.getPropertyValue('--border').trim() || '#e3d9c8';
-  const green = styles.getPropertyValue('--green').trim() || '#287a55';
+  const green = styles.getPropertyValue('--green').trim() || '#0d9488';
   const amber = styles.getPropertyValue('--amber').trim() || '#b9842f';
   const red = styles.getPropertyValue('--red').trim() || '#d94a4a';
   const pad = { left: 26, right: 18, top: 20, bottom: 38 };
@@ -5573,7 +5573,7 @@ function createPerfChart(container, data, color, height) {
   const chart = LightweightCharts.createChart(container, {
     width: container.clientWidth || 300, height,
     layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#94a3b8' },
-    grid: { vertLines: { visible: false }, horzLines: { color: '#1e293b30' } },
+    grid: { vertLines: { visible: false }, horzLines: { color: '#33415530' } },
     crosshair: {
       mode: 1,
       vertLine: { color: color + '80', labelBackgroundColor: color },
@@ -5789,7 +5789,7 @@ function renderPortfolioDemoDashboard() {
     { label: 'Top 3 holdings', pct: top3Pct, value: top3Pct.toFixed(1) + '%', tone: top3Pct > 75 ? 'bad' : top3Pct > 60 ? 'warn' : 'good', sub: 'How much the top group controls' },
   ];
   const exposureRows = [
-    { label: 'Global equities', pct: Math.max(0, 100 - cryptoPct), value: Math.max(0, 100 - cryptoPct).toFixed(1) + '%', color: '#287a55' },
+    { label: 'Global equities', pct: Math.max(0, 100 - cryptoPct), value: Math.max(0, 100 - cryptoPct).toFixed(1) + '%', color: '#0d9488' },
     { label: 'Crypto', pct: cryptoPct, value: cryptoPct.toFixed(1) + '%', color: '#f59e0b' },
   ].filter(row => row.pct > 0.1);
   const geographyRows = exposureRows;
@@ -5997,7 +5997,7 @@ function renderPortfolioDemoDashboard() {
 
   requestAnimationFrame(() => {
     if (portPerfChart) { try { portPerfChart.remove(); } catch(e){} portPerfChart = null; }
-    initPerfChart(PORT_HIST, '#10b981');
+    initPerfChart(PORT_HIST, '#0d9488');
     const donut = document.getElementById('port-donut');
     if (donut) makeDonut(donut, HOLDINGS.map((h, i) => ({ label: h.ticker, pct: h.alloc, color: ALLOC_COLORS[i] })));
     animatePnlBars();
@@ -6187,7 +6187,7 @@ function renderPortfolio() {
 
   requestAnimationFrame(() => {
     if (portPerfChart) { try { portPerfChart.remove(); } catch(e){} portPerfChart = null; }
-    initPerfChart(PORT_HIST, '#10b981');
+    initPerfChart(PORT_HIST, '#0d9488');
     const donut = document.getElementById('port-donut');
     if (donut) makeDonut(donut, HOLDINGS.map((h, i) => ({ label: h.ticker, pct: h.alloc, color: ALLOC_COLORS[i] })));
     animatePnlBars();
@@ -6210,8 +6210,8 @@ function renderPortfolioGuestWall() {
     </div>
     <p style="font-weight:700;font-size:11px;color:var(--faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;padding:0 4px">What you unlock</p>
     ${[
-      { icon:'wallet-02', col:'#10b981', title:'Real holdings', desc:'Add stocks, ETFs, crypto and JSE shares with units and average cost.' },
-      { icon:'pie-chart-09', col:'#3b82f6', title:'Portfolio analytics', desc:'See allocation, returns, categories, concentration and diversification insights.' },
+      { icon:'wallet-02', col:'#0d9488', title:'Real holdings', desc:'Add stocks, ETFs, crypto and JSE shares with units and average cost.' },
+      { icon:'pie-chart-09', col:'#334155', title:'Portfolio analytics', desc:'See allocation, returns, categories, concentration and diversification insights.' },
     ].map(f => `
       <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:14px;
                   background:var(--card);border:1px solid var(--border);margin-bottom:10px">
@@ -6271,7 +6271,7 @@ function analyzePortfolioWithFinBot() {
 }
 
 function renderDBPortfolio() {
-  const COLORS = ['#10b981','#3b82f6','#8b5cf6','#f59e0b','#ec4899','#06b6d4','#ef4444','#f97316'];
+  const COLORS = ['#0d9488','#334155','#475569','#f59e0b','#ec4899','#14b8a6','#ef4444','#f97316'];
   const SECTOR_MAP = {
     AAPL:'Tech',MSFT:'Tech',GOOGL:'Tech',GOOG:'Tech',NVDA:'Tech',META:'Tech',AMZN:'Tech',
     TSLA:'Tech',AMD:'Tech',INTC:'Tech',NFLX:'Tech',CRM:'Tech',ORCL:'Tech',ADBE:'Tech',
@@ -6300,9 +6300,9 @@ function renderDBPortfolio() {
     MNP:'Industrial',
   };
   const SECTOR_COLORS = {
-    Tech:'#6366f1',Finance:'#3b82f6',Healthcare:'#10b981',Crypto:'#f59e0b',
-    ETF:'#8b5cf6',Energy:'#f97316',Consumer:'#ec4899',Industrial:'#06b6d4',
-    Commodities:'#84cc16',Mining:'#d97706',Telecom:'#0891b2',Other:'#94a3b8',
+    Tech:'#334155',Finance:'#334155',Healthcare:'#0d9488',Crypto:'#f59e0b',
+    ETF:'#475569',Energy:'#f97316',Consumer:'#ec4899',Industrial:'#14b8a6',
+    Commodities:'#84cc16',Mining:'#d97706',Telecom:'#0d9488',Other:'#94a3b8',
   };
 
   // Enrich holdings with current prices
@@ -6413,8 +6413,8 @@ function renderDBPortfolio() {
     exposureTotals[key] = (exposureTotals[key] || 0) + h.allocPct;
   });
   const exposureColors = {
-    'Global equities':'#287a55',
-    'JSE equities':'#3e73a8',
+    'Global equities':'#0d9488',
+    'JSE equities':'#334155',
     'Crypto':'#f59e0b',
     'ETFs':'#7562c8',
     'Commodities':'#84cc16',
@@ -6423,9 +6423,9 @@ function renderDBPortfolio() {
     .map(([label, pct]) => ({ label, pct, color: exposureColors[label] || '#94a3b8', value: pct.toFixed(1) + '%' }))
     .sort((a, b) => b.pct - a.pct);
   const geographyRows = [
-    { label: 'South Africa', pct: jsePct, color: '#3e73a8', value: jsePct.toFixed(1) + '%' },
+    { label: 'South Africa', pct: jsePct, color: '#334155', value: jsePct.toFixed(1) + '%' },
     { label: 'Crypto', pct: cryptoPct, color: '#f59e0b', value: cryptoPct.toFixed(1) + '%' },
-    { label: 'Global / US', pct: Math.max(0, 100 - jsePct - cryptoPct), color: '#287a55', value: Math.max(0, 100 - jsePct - cryptoPct).toFixed(1) + '%' },
+    { label: 'Global / US', pct: Math.max(0, 100 - jsePct - cryptoPct), color: '#0d9488', value: Math.max(0, 100 - jsePct - cryptoPct).toFixed(1) + '%' },
   ].filter(row => row.pct > 0.1);
   const concentrationRows = [
     { label: `Top holding${allocations[0] ? ' (' + allocations[0].ticker + ')' : ''}`, pct: top1Pct, value: top1Pct.toFixed(1) + '%', tone: top1Pct > 35 ? 'bad' : top1Pct > 25 ? 'warn' : 'good', sub: top1Pct > 30 ? 'A large move here will strongly affect the portfolio' : 'Single holding risk is manageable' },
@@ -6493,7 +6493,7 @@ function renderDBPortfolio() {
     </div>
 
     <button onclick="analyzePortfolioWithFinBot()"
-      style="width:100%;padding:13px 16px;border-radius:16px;background:#3b82f614;color:#2563eb;font-size:13px;font-weight:700;border:1px solid #3b82f630;cursor:pointer;margin-bottom:18px">
+      style="width:100%;padding:13px 16px;border-radius:16px;background:#33415514;color:#334155;font-size:13px;font-weight:700;border:1px solid #33415530;cursor:pointer;margin-bottom:18px">
       Analyze portfolio with FinBot →
     </button>
 
@@ -6680,7 +6680,7 @@ function renderDBPortfolio() {
 
   requestAnimationFrame(() => {
     if (portPerfChart) { try { portPerfChart.remove(); } catch(e){} portPerfChart = null; }
-    initPerfChart(perfData, up ? '#10b981' : '#ef4444');
+    initPerfChart(perfData, up ? '#0d9488' : '#ef4444');
     const donut = document.getElementById('port-donut');
     if (donut) makeDonut(donut, holdings.map((h, i) => ({ label: h.ticker, pct: total > 0 ? (h.val / total * 100) : 0, color: COLORS[i % COLORS.length] })));
     animatePnlBars();
@@ -6699,25 +6699,25 @@ function renderDBPortfolio() {
     <div class="port-hero">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
-          <p style="font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.08em">Total Value</p>
+          <p style="font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;letter-spacing:0.08em">Total Value</p>
           <p style="font-size:28px;font-weight:800;color:#fff;margin-top:4px;font-family:var(--mono)">${fmtMoney(total)}</p>
-          <p style="margin-top:6px;font-size:13px;font-weight:700;color:${up?'#10b981':'#ef4444'}">
+          <p style="margin-top:6px;font-size:13px;font-weight:700;color:${up?'#0d9488':'#ef4444'}">
             ${up?'▲':'▼'} ${fmtMoney(Math.abs(totalPnl))} (${up?'+':''}${totalPnlP}%)
           </p>
         </div>
         <div style="text-align:right">
-          <p style="font-size:10px;color:#64748b">Holdings</p>
+          <p style="font-size:10px;color:#475569">Holdings</p>
           <p style="font-size:22px;font-weight:800;color:#fff">${holdings.length}</p>
         </div>
       </div>
     </div>
 
     <button onclick="analyzePortfolioWithFinBot()"
-      style="width:100%;padding:13px;border-radius:14px;background:linear-gradient(135deg,#3b82f618,#2563eb18);
-             color:#2563eb;font-size:13px;font-weight:700;border:1.5px solid #3b82f630;cursor:pointer;
+      style="width:100%;padding:13px;border-radius:14px;background:linear-gradient(135deg,#33415518,#33415518);
+             color:#334155;font-size:13px;font-weight:700;border:1.5px solid #33415530;cursor:pointer;
              margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s"
-      onmouseenter="this.style.background='linear-gradient(135deg,#3b82f628,#2563eb28)'"
-      onmouseleave="this.style.background='linear-gradient(135deg,#3b82f618,#2563eb18)'">
+      onmouseenter="this.style.background='linear-gradient(135deg,#33415528,#33415528)'"
+      onmouseleave="this.style.background='linear-gradient(135deg,#33415518,#33415518)'">
       🤖 Analyze Portfolio with FinBot →
     </button>
 
@@ -6940,7 +6940,7 @@ function renderDBPortfolio() {
 
   requestAnimationFrame(() => {
     if (portPerfChart) { try { portPerfChart.remove(); } catch(e){} portPerfChart = null; }
-    initPerfChart(perfData, up ? '#10b981' : '#ef4444');
+    initPerfChart(perfData, up ? '#0d9488' : '#ef4444');
     const donut = document.getElementById('port-donut');
     if (donut) {
       makeDonut(donut, holdings.map((h, i) => ({
@@ -7115,7 +7115,7 @@ function getInitials(name) {
 }
 
 function getAvatarColor(name) {
-  const colors = ['#10b981','#3b82f6','#8b5cf6','#f59e0b','#ec4899','#06b6d4','#ef4444'];
+  const colors = ['#0d9488','#334155','#475569','#f59e0b','#ec4899','#14b8a6','#ef4444'];
   let h = 0; for (let c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffffffff;
   return colors[Math.abs(h) % colors.length];
 }
@@ -7193,37 +7193,37 @@ function renderSettings() {
     {
       label: 'Supabase',
       state: isSupabaseConfigured() ? 'Healthy' : 'Needs setup',
-      tone: isSupabaseConfigured() ? '#10b981' : '#f59e0b',
+      tone: isSupabaseConfigured() ? '#0d9488' : '#f59e0b',
       sub: isSupabaseConfigured() ? 'Client configured and available' : 'Missing project URL or anon key',
     },
     {
       label: 'Session',
       state: currentUser ? 'Active' : 'Signed out',
-      tone: currentUser ? '#3b82f6' : '#64748b',
+      tone: currentUser ? '#334155' : '#475569',
       sub: currentUser ? `Signed in as @${currentUser.username}` : 'No active authenticated session',
     },
     {
       label: 'FinBot',
       state: latestByService.finbot ? 'Attention' : 'Healthy',
-      tone: latestByService.finbot ? '#ef4444' : '#10b981',
+      tone: latestByService.finbot ? '#ef4444' : '#0d9488',
       sub: latestByService.finbot ? latestByService.finbot.message : 'No recent function issues',
     },
     {
       label: 'Markets',
       state: latestByService['market-data'] ? 'Attention' : 'Healthy',
-      tone: latestByService['market-data'] ? '#ef4444' : '#10b981',
+      tone: latestByService['market-data'] ? '#ef4444' : '#0d9488',
       sub: latestByService['market-data'] ? latestByService['market-data'].message : 'Live prices and charts responding',
     },
     {
       label: 'News',
       state: latestByService.news ? 'Attention' : 'Healthy',
-      tone: latestByService.news ? '#f59e0b' : '#10b981',
+      tone: latestByService.news ? '#f59e0b' : '#0d9488',
       sub: latestByService.news ? latestByService.news.message : 'News feed loading normally',
     },
     {
       label: 'Calendar',
       state: latestByService.calendar ? 'Attention' : 'Healthy',
-      tone: latestByService.calendar ? '#f59e0b' : '#10b981',
+      tone: latestByService.calendar ? '#f59e0b' : '#0d9488',
       sub: latestByService.calendar ? latestByService.calendar.message : 'Calendar data loading normally',
     },
   ];
@@ -7261,7 +7261,7 @@ function renderSettings() {
       <div class="settings-group">
         <div class="settings-row">
           <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:#3b82f614;color:#2f7d5a">${iconMarkup('notification-01', 'settings-icon-glyph')}</div>
+            <div class="settings-row-icon" style="background:#33415514;color:#0d9488">${iconMarkup('notification-01', 'settings-icon-glyph')}</div>
             <div><p class="settings-row-title">Push Notifications</p><p class="settings-row-sub">Market updates & news alerts</p></div>
           </div>
           <label class="toggle">
@@ -7271,7 +7271,7 @@ function renderSettings() {
         </div>
         <div class="settings-row">
           <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:#10b98114;color:#2f7d5a">${iconMarkup('chart-03', 'settings-icon-glyph')}</div>
+            <div class="settings-row-icon" style="background:#0d948814;color:#0d9488">${iconMarkup('chart-03', 'settings-icon-glyph')}</div>
             <div><p class="settings-row-title">Price Alerts</p><p class="settings-row-sub">Notify when watchlist moves ±5%</p></div>
           </div>
           <label class="toggle">
@@ -7281,7 +7281,7 @@ function renderSettings() {
         </div>
         <div class="settings-row">
           <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:#8b5cf614;color:#7c3aed">${iconMarkup('chart', 'settings-icon-glyph')}</div>
+            <div class="settings-row-icon" style="background:#47556914;color:#334155">${iconMarkup('chart', 'settings-icon-glyph')}</div>
             <div><p class="settings-row-title">Weekly Newsletter</p><p class="settings-row-sub">Top picks & market recap</p></div>
           </div>
           <label class="toggle">
@@ -7298,7 +7298,7 @@ function renderSettings() {
       <div class="settings-group">
         <div class="settings-row settings-row-stack">
           <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:#06b6d414">UI</div>
+            <div class="settings-row-icon" style="background:#14b8a614">UI</div>
             <div><p class="settings-row-title">Workspace Style</p><p class="settings-row-sub">Choose the experience level and visual density for the app.</p></div>
           </div>
           <div class="ui-mode-grid">
@@ -7313,7 +7313,7 @@ function renderSettings() {
         </div>
         <div class="settings-row">
           <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:#f59e0b14;color:#3b82f6">${iconMarkup('money-exchange-03', 'settings-icon-glyph')}</div>
+            <div class="settings-row-icon" style="background:#f59e0b14;color:#334155">${iconMarkup('money-exchange-03', 'settings-icon-glyph')}</div>
             <div><p class="settings-row-title">Currency</p><p class="settings-row-sub">Base display currency</p></div>
           </div>
           <select class="settings-select" onchange="saveSettings({currency:this.value})">
@@ -7324,7 +7324,7 @@ function renderSettings() {
         </div>
         <div class="settings-row">
           <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:#ef444414;color:#8b5cf6">${iconMarkup('view-off', 'settings-icon-glyph')}</div>
+            <div class="settings-row-icon" style="background:#ef444414;color:#475569">${iconMarkup('view-off', 'settings-icon-glyph')}</div>
             <div><p class="settings-row-title">Hide Balances</p><p class="settings-row-sub">Mask portfolio values</p></div>
           </div>
           <label class="toggle">
@@ -7341,7 +7341,7 @@ function renderSettings() {
       <div class="settings-group">
         <div class="settings-row">
           <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:#10b98114;color:#06b6d4">${iconMarkup('balance-scale', 'settings-icon-glyph')}</div>
+            <div class="settings-row-icon" style="background:#0d948814;color:#14b8a6">${iconMarkup('balance-scale', 'settings-icon-glyph')}</div>
             <div><p class="settings-row-title">Default Risk</p><p class="settings-row-sub">Pre-fill risk tolerance</p></div>
           </div>
           <select class="settings-select" onchange="saveSettings({defaultRisk:this.value})">
@@ -7352,7 +7352,7 @@ function renderSettings() {
         </div>
         <div class="settings-row">
           <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:#3b82f614;color:#64748b">${iconMarkup('time-04', 'settings-icon-glyph')}</div>
+            <div class="settings-row-icon" style="background:#33415514;color:#475569">${iconMarkup('time-04', 'settings-icon-glyph')}</div>
             <div><p class="settings-row-title">Time Horizon</p><p class="settings-row-sub">Default investment horizon</p></div>
           </div>
           <select class="settings-select" onchange="saveSettings({defaultHorizon:this.value})">
@@ -7363,7 +7363,7 @@ function renderSettings() {
         </div>
         <div class="settings-row">
           <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:#8b5cf614;color:#7c3aed">${iconMarkup('chart', 'settings-icon-glyph')}</div>
+            <div class="settings-row-icon" style="background:#47556914;color:#334155">${iconMarkup('chart', 'settings-icon-glyph')}</div>
             <div>
               <p class="settings-row-title">Preferred Sectors</p>
               <p class="settings-row-sub">${s.defaultSectors || 'Not set'}</p>
@@ -7391,7 +7391,7 @@ function renderSettings() {
         </div>
         <div class="settings-row">
           <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:#10b98114;color:#10b981">${iconMarkup('coins-01', 'settings-icon-glyph')}</div>
+            <div class="settings-row-icon" style="background:#0d948814;color:#0d9488">${iconMarkup('coins-01', 'settings-icon-glyph')}</div>
             <div>
               <p class="settings-row-title">Credits Remaining</p>
               <p class="settings-row-sub">Resets monthly · 5 per analysis, 2 per news AI</p>
@@ -7533,7 +7533,7 @@ function renderSettings() {
               <div class="settings-log-card">
                 <div class="settings-log-head">
                   <div class="settings-log-meta">
-                    <span class="settings-status-pill" style="background:${event.level === 'error' ? '#ef444418' : event.level === 'warn' ? '#f59e0b18' : '#10b98118'};color:${event.level === 'error' ? '#ef4444' : event.level === 'warn' ? '#f59e0b' : '#10b981'}">${escHtml(event.level)}</span>
+                    <span class="settings-status-pill" style="background:${event.level === 'error' ? '#ef444418' : event.level === 'warn' ? '#f59e0b18' : '#0d948818'};color:${event.level === 'error' ? '#ef4444' : event.level === 'warn' ? '#f59e0b' : '#0d9488'}">${escHtml(event.level)}</span>
                     <span class="settings-log-service">${escHtml(event.service)} · ${escHtml(event.event)}</span>
                   </div>
                   <span class="settings-log-time">${formatDiagnosticsTime(event.created_at)}</span>
@@ -7558,8 +7558,8 @@ function renderSettings() {
       <p class="settings-section-label">Account</p>
       <div class="settings-group settings-group-pad settings-group-stack settings-account-group">
         ${currentUser ? `
-          <button class="modal-save-btn" style="background:#3b82f6" onclick="manageSignInEmail()">Manage Sign-In Email</button>
-          <button class="modal-save-btn" style="background:#1e293b" onclick="doLogout()">Sign Out</button>
+          <button class="modal-save-btn" style="background:#334155" onclick="manageSignInEmail()">Manage Sign-In Email</button>
+          <button class="modal-save-btn" style="background:#334155" onclick="doLogout()">Sign Out</button>
         ` : `<button class="modal-save-btn" onclick="document.getElementById('auth-overlay').classList.remove('hidden')">Sign In / Create Account</button>`}
         <button class="danger-btn" onclick="resetAllSettings()">Reset All Settings</button>
       </div>
@@ -7605,7 +7605,7 @@ async function doChangePassword() {
     });
     if (d.success) {
       errEl.textContent = 'Password updated successfully!';
-      errEl.style.color = '#10b981';
+      errEl.style.color = '#0d9488';
       errEl.classList.add('show');
       setTimeout(() => closeChangePasswordModal(), 1500);
     } else {
@@ -7981,9 +7981,9 @@ function getTierPresentation(tier = 'free') {
     return {
       label: 'Pro',
       sub: '100 credits/month - Full access',
-      chipBg: '#7c3aed22',
+      chipBg: '#33415522',
       chipColor: '#a78bfa',
-      iconBg: '#7c3aed14',
+      iconBg: '#33415514',
       icon: iconMarkup('bolt')
     };
   }
@@ -7991,18 +7991,18 @@ function getTierPresentation(tier = 'free') {
     return {
       label: 'Basic',
       sub: '50 credits/month - Starter AI access',
-      chipBg: '#10b98122',
-      chipColor: '#10b981',
-      iconBg: '#10b98114',
+      chipBg: '#0d948822',
+      chipColor: '#0d9488',
+      iconBg: '#0d948814',
       icon: iconMarkup('spark')
     };
   }
   return {
     label: 'Free',
     sub: '0 credits/month - Core access',
-    chipBg: '#64748b22',
-    chipColor: '#64748b',
-    iconBg: '#64748b14',
+    chipBg: '#47556922',
+    chipColor: '#475569',
+    iconBg: '#47556914',
     icon: iconMarkup('spark')
   };
 }
@@ -8366,7 +8366,7 @@ async function handleDataAction(action, method, body) {
             mode_id: body.modeId,
             mode_title: body.modeTitle || '',
             mode_sub: body.modeSub || '',
-            mode_col: body.modeCol || '#10b981',
+            mode_col: body.modeCol || '#0d9488',
             mode_icon: body.modeIcon || '🤖',
             content: body.content || '',
             article_link: body.articleLink || '',
@@ -8638,7 +8638,7 @@ function clearAuthError() {
 function showAuthSuccess(msg) {
   const el = document.getElementById('auth-error');
   el.textContent = msg;
-  el.style.color = '#10b981';
+  el.style.color = '#0d9488';
   el.classList.add('show');
 }
 function shouldRememberSession() {
@@ -8911,7 +8911,7 @@ function updateHeaderUser() {
     if (ddName)  ddName.textContent  = currentUser.name || currentUser.username;
     if (ddEmail) ddEmail.textContent = currentUser.email || ('@' + currentUser.username);
     // Tier badge
-    const tierColors = { free: '#64748b', basic: '#10b981', pro: '#7c3aed', enterprise: '#d97706' };
+    const tierColors = { free: '#475569', basic: '#0d9488', pro: '#334155', enterprise: '#d97706' };
     const tierLabels = { free: 'Free', basic: 'Basic', pro: 'Pro', enterprise: 'Enterprise' };
     const t = currentUser.tier || 'free';
     let tierBadge = document.getElementById('header-tier-badge');
@@ -8922,15 +8922,15 @@ function updateHeaderUser() {
       un.parentNode.insertBefore(tierBadge, un.nextSibling);
     }
     tierBadge.textContent = tierLabels[t] || t;
-    tierBadge.style.background = (tierColors[t] || '#64748b') + '22';
-    tierBadge.style.color = tierColors[t] || '#64748b';
+    tierBadge.style.background = (tierColors[t] || '#475569') + '22';
+    tierBadge.style.color = tierColors[t] || '#475569';
     // Credits counter (only for pro/enterprise)
     let credEl = document.getElementById('header-credits');
     if (t !== 'free') {
       if (!credEl) {
         credEl = document.createElement('span');
         credEl.id = 'header-credits';
-        credEl.style.cssText = 'font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:#10b98122;color:#10b981;margin-left:4px;cursor:default';
+        credEl.style.cssText = 'font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:#0d948822;color:#0d9488;margin-left:4px;cursor:default';
         credEl.title = 'FinBot credits remaining';
         tierBadge.parentNode.insertBefore(credEl, tierBadge.nextSibling);
       }
@@ -9513,7 +9513,7 @@ const LEARN_TOPICS = [
   {
     id: 'basics',
     icon: '📊',
-    iconBg: '#10b98118',
+    iconBg: '#0d948818',
     title: 'Investing Basics',
     desc: 'Stocks, bonds, ETFs, and how the market works',
     difficulty: 'beginner',
@@ -9606,7 +9606,7 @@ const LEARN_TOPICS = [
   {
     id: 'strategies',
     icon: '🎯',
-    iconBg: '#3b82f618',
+    iconBg: '#33415518',
     title: 'Investment Strategies',
     desc: 'Value investing, growth, DCA, and portfolio building',
     difficulty: 'intermediate',
@@ -9705,7 +9705,7 @@ const LEARN_TOPICS = [
   {
     id: 'analysis',
     icon: '🔍',
-    iconBg: '#8b5cf618',
+    iconBg: '#47556918',
     title: 'Fundamental Analysis',
     desc: 'Reading financial statements and evaluating companies',
     difficulty: 'intermediate',
@@ -9881,7 +9881,7 @@ const LEARN_TOPICS = [
   {
     id: 'risk',
     icon: '🛡️',
-    iconBg: '#06b6d418',
+    iconBg: '#14b8a618',
     title: 'Risk Management',
     desc: 'Protecting your capital and managing downside',
     difficulty: 'beginner',
@@ -10202,7 +10202,7 @@ const LEARN_TOPICS = [
   {
     id: 'dividends',
     icon: '💰',
-    iconBg: '#10b98118',
+    iconBg: '#0d948818',
     title: 'Dividends & Income',
     desc: 'Dividend investing, REITs, and building passive income',
     difficulty: 'beginner',
@@ -10396,7 +10396,7 @@ const LEARN_TOPICS = [
   {
     id: 'macro',
     icon: '🌍',
-    iconBg: '#6366f118',
+    iconBg: '#33415518',
     title: 'Macro & Market Cycles',
     desc: 'Economic indicators, business cycles, and market timing',
     difficulty: 'intermediate',
@@ -10639,7 +10639,7 @@ function awardXP(amount) {
   const el = document.getElementById('tab-learn');
   if (el && el.closest('.tab-content')) {
     const chip = document.createElement('div');
-    chip.style.cssText = 'position:fixed;bottom:140px;right:16px;z-index:9998;background:linear-gradient(90deg,#10b981,#3b82f6);color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:20px;animation:toastIn 0.3s ease,toastOut 0.3s 1.5s ease forwards;pointer-events:none';
+    chip.style.cssText = 'position:fixed;bottom:140px;right:16px;z-index:9998;background:linear-gradient(90deg,#0d9488,#334155);color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:20px;animation:toastIn 0.3s ease,toastOut 0.3s 1.5s ease forwards;pointer-events:none';
     chip.textContent = '+' + amount + ' XP';
     document.body.appendChild(chip);
     setTimeout(() => chip.remove(), 2000);
@@ -10867,8 +10867,8 @@ function renderCalendar() {
   // ── Shared header (view toggle + filter pills) ────────────────────────────
   function buildHeader(isLive, filter, view) {
     const statusBadge = isLive
-      ? `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#10b981;background:#10b98115;padding:3px 10px;border-radius:20px">
-           <span style="width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block"></span>Live data</span>`
+      ? `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#0d9488;background:#0d948815;padding:3px 10px;border-radius:20px">
+           <span style="width:6px;height:6px;border-radius:50%;background:#0d9488;display:inline-block"></span>Live data</span>`
       : `<span style="font-size:11px;color:var(--muted);background:var(--border);padding:3px 10px;border-radius:20px">Demo data</span>`;
 
     const viewBtns = [
@@ -10892,7 +10892,7 @@ function renderCalendar() {
             ${filterTypes.map(f => `
               <button onclick="renderCalendar._build('${f}','${view}')"
                 style="padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;
-                       background:${f === filter ? (f === 'all' ? '#10b981' : f === 'earnings' ? '#3b82f6' : f === 'fed' ? '#8b5cf6' : '#f59e0b') : 'var(--border)'};
+                       background:${f === filter ? (f === 'all' ? '#0d9488' : f === 'earnings' ? '#334155' : f === 'fed' ? '#475569' : '#f59e0b') : 'var(--border)'};
                        color:${f === filter ? '#fff' : 'var(--muted)'};border:none;transition:all .15s">
                 ${f === 'all' ? 'All Events' : LABEL[f]}
               </button>`).join('')}

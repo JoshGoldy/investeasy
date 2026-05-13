@@ -6,33 +6,33 @@
   </defs>
 
   <!-- Handle — bottom-left direction -->
-  <line x1="28" y1="72" x2="5" y2="97" stroke="#46B14B" stroke-width="14" stroke-linecap="round"/>
+  <line x1="28" y1="72" x2="5" y2="97" stroke="#0d9488" stroke-width="14" stroke-linecap="round"/>
 
   <!-- Magnifying glass ring -->
-  <circle cx="52" cy="49" r="32" fill="white" stroke="#46B14B" stroke-width="10"/>
+  <circle cx="52" cy="49" r="32" fill="white" stroke="#0d9488" stroke-width="10"/>
 
   <!-- Chart content clipped inside glass -->
   <g clip-path="url(#gc)">
     <!-- Bars (tall → short, left to right) -->
-    <rect x="26" y="36" width="10" height="31" rx="2.5" fill="#2B8FD4"/>
-    <rect x="41" y="43" width="10" height="24" rx="2.5" fill="#2B8FD4"/>
-    <rect x="56" y="51" width="10" height="16" rx="2.5" fill="#2B8FD4"/>
+    <rect x="26" y="36" width="10" height="31" rx="2.5" fill="#334155"/>
+    <rect x="41" y="43" width="10" height="24" rx="2.5" fill="#334155"/>
+    <rect x="56" y="51" width="10" height="16" rx="2.5" fill="#334155"/>
     <!-- Trend line + dots on bar tops -->
     <polyline points="31,33  46,41  61,49"
-              fill="none" stroke="#2B8FD4"
+              fill="none" stroke="#334155"
               stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="31" cy="33" r="4" fill="#2B8FD4"/>
-    <circle cx="46" cy="41" r="4" fill="#2B8FD4"/>
-    <circle cx="61" cy="49" r="4" fill="#2B8FD4"/>
+    <circle cx="31" cy="33" r="4" fill="#334155"/>
+    <circle cx="46" cy="41" r="4" fill="#334155"/>
+    <circle cx="61" cy="49" r="4" fill="#334155"/>
   </g>
 
   <!-- "Fin" in blue -->
   <text x="107" y="79"
         font-family="'Nunito','Arial Black','Arial Bold',Arial,sans-serif"
-        font-size="62" font-weight="900" fill="#2B8FD4">Fin</text>
+        font-size="62" font-weight="900" fill="#334155">Fin</text>
 
   <!-- "Scope" in green -->
   <text x="210" y="79"
         font-family="'Nunito','Arial Black','Arial Bold',Arial,sans-serif"
-        font-size="62" font-weight="900" fill="#46B14B">Scope</text>
+        font-size="62" font-weight="900" fill="#0d9488">Scope</text>
 </svg>
