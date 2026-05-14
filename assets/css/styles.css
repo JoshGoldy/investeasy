@@ -182,6 +182,7 @@ body[data-ui-mode="terminal"] .nav button[data-tab="learn"]{display:none!importa
 .settings-icon-glyph svg{width:18px;height:18px;stroke-width:1.8}
 .finbot-hero-icon{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px}
 .finbot-hero-icon svg{width:46px!important;height:46px!important;stroke-width:1.85}
+.finbot-guest-icon .finbot-hero-icon{background:transparent!important;box-shadow:none!important;border:none!important}
 .finbot-main-icon svg{width:23px;height:23px;stroke-width:1.7}
 .finbot-avatar-icon svg{width:17px;height:17px;stroke-width:1.8}
 .learn-topic-emoji,.learn-detail-emoji,.path-node-emoji,.badge-emoji{display:inline-flex;align-items:center;justify-content:center;line-height:1}
