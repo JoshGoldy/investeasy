@@ -11225,7 +11225,300 @@ function renderLearn() {
   `;
   scheduleUiIconRefresh(el);
 }
-const _renderCalendarOriginal = renderCalendar;
+function renderCalendarImproved() {
+  const el = document.getElementById('tab-calendar');
+  if (!el) return;
+
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const labels = { earnings: 'Earnings', fed: 'Fed', macro: 'Economic', holiday: 'Market Event' };
+  const badges = { earnings: 'cal-badge-earnings', fed: 'cal-badge-fed', macro: 'cal-badge-macro', holiday: 'cal-badge-holiday' };
+  const typeIcons = { earnings: 'chart-03', fed: 'time-04', macro: 'chart', holiday: 'calendar' };
+  const filters = [['all', 'All Events'], ['earnings', 'Earnings'], ['fed', 'Fed'], ['macro', 'Economic'], ['high', 'High Impact'], ['medium', 'Medium Impact'], ['us', 'US'], ['global', 'Global'], ['watched', 'Watched']];
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+  const weekEnd = new Date(today); weekEnd.setDate(today.getDate() + 7);
+  const nextWeekEnd = new Date(today); nextWeekEnd.setDate(today.getDate() + 14);
+
+  const dateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  const calKey = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80) || 'event';
+  const calArg = (value) => JSON.stringify(String(value || '')).replace(/</g, '\\u003c');
+  const loadWatched = () => { try { return JSON.parse(localStorage.getItem('ezvest_calendar_watched') || '[]'); } catch (_) { return []; } };
+  const saveWatched = (items) => localStorage.setItem('ezvest_calendar_watched', JSON.stringify([...new Set(items)]));
+
+  function impactFor(ev) {
+    if (ev.impact) return String(ev.impact).toLowerCase();
+    if (ev.type === 'fed' || /cpi|payroll|fomc|rate decision/i.test(ev.title || '')) return 'high';
+    return 'medium';
+  }
+
+  function timeFor(ev) {
+    if (ev.time) return ev.time;
+    if (ev.type === 'fed') return '2:00 PM ET';
+    if (/payroll|cpi|ppi/i.test(ev.title || '')) return '8:30 AM ET';
+    if (/confidence/i.test(ev.title || '')) return '10:00 AM ET';
+    return ev.type === 'earnings' ? 'TBD' : 'TBD';
+  }
+
+  function valuesFor(ev) {
+    if (ev.values) return ev.values;
+    const title = ev.title || '';
+    if (/CPI|PPI|Payroll|Confidence|FOMC|Rate/i.test(title)) return { previous: 'Pending', forecast: 'Pending', actual: '-' };
+    if (ev.type === 'earnings') return { previous: '-', forecast: ev.epsEst ? `$${ev.epsEst}` : '-', actual: '-' };
+    return { previous: '-', forecast: '-', actual: '-' };
+  }
+
+  function whyFor(ev) {
+    const title = ev.title || '';
+    if (/CPI|PPI/i.test(title)) return 'Inflation data can move interest-rate expectations, bond yields, the dollar, gold, and growth stocks.';
+    if (/Payroll/i.test(title)) return 'Jobs data affects growth expectations and the Fed path, so index futures, rates, and the dollar can react quickly.';
+    if (/FOMC|Fed|Rate/i.test(title)) return 'Fed decisions reset the market view on borrowing costs, liquidity, and risk appetite.';
+    if (/Confidence/i.test(title)) return 'Consumer sentiment gives an early read on household spending, retail demand, and recession risk.';
+    if (ev.type === 'earnings') return 'Earnings can reprice the stock and affect peers when guidance changes expectations.';
+    return 'This event may shift expectations for growth, inflation, rates, or sector leadership.';
+  }
+
+  function normalizeEvents(events) {
+    const watched = new Set(loadWatched());
+    return events.map((raw, index) => {
+      const ev = { ...raw };
+      ev.date = ev.date || dateKey(today);
+      ev.type = ev.type || 'macro';
+      ev.title = ev.title || 'Market Event';
+      ev.desc = ev.desc || 'Calendar event details will update when data is available.';
+      ev.impact = impactFor(ev);
+      ev.time = timeFor(ev);
+      ev.region = ev.region || (ev.type === 'earnings' ? 'Global' : 'US');
+      ev.values = valuesFor(ev);
+      ev.assets = ev.assets || ev.tickers || [];
+      ev.id = ev.id || `${ev.date}-${ev.type}-${calKey(ev.title)}-${index}`;
+      ev.watched = watched.has(ev.id);
+      ev.why = ev.why || whyFor(ev);
+      return ev;
+    }).sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
+  }
+
+  function groupLabel(dateStr) {
+    const d = new Date(`${dateStr}T12:00:00`); d.setHours(0, 0, 0, 0);
+    if (+d === +today) return 'Today';
+    if (+d === +tomorrow) return 'Tomorrow';
+    if (d < weekEnd) return 'This Week';
+    if (d < nextWeekEnd) return 'Next Week';
+    return d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  }
+
+  function applyFilter(events, filter) {
+    if (filter === 'all') return events;
+    if (['high', 'medium', 'low'].includes(filter)) return events.filter(e => e.impact === filter);
+    if (filter === 'us') return events.filter(e => e.region === 'US');
+    if (filter === 'global') return events.filter(e => e.region !== 'US');
+    if (filter === 'watched') return events.filter(e => e.watched);
+    return events.filter(e => e.type === filter);
+  }
+
+  function buildHeader(isLive, filter, view) {
+    const viewBtns = [['list', 'list', 'List'], ['week', 'calendar', 'Week'], ['month', 'calendar', 'Month']]
+      .map(([id, icon, label]) => `<button class="cal-view-btn${id === view ? ' active' : ''}" onclick="renderCalendar._build('${filter}','${id}')">${iconMarkup(icon, 'inline-icon')} ${label}</button>`).join('');
+    return `<div class="cal-header">
+      <div>
+        <div class="cal-title-row"><h2>Economic Calendar</h2><span class="cal-status${isLive ? ' live' : ''}">${isLive ? '<span></span>Live data' : 'Demo data'}</span></div>
+        <p>Earnings dates from Yahoo Finance - Fed and macro events</p>
+      </div>
+      <div class="cal-header-actions">
+        <div class="cal-view-toggle">${viewBtns}</div>
+        <div class="cal-filters-row">${filters.map(([id, label]) => `<button class="cal-filter-btn${id === filter ? ' active' : ''}" onclick="renderCalendar._build('${id}','${view}')">${label}</button>`).join('')}</div>
+      </div>
+    </div>`;
+  }
+
+  function buildEventCard(ev, compact = false) {
+    const d = new Date(`${ev.date}T12:00:00`);
+    const assets = (ev.assets || []).slice(0, 5).map(t => {
+      const idx = MARKETS.findIndex(x => x.ticker === t);
+      const click = idx >= 0 ? ` onclick="event.stopPropagation();switchTab('markets');setTimeout(()=>openStockDetail(${idx}),80)"` : '';
+      return `<span class="cal-asset-chip"${click}>${escHtml(t)}</span>`;
+    }).join('');
+    return `<button class="cal-event-card${ev.id === el._calSelected ? ' selected' : ''}" onclick="renderCalendar._select(${calArg(ev.id)})">
+      <div class="cal-date-col"><div class="cal-day-num">${d.getDate()}</div><div class="cal-day-name">${days[d.getDay()]}</div></div>
+      <div class="cal-body">
+        <div class="cal-event-top">
+          <span class="cal-badge ${badges[ev.type]}">${iconMarkup(typeIcons[ev.type] || 'calendar', 'inline-icon')} ${labels[ev.type] || 'Event'}</span>
+          <span class="cal-impact cal-impact-${ev.impact}">${ev.impact} impact</span>
+          <span class="cal-event-time">${escHtml(ev.time)}</span>
+        </div>
+        <div class="cal-event-title">${escHtml(ev.title)}</div>
+        <p class="cal-event-desc">${escHtml(compact ? ev.desc.slice(0, 90) : ev.desc)}</p>
+        <div class="cal-event-meta">
+          <span>${iconMarkup('globe', 'inline-icon')} ${escHtml(ev.region)}</span>
+          <span>Prev ${escHtml(ev.values.previous)}</span>
+          <span>Forecast ${escHtml(ev.values.forecast)}</span>
+          <span>Actual ${escHtml(ev.values.actual)}</span>
+        </div>
+        ${assets ? `<div class="cal-assets-row">${assets}</div>` : ''}
+      </div>
+      <div class="cal-card-actions">
+        <span class="cal-watch-btn${ev.watched ? ' active' : ''}" onclick="event.stopPropagation();renderCalendar._watch(${calArg(ev.id)})">${iconMarkup('bookmark', 'inline-icon')} ${ev.watched ? 'Watching' : 'Watch'}</span>
+        <span class="cal-alert-action" onclick="event.stopPropagation();showToast('Calendar alert saved')">${iconMarkup('notification-01', 'inline-icon')}</span>
+      </div>
+    </button>`;
+  }
+
+  function buildSidePanel(events, visible) {
+    const selected = events.find(e => e.id === el._calSelected) || visible[0] || events[0];
+    const todayEvents = events.filter(e => e.date === dateKey(today));
+    const weekEvents = events.filter(e => {
+      const d = new Date(`${e.date}T12:00:00`); d.setHours(0, 0, 0, 0);
+      return d >= today && d < weekEnd;
+    });
+    const highCount = weekEvents.filter(e => e.impact === 'high').length;
+    const next = events.find(e => new Date(`${e.date}T12:00:00`) >= today);
+    return `<aside class="cal-side-panel">
+      <div class="cal-panel-card">
+        <div class="cal-panel-label">This Week</div>
+        <div class="cal-stat-grid">
+          <div><strong>${weekEvents.length}</strong><span>Events</span></div>
+          <div><strong>${highCount}</strong><span>High impact</span></div>
+          <div><strong>${todayEvents.length}</strong><span>Today</span></div>
+        </div>
+        ${next ? `<div class="cal-next-box"><span>Next up</span><strong>${escHtml(next.title)}</strong><small>${escHtml(next.date)} at ${escHtml(next.time)}</small></div>` : ''}
+      </div>
+      ${selected ? `<div class="cal-panel-card">
+        <div class="cal-panel-label">Event Brief</div>
+        <h3>${escHtml(selected.title)}</h3>
+        <div class="cal-event-top panel"><span class="cal-badge ${badges[selected.type]}">${labels[selected.type] || 'Event'}</span><span class="cal-impact cal-impact-${selected.impact}">${selected.impact} impact</span></div>
+        <p>${escHtml(selected.why)}</p>
+        <div class="cal-values-grid">
+          <div><span>Previous</span><strong>${escHtml(selected.values.previous)}</strong></div>
+          <div><span>Forecast</span><strong>${escHtml(selected.values.forecast)}</strong></div>
+          <div><span>Actual</span><strong>${escHtml(selected.values.actual)}</strong></div>
+        </div>
+        <button class="cal-primary-action" onclick="renderCalendar._watch(${calArg(selected.id)})">${iconMarkup('bookmark', 'inline-icon')} ${selected.watched ? 'Remove from watch' : 'Watch event'}</button>
+      </div>` : ''}
+    </aside>`;
+  }
+
+  function buildLayout(events, visible, isLive, filter, view, mainHtml) {
+    return `${buildHeader(isLive, filter, view)}<div class="cal-layout"><section class="cal-main">${mainHtml}</section>${buildSidePanel(events, visible)}</div>`;
+  }
+
+  function buildListView(events, isLive, filter) {
+    const visible = applyFilter(events, filter);
+    const groups = {};
+    visible.forEach(ev => { (groups[groupLabel(ev.date)] = groups[groupLabel(ev.date)] || []).push(ev); });
+    const fixed = ['Today', 'Tomorrow', 'This Week', 'Next Week'];
+    const extra = Object.keys(groups).filter(k => !fixed.includes(k)).sort((a, b) => (groups[a][0]?.date || '').localeCompare(groups[b][0]?.date || ''));
+    const keys = [...fixed.filter(k => groups[k]), ...extra];
+    const main = keys.map(label => `<div class="cal-group-label">${label}</div>${groups[label].map(ev => buildEventCard(ev)).join('')}`).join('') || '<p class="cal-empty">No events match this filter.</p>';
+    return buildLayout(events, visible, isLive, filter, 'list', main);
+  }
+
+  function buildWeekView(events, isLive, filter) {
+    const visible = applyFilter(events, filter);
+    const dow = today.getDay();
+    const monday = new Date(today); monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+    const byDate = {};
+    visible.forEach(ev => { (byDate[ev.date] = byDate[ev.date] || []).push(ev); });
+    const cols = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(monday); d.setDate(monday.getDate() + i);
+      const dayEvents = byDate[dateKey(d)] || [];
+      return `<div class="cal-week-col">
+        <div class="cal-week-day-header${+d === +today ? ' today' : ''}"><div>${days[d.getDay()]}</div><strong>${d.getDate()}</strong></div>
+        ${dayEvents.map(ev => `<button class="cal-week-event cal-week-event-${ev.type} impact-${ev.impact}" onclick="renderCalendar._select(${calArg(ev.id)})"><span>${escHtml(ev.time)}</span><strong>${escHtml(ev.title)}</strong></button>`).join('') || '<div class="cal-no-events">No events</div>'}
+      </div>`;
+    }).join('');
+    return buildLayout(events, visible, isLive, filter, 'week', `<div class="cal-week-grid">${cols}</div>`);
+  }
+
+  function buildMonthView(events, isLive, filter) {
+    const visible = applyFilter(events, filter);
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const first = new Date(year, month, 1);
+    const last = new Date(year, month + 1, 0);
+    const offset = first.getDay() === 0 ? 6 : first.getDay() - 1;
+    const gridStart = new Date(first); gridStart.setDate(first.getDate() - offset);
+    const total = Math.ceil((offset + last.getDate()) / 7) * 7;
+    const byDate = {};
+    visible.forEach(ev => { (byDate[ev.date] = byDate[ev.date] || []).push(ev); });
+    const headers = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div class="cal-month-day-header">${d}</div>`).join('');
+    const cells = Array.from({ length: total }, (_, i) => {
+      const d = new Date(gridStart); d.setDate(gridStart.getDate() + i);
+      const dayEvents = byDate[dateKey(d)] || [];
+      return `<div class="cal-month-cell${d.getMonth() !== month ? ' other-month' : ''}${+d === +today ? ' today' : ''}">
+        <div class="cal-month-cell-day">${d.getDate()}</div>
+        ${dayEvents.slice(0, 3).map(ev => `<button class="cal-month-event cal-month-event-${ev.type} impact-${ev.impact}" onclick="renderCalendar._select(${calArg(ev.id)})">${escHtml(ev.title)}</button>`).join('')}
+        ${dayEvents.length > 3 ? `<div class="cal-month-more">+${dayEvents.length - 3} more</div>` : ''}
+      </div>`;
+    }).join('');
+    const title = first.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    return buildLayout(events, visible, isLive, filter, 'month', `<div class="cal-month-title">${title}</div><div class="cal-month-grid">${headers}${cells}</div>`);
+  }
+
+  function buildUI(events, isLive, filter, view) {
+    events = normalizeEvents(events);
+    el._calFilter = filter;
+    el._calEvents = events;
+    if (!events.find(e => e.id === el._calSelected)) el._calSelected = events[0]?.id || '';
+    _calView = view;
+    el.innerHTML = view === 'week'
+      ? buildWeekView(events, isLive, filter)
+      : view === 'month'
+        ? buildMonthView(events, isLive, filter)
+        : buildListView(events, isLive, filter);
+    scheduleUiIconRefresh(el);
+  }
+
+  function earningsToEvents(earnings) {
+    return earnings.map(e => {
+      const parts = [];
+      if (e.epsEst != null) parts.push(`EPS est. $${e.epsEst}`);
+      if (e.epsLow != null && e.epsHigh != null) parts.push(`range $${e.epsLow}-$${e.epsHigh}`);
+      if (e.revEst) parts.push(`Revenue est. ${e.revEst}`);
+      return { date: e.date, title: `${e.name} Earnings`, type: 'earnings', impact: 'medium', desc: parts.join(' - ') || 'Consensus estimates not yet available.', tickers: [e.ticker], assets: [e.ticker], epsEst: e.epsEst, values: { previous: '-', forecast: e.epsEst != null ? `$${e.epsEst}` : '-', actual: '-' } };
+    });
+  }
+
+  renderCalendar._build = (filter, view) => {
+    if (_calCache) buildUI(_calCache.events, _calCache.live, filter, view || _calView || 'list');
+  };
+  renderCalendar._select = (id) => {
+    el._calSelected = id;
+    if (_calCache) buildUI(_calCache.events, _calCache.live, el._calFilter || 'all', _calView || 'list');
+  };
+  renderCalendar._watch = (id) => {
+    const watched = new Set(loadWatched());
+    if (watched.has(id)) { watched.delete(id); showToast('Removed from calendar watchlist'); }
+    else { watched.add(id); showToast('Added to calendar watchlist'); }
+    saveWatched([...watched]);
+    if (_calCache) buildUI(_calCache.events, _calCache.live, el._calFilter || 'all', _calView || 'list');
+  };
+
+  if (_calCache && (Date.now() - _calCacheTs) < 21_600_000) {
+    buildUI(_calCache.events, _calCache.live, el._calFilter || 'all', _calView || 'list');
+    return;
+  }
+
+  el.innerHTML = `<div class="cal-loading"><h2>Economic Calendar</h2><p>Loading live data...</p>${Array(6).fill(0).map(() => '<div class="cal-loading-row"></div>').join('')}</div>`;
+  const from = new Date().toISOString().slice(0, 10);
+  const to = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
+  fetchMarketData('calendar', { from, to })
+    .then(data => {
+      if (!data.success) throw new Error(data.error || 'API error');
+      const events = [...earningsToEvents(data.earnings || []), ...(data.economic || [])].sort((a, b) => a.date.localeCompare(b.date));
+      calendarLoadError = '';
+      _calCache = { events, live: true };
+      _calCacheTs = Date.now();
+      buildUI(events, true, el._calFilter || 'all', _calView || 'list');
+    })
+    .catch((error) => {
+      calendarLoadError = describeAppError(error, 'Calendar data is temporarily unavailable.');
+      logAppIssue('calendar', calendarLoadError, 'warn');
+      _calCache = { events: [], live: false };
+      _calCacheTs = Date.now();
+      buildUI([], false, 'all', _calView || 'list');
+    });
+}
+
+const _renderCalendarOriginal = renderCalendarImproved;
 renderCalendar = function(...args) {
   return _renderCalendarOriginal.apply(this, args);
 };
