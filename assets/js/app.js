@@ -11233,7 +11233,7 @@ function renderCalendarImproved() {
   const labels = { earnings: 'Earnings', fed: 'Fed', macro: 'Economic', holiday: 'Market Event' };
   const badges = { earnings: 'cal-badge-earnings', fed: 'cal-badge-fed', macro: 'cal-badge-macro', holiday: 'cal-badge-holiday' };
   const typeIcons = { earnings: 'chart-03', fed: 'time-04', macro: 'chart', holiday: 'calendar' };
-  const filters = [['all', 'All Events'], ['earnings', 'Earnings'], ['fed', 'Fed'], ['macro', 'Economic'], ['high', 'High Impact'], ['medium', 'Medium Impact'], ['us', 'US'], ['global', 'Global'], ['watched', 'Watched']];
+  const filters = [['all', 'All Events'], ['earnings', 'Earnings'], ['fed', 'Fed'], ['macro', 'Economic'], ['high', 'High Impact'], ['medium', 'Medium Impact'], ['us', 'US'], ['global', 'Global']];
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
   const weekEnd = new Date(today); weekEnd.setDate(today.getDate() + 7);
@@ -11242,8 +11242,6 @@ function renderCalendarImproved() {
   const dateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   const calKey = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80) || 'event';
   const calArg = (value) => `'${String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/</g, '\\u003c')}'`;
-  const loadWatched = () => { try { return JSON.parse(localStorage.getItem('ezvest_calendar_watched') || '[]'); } catch (_) { return []; } };
-  const saveWatched = (items) => localStorage.setItem('ezvest_calendar_watched', JSON.stringify([...new Set(items)]));
   const loadCalendarAlerts = () => { try { return JSON.parse(localStorage.getItem('ezvest_calendar_alerts') || '[]'); } catch (_) { return []; } };
   const saveCalendarAlerts = (items) => localStorage.setItem('ezvest_calendar_alerts', JSON.stringify([...new Set(items)]));
 
@@ -11280,7 +11278,6 @@ function renderCalendarImproved() {
   }
 
   function normalizeEvents(events) {
-    const watched = new Set(loadWatched());
     const alerts = new Set(loadCalendarAlerts());
     return events.map((raw, index) => {
       const ev = { ...raw };
@@ -11294,7 +11291,6 @@ function renderCalendarImproved() {
       ev.values = valuesFor(ev);
       ev.assets = ev.assets || ev.tickers || [];
       ev.id = ev.id || `${ev.date}-${ev.type}-${calKey(ev.title)}-${index}`;
-      ev.watched = watched.has(ev.id);
       ev.alerted = alerts.has(ev.id);
       ev.why = ev.why || whyFor(ev);
       return ev;
@@ -11315,7 +11311,6 @@ function renderCalendarImproved() {
     if (['high', 'medium', 'low'].includes(filter)) return events.filter(e => e.impact === filter);
     if (filter === 'us') return events.filter(e => e.region === 'US');
     if (filter === 'global') return events.filter(e => e.region !== 'US');
-    if (filter === 'watched') return events.filter(e => e.watched);
     return events.filter(e => e.type === filter);
   }
 
@@ -11364,7 +11359,6 @@ function renderCalendarImproved() {
         ${assets ? `<div class="cal-assets-row">${assets}</div>` : ''}
       </div>
       <div class="cal-card-actions">
-        <span class="cal-watch-btn${ev.watched ? ' active' : ''}" onclick="event.stopPropagation();renderCalendar._watch(${calArg(ev.id)})">${iconMarkup(ev.watched ? 'bookmark-check-01' : 'bookmark-add-01', 'inline-icon')} ${ev.watched ? 'Watching' : 'Watch'}</span>
         <span class="cal-alert-action${ev.alerted ? ' active' : ''}" onclick="event.stopPropagation();renderCalendar._alert(${calArg(ev.id)})" title="${ev.alerted ? 'Remove alert' : 'Set alert'}">${iconMarkup(ev.alerted ? 'notification-01' : 'notification-off-01', 'inline-icon')}</span>
       </div>
     </div>`;
@@ -11400,8 +11394,7 @@ function renderCalendarImproved() {
           <div><span>Actual</span><strong>${escHtml(selected.values.actual)}</strong></div>
         </div>
         <div class="cal-panel-actions">
-          <button class="cal-primary-action" onclick="renderCalendar._watch(${calArg(selected.id)})">${iconMarkup(selected.watched ? 'bookmark-check-01' : 'bookmark-add-01', 'inline-icon')} ${selected.watched ? 'Remove from watch' : 'Watch event'}</button>
-          <button class="cal-secondary-action${selected.alerted ? ' active' : ''}" onclick="renderCalendar._alert(${calArg(selected.id)})">${iconMarkup(selected.alerted ? 'notification-01' : 'notification-off-01', 'inline-icon')} ${selected.alerted ? 'Remove alert' : 'Set alert'}</button>
+          <button class="cal-primary-action${selected.alerted ? ' active' : ''}" onclick="renderCalendar._alert(${calArg(selected.id)})">${iconMarkup(selected.alerted ? 'notification-01' : 'notification-off-01', 'inline-icon')} ${selected.alerted ? 'Remove alert' : 'Set alert'}</button>
         </div>
       </div>` : ''}
     </aside>`;
@@ -11535,13 +11528,6 @@ function renderCalendarImproved() {
   };
   renderCalendar._select = (id) => {
     el._calSelected = id;
-    if (_calCache) buildUI(_calCache.events, _calCache.live, el._calFilter || 'all', _calView || 'list');
-  };
-  renderCalendar._watch = (id) => {
-    const watched = new Set(loadWatched());
-    if (watched.has(id)) { watched.delete(id); showToast('Removed from calendar watchlist'); }
-    else { watched.add(id); showToast('Added to calendar watchlist'); }
-    saveWatched([...watched]);
     if (_calCache) buildUI(_calCache.events, _calCache.live, el._calFilter || 'all', _calView || 'list');
   };
   renderCalendar._alert = (id, fromManager = false) => {

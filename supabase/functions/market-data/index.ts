@@ -871,13 +871,29 @@ function pushIfInRange(events: Array<Record<string, unknown>>, date: Date, fromT
   events.push({ date: date.toISOString().slice(0, 10), ts, ...payload });
 }
 
+function pushScheduledRelease(
+  events: Array<Record<string, unknown>>,
+  fromTs: number,
+  toTs: number,
+  releaseDate: string,
+  referenceMonth: string,
+  payload: Record<string, unknown>,
+) {
+  pushIfInRange(events, new Date(`${releaseDate}T00:00:00Z`), fromTs, toTs, {
+    time: "8:30 AM ET",
+    region: "US",
+    referenceMonth,
+    ...payload,
+  });
+}
+
 function generateEconomicEvents(from: string, to: string) {
   const fromTs = Math.floor(new Date(from).getTime() / 1000);
   const toTs = Math.floor(new Date(to).getTime() / 1000);
   const events: Array<Record<string, unknown>> = [];
 
   const fedDates = [
-    "2026-01-28", "2026-03-18", "2026-05-06", "2026-06-17",
+    "2026-01-28", "2026-03-18", "2026-04-29", "2026-06-17",
     "2026-07-29", "2026-09-16", "2026-10-28", "2026-12-09",
   ];
   for (const d of fedDates) {
@@ -885,9 +901,47 @@ function generateEconomicEvents(from: string, to: string) {
     pushIfInRange(events, dt, fromTs, toTs, {
       type: "fed",
       impact: "high",
+      time: "2:00 PM ET",
+      region: "US",
       title: "FOMC Rate Decision",
       desc: "Federal Reserve interest rate decision and policy statement.",
       assets: ["TLT", "GLD", "UUP", "SPY"],
+    });
+  }
+
+  const cpiSchedule = [
+    ["2026-01-13", "December 2025"], ["2026-02-13", "January 2026"],
+    ["2026-03-11", "February 2026"], ["2026-04-10", "March 2026"],
+    ["2026-05-12", "April 2026"], ["2026-06-10", "May 2026"],
+    ["2026-07-14", "June 2026"], ["2026-08-12", "July 2026"],
+    ["2026-09-11", "August 2026"], ["2026-10-14", "September 2026"],
+    ["2026-11-10", "October 2026"], ["2026-12-10", "November 2026"],
+  ];
+  for (const [releaseDate, referenceMonth] of cpiSchedule) {
+    pushScheduledRelease(events, fromTs, toTs, releaseDate, referenceMonth, {
+      type: "macro",
+      impact: "high",
+      title: `CPI Inflation Report - ${referenceMonth}`,
+      desc: "Consumer Price Index inflation release.",
+      assets: ["SPY", "TLT", "GLD", "UUP"],
+    });
+  }
+
+  const ppiSchedule = [
+    ["2026-01-30", "December 2025"], ["2026-02-27", "January 2026"],
+    ["2026-03-18", "February 2026"], ["2026-04-14", "March 2026"],
+    ["2026-05-13", "April 2026"], ["2026-06-11", "May 2026"],
+    ["2026-07-15", "June 2026"], ["2026-08-13", "July 2026"],
+    ["2026-09-10", "August 2026"], ["2026-10-15", "September 2026"],
+    ["2026-11-13", "October 2026"], ["2026-12-15", "November 2026"],
+  ];
+  for (const [releaseDate, referenceMonth] of ppiSchedule) {
+    pushScheduledRelease(events, fromTs, toTs, releaseDate, referenceMonth, {
+      type: "macro",
+      impact: "medium",
+      title: `PPI Inflation Report - ${referenceMonth}`,
+      desc: "Producer Price Index inflation release.",
+      assets: ["SPY", "TLT", "GLD"],
     });
   }
 
@@ -900,36 +954,25 @@ function generateEconomicEvents(from: string, to: string) {
     const month = cursor.getUTCMonth();
     const monthLabel = cursor.toLocaleString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
     const nfp = nthWeekdayOfMonth(year, month, 5, 1);
-    const cpi = nthWeekdayOfMonth(year, month, 4, 2);
-    const ppi = nthWeekdayOfMonth(year, month, 4, 3);
+    const priorMonth = new Date(Date.UTC(year, month - 1, 1)).toLocaleString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
 
     if (nfp) pushIfInRange(events, nfp, fromTs, toTs, {
       type: "macro",
       impact: "high",
-      title: `Non-Farm Payrolls — ${monthLabel}`,
+      time: "8:30 AM ET",
+      region: "US",
+      title: `Employment Situation - ${priorMonth}`,
       desc: "Monthly US jobs report with payroll growth, unemployment, and wage trends.",
       assets: ["SPY", "TLT", "UUP", "GLD"],
-    });
-    if (cpi) pushIfInRange(events, cpi, fromTs, toTs, {
-      type: "macro",
-      impact: "high",
-      title: `CPI Inflation Report — ${monthLabel}`,
-      desc: "Consumer Price Index inflation release.",
-      assets: ["SPY", "TLT", "GLD", "UUP"],
-    });
-    if (ppi) pushIfInRange(events, ppi, fromTs, toTs, {
-      type: "macro",
-      impact: "medium",
-      title: `PPI Inflation Report — ${monthLabel}`,
-      desc: "Producer Price Index inflation release.",
-      assets: ["SPY", "TLT", "GLD"],
     });
 
     const confidence = lastWeekdayOfMonth(year, month, 2);
     pushIfInRange(events, confidence, fromTs, toTs, {
       type: "macro",
       impact: "medium",
-      title: `Consumer Confidence — ${monthLabel}`,
+      time: "10:00 AM ET",
+      region: "US",
+      title: `Consumer Confidence - ${monthLabel}`,
       desc: "Conference Board consumer confidence survey.",
       assets: ["XLY", "SPY", "XRT"],
     });
