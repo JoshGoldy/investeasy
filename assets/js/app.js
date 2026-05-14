@@ -11241,7 +11241,7 @@ function renderCalendarImproved() {
 
   const dateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   const calKey = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80) || 'event';
-  const calArg = (value) => JSON.stringify(String(value || '')).replace(/</g, '\\u003c');
+  const calArg = (value) => `'${String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/</g, '\\u003c')}'`;
   const loadWatched = () => { try { return JSON.parse(localStorage.getItem('ezvest_calendar_watched') || '[]'); } catch (_) { return []; } };
   const saveWatched = (items) => localStorage.setItem('ezvest_calendar_watched', JSON.stringify([...new Set(items)]));
   const loadCalendarAlerts = () => { try { return JSON.parse(localStorage.getItem('ezvest_calendar_alerts') || '[]'); } catch (_) { return []; } };
@@ -11324,12 +11324,15 @@ function renderCalendarImproved() {
       .map(([id, icon, label]) => `<button class="cal-view-btn${id === view ? ' active' : ''}" onclick="renderCalendar._build('${filter}','${id}')">${iconMarkup(icon, 'inline-icon')} ${label}</button>`).join('');
     return `<div class="cal-header">
       <div>
-        <div class="cal-title-row"><h2>Economic Calendar</h2><span class="cal-status${isLive ? ' live' : ''}">${isLive ? '<span></span>Live data' : 'Demo data'}</span></div>
+        <div class="cal-title-row">
+          <h2>Economic Calendar</h2>
+          <span class="cal-status${isLive ? ' live' : ''}">${isLive ? '<span></span>Live data' : 'Demo data'}</span>
+          <button class="cal-manage-alerts-btn" onclick="renderCalendar._manageAlerts()">${iconMarkup('notification-01', 'inline-icon')} Manage Alerts</button>
+        </div>
         <p>Earnings dates from Yahoo Finance - Fed and macro events</p>
       </div>
       <div class="cal-header-actions">
         <div class="cal-view-toggle">${viewBtns}</div>
-        <button class="cal-manage-alerts-btn" onclick="renderCalendar._manageAlerts()">${iconMarkup('notification-01', 'inline-icon')} Manage Alerts</button>
         <div class="cal-filters-row">${filters.map(([id, label]) => `<button class="cal-filter-btn${id === filter ? ' active' : ''}" onclick="renderCalendar._build('${id}','${view}')">${label}</button>`).join('')}</div>
       </div>
     </div>`;
@@ -11342,7 +11345,7 @@ function renderCalendarImproved() {
       const click = idx >= 0 ? ` onclick="event.stopPropagation();switchTab('markets');setTimeout(()=>openStockDetail(${idx}),80)"` : '';
       return `<span class="cal-asset-chip"${click}>${escHtml(t)}</span>`;
     }).join('');
-    return `<button class="cal-event-card${ev.id === el._calSelected ? ' selected' : ''}" onclick="renderCalendar._select(${calArg(ev.id)})">
+    return `<div class="cal-event-card${ev.id === el._calSelected ? ' selected' : ''}" onclick="renderCalendar._select(${calArg(ev.id)})">
       <div class="cal-date-col"><div class="cal-day-num">${d.getDate()}</div><div class="cal-day-name">${days[d.getDay()]}</div></div>
       <div class="cal-body">
         <div class="cal-event-top">
@@ -11364,7 +11367,7 @@ function renderCalendarImproved() {
         <span class="cal-watch-btn${ev.watched ? ' active' : ''}" onclick="event.stopPropagation();renderCalendar._watch(${calArg(ev.id)})">${iconMarkup(ev.watched ? 'bookmark-check-01' : 'bookmark-add-01', 'inline-icon')} ${ev.watched ? 'Watching' : 'Watch'}</span>
         <span class="cal-alert-action${ev.alerted ? ' active' : ''}" onclick="event.stopPropagation();renderCalendar._alert(${calArg(ev.id)})" title="${ev.alerted ? 'Remove alert' : 'Set alert'}">${iconMarkup(ev.alerted ? 'notification-01' : 'notification-off-01', 'inline-icon')}</span>
       </div>
-    </button>`;
+    </div>`;
   }
 
   function buildSidePanel(events, visible) {
