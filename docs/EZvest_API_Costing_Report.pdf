@@ -1,0 +1,413 @@
+%PDF-1.4
+1 0 obj
+<< /Length 7176 >>
+stream
+q 0.051 0.580 0.533 rg 0.00 825.89 595.28 16.00 re f Q
+BT /F2 10 Tf 0.294 0.333 0.412 rg 46.00 803.89 Td (EZvest Costing Report) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 477.28 803.89 Td (14 May 2026) Tj ET
+BT /F1 15 Tf 0.059 0.090 0.165 rg 46.00 775.89 Td (EZvest API Costing & Future Cost Plan) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 753.89 Td (Prepared 14 May 2026. This document estimates Claude API usage, payment fees, backend costs, and) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 739.89 Td (scale-up risk for the current EZvest app. Amounts use ZAR where useful and assume USD/ZAR = 16.4,) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 725.89 Td (matching the app's current backend estimate.) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 704.89 Td (Important: this is an operating-cost model, not accounting or tax advice. Recheck provider pricing) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 690.89 Td (before launch or fundraising, because API and platform prices can change.) Tj ET
+BT /F1 15 Tf 0.059 0.090 0.165 rg 46.00 659.89 Td (1. Current App Cost Model) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 637.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 637.89 Td (Frontend: static HTML/CSS/JavaScript, currently suited to GitHub Pages or another static host.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 621.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 621.89 Td (Backend: Supabase Auth, Postgres, Edge Functions, rate-limit tables, function event logging, and a) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 608.89 Td (shared market cache.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 592.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 592.89 Td (AI: Supabase Edge Function named finbot calls Anthropic Claude Messages API.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 576.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 576.89 Td (Current default model in code/docs: claude-sonnet-4-5 unless ANTHROPIC_MODEL is changed.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 560.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 560.89 Td (Billing: Paystack recurring plan checkout and webhook sync.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 544.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 544.89 Td (Paid plan credits in the repo: Basic 50, Pro 100, Enterprise 300 monthly FinBot credits.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 528.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 528.89 Td (Credit costs in code: chat = 1 credit, news = 2 credits, full FinBot analysis = 5 credits.) Tj ET
+BT /F1 11 Tf 0.059 0.090 0.165 rg 46.00 507.89 Td (Current paid plans in repo) Tj ET
+q 0.051 0.580 0.533 rg 46.00 471.89 490.00 22.00 re f Q
+BT /F1 8.5 Tf 1 1 1 rg 51.00 479.89 Td (Plan) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 171.00 479.89 Td (Price/mo) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 266.00 479.89 Td (Credits) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 351.00 479.89 Td (Full analyses if all credits used) Tj ET
+q 0.969 0.984 0.984 rg 46.00 449.89 490.00 21.00 re f Q
+q 0.886 0.910 0.925 RG 0.75 w 46.00 449.89 490.00 21.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 458.89 Td (Basic) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 171.00 458.89 Td (R199.00) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 266.00 458.89 Td (50) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 351.00 458.89 Td (10) Tj ET
+q 0.886 0.910 0.925 RG 0.75 w 46.00 428.89 490.00 21.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 437.89 Td (Pro) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 171.00 437.89 Td (R399.00) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 266.00 437.89 Td (100) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 351.00 437.89 Td (20) Tj ET
+q 0.969 0.984 0.984 rg 46.00 407.89 490.00 21.00 re f Q
+q 0.886 0.910 0.925 RG 0.75 w 46.00 407.89 490.00 21.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 416.89 Td (Enterprise) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 171.00 416.89 Td (R799.00) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 266.00 416.89 Td (300) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 351.00 416.89 Td (60) Tj ET
+BT /F1 15 Tf 0.059 0.090 0.165 rg 46.00 382.89 Td (2. Claude API Pricing Used) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 360.89 Td (Official Anthropic API pricing is per million tokens \\\(MTok\\\). Input tokens and output tokens are) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 346.89 Td (priced separately. Your current code also records token usage and estimates cost after each) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 332.89 Td (successful FinBot response.) Tj ET
+BT /F1 11 Tf 0.059 0.090 0.165 rg 46.00 311.89 Td (Claude API list prices used in this report) Tj ET
+q 0.051 0.580 0.533 rg 46.00 275.89 550.00 22.00 re f Q
+BT /F1 8.5 Tf 1 1 1 rg 51.00 283.89 Td (Model) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 196.00 283.89 Td (Input / MTok) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 281.00 283.89 Td (Output / MTok) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 371.00 283.89 Td (Recommended EZvest use) Tj ET
+q 0.969 0.984 0.984 rg 46.00 253.89 550.00 21.00 re f Q
+q 0.886 0.910 0.925 RG 0.75 w 46.00 253.89 550.00 21.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 262.89 Td (Claude Haiku 4.5) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 196.00 262.89 Td ($1) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 281.00 262.89 Td ($5) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 371.00 262.89 Td (Low-cost chat, summaries, simple education flows) Tj ET
+q 0.886 0.910 0.925 RG 0.75 w 46.00 232.89 550.00 21.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 241.89 Td (Claude Sonnet 4.5 / 4.6) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 196.00 241.89 Td ($3) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 281.00 241.89 Td ($15) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 371.00 241.89 Td (Current default; best balanced model for FinBot) Tj ET
+q 0.969 0.984 0.984 rg 46.00 211.89 550.00 21.00 re f Q
+q 0.886 0.910 0.925 RG 0.75 w 46.00 211.89 550.00 21.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 220.89 Td (Claude Opus 4.6) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 196.00 220.89 Td ($5) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 281.00 220.89 Td ($25) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 371.00 220.89 Td (Premium future tier or complex portfolio/risk reports) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 196.89 Td (Anthropic also lists 50% discounted Batch API pricing. That is useful for future background jobs,) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 182.89 Td (bulk report regeneration, or scheduled portfolio reviews, but not for live user chat because batch) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 168.89 Td (work is asynchronous.) Tj ET
+BT /F1 15 Tf 0.059 0.090 0.165 rg 46.00 137.89 Td (3. Estimated Claude Cost per User Action) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 115.89 Td (The estimates below use Sonnet pricing because Sonnet is your current default and likely the best) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 101.89 Td (production baseline. Real cost depends on prompt size, chat history length, market data included in) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 87.89 Td (the prompt, and output length.) Tj ET
+BT /F2 9 Tf 0.580 0.639 0.722 rg 293.64 24.00 Td (1) Tj ET
+endstream
+endobj
+2 0 obj
+<< /Length 9380 >>
+stream
+q 0.051 0.580 0.533 rg 0.00 825.89 595.28 16.00 re f Q
+BT /F2 10 Tf 0.294 0.333 0.412 rg 46.00 803.89 Td (EZvest Costing Report) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 477.28 803.89 Td (14 May 2026) Tj ET
+BT /F1 11 Tf 0.059 0.090 0.165 rg 46.00 785.89 Td (Typical request economics - Claude Sonnet) Tj ET
+q 0.051 0.580 0.533 rg 46.00 749.89 585.00 22.00 re f Q
+BT /F1 8.5 Tf 1 1 1 rg 51.00 757.89 Td (Request) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 161.00 757.89 Td (Credits) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 211.00 757.89 Td (Tokens in/out) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 296.00 757.89 Td (Claude cost) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 401.00 757.89 Td (Cost / credit) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 481.00 757.89 Td (Note) Tj ET
+q 0.969 0.984 0.984 rg 46.00 727.89 585.00 21.00 re f Q
+q 0.886 0.910 0.925 RG 0.75 w 46.00 727.89 585.00 21.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 736.89 Td (Chat) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 161.00 736.89 Td (1) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 211.00 736.89 Td (1200/500) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 296.00 736.89 Td ($0.0111 / R0.18) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 401.00 736.89 Td (R0.18) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 481.00 736.89 Td (Typical short FinBot chat) Tj ET
+q 0.886 0.910 0.925 RG 0.75 w 46.00 706.89 585.00 21.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 715.89 Td (News analysis) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 161.00 715.89 Td (2) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 211.00 715.89 Td (2500/1200) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 296.00 715.89 Td ($0.0255 / R0.42) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 401.00 715.89 Td (R0.21) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 481.00 715.89 Td (Article/news explanation) Tj ET
+q 0.969 0.984 0.984 rg 46.00 674.89 585.00 32.00 re f Q
+q 0.886 0.910 0.925 RG 0.75 w 46.00 674.89 585.00 32.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 694.89 Td (Full FinBot analysis) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 161.00 694.89 Td (5) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 211.00 694.89 Td (3800/2600) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 296.00 694.89 Td ($0.0504 / R0.83) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 401.00 694.89 Td (R0.17) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 481.00 694.89 Td (Average screener/DCF/risk/report) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 481.00 683.89 Td (request) Tj ET
+q 0.886 0.910 0.925 RG 0.75 w 46.00 642.89 585.00 32.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 662.89 Td (Heavy builder/risk) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 161.00 662.89 Td (5) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 211.00 662.89 Td (4200/4200) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 296.00 662.89 Td ($0.0756 / R1.24) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 401.00 662.89 Td (R0.25) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 481.00 662.89 Td (Upper practical scenario near large) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 481.00 651.89 Td (report caps) Tj ET
+BT /F1 11 Tf 0.059 0.090 0.165 rg 46.00 627.89 Td (Upper practical request cases - Claude Sonnet) Tj ET
+q 0.051 0.580 0.533 rg 46.00 591.89 510.00 22.00 re f Q
+BT /F1 8.5 Tf 1 1 1 rg 51.00 599.89 Td (Case) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 206.00 599.89 Td (Tokens in/out) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 301.00 599.89 Td (Credits) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 356.00 599.89 Td (Cost) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 476.00 599.89 Td (Cost / credit) Tj ET
+q 0.969 0.984 0.984 rg 46.00 569.89 510.00 21.00 re f Q
+q 0.886 0.910 0.925 RG 0.75 w 46.00 569.89 510.00 21.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 578.89 Td (Chat with history) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 206.00 578.89 Td (11400/900) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 301.00 578.89 Td (1) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 356.00 578.89 Td ($0.0477 / R0.78) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 476.00 578.89 Td (R0.78) Tj ET
+q 0.886 0.910 0.925 RG 0.75 w 46.00 548.89 510.00 21.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 557.89 Td (News max cap) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 206.00 557.89 Td (3200/1800) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 301.00 557.89 Td (2) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 356.00 557.89 Td ($0.0366 / R0.60) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 476.00 557.89 Td (R0.30) Tj ET
+q 0.969 0.984 0.984 rg 46.00 527.89 510.00 21.00 re f Q
+q 0.886 0.910 0.925 RG 0.75 w 46.00 527.89 510.00 21.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 536.89 Td (Builder max cap) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 206.00 536.89 Td (3600/4200) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 301.00 536.89 Td (5) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 356.00 536.89 Td ($0.0738 / R1.21) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 476.00 536.89 Td (R0.24) Tj ET
+BT /F1 15 Tf 0.059 0.090 0.165 rg 46.00 502.89 Td (4. AI Cost If Users Spend All Credits) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 480.89 Td (This is the stress test most relevant to pricing. It assumes every paid user spends every monthly) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 466.89 Td (credit. In practice, many subscribers will not use 100% of credits, which improves margin.) Tj ET
+BT /F1 11 Tf 0.059 0.090 0.165 rg 46.00 445.89 Td (Monthly Claude cost per subscriber if all credits are used) Tj ET
+q 0.051 0.580 0.533 rg 46.00 409.89 565.00 22.00 re f Q
+BT /F1 8.5 Tf 1 1 1 rg 51.00 417.89 Td (Plan) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 151.00 417.89 Td (Included credits) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 246.00 417.89 Td (All as avg full reports) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 376.00 417.89 Td (All as heavy reports) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 491.00 417.89 Td (AI margin before other costs) Tj ET
+q 0.969 0.984 0.984 rg 46.00 387.89 565.00 21.00 re f Q
+q 0.886 0.910 0.925 RG 0.75 w 46.00 387.89 565.00 21.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 396.89 Td (Basic) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 151.00 396.89 Td (50) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 246.00 396.89 Td (R8.27) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 376.00 396.89 Td (R12.40) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 491.00 396.89 Td (93.8%) Tj ET
+q 0.886 0.910 0.925 RG 0.75 w 46.00 366.89 565.00 21.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 375.89 Td (Pro) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 151.00 375.89 Td (100) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 246.00 375.89 Td (R16.53) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 376.00 375.89 Td (R24.80) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 491.00 375.89 Td (93.8%) Tj ET
+q 0.969 0.984 0.984 rg 46.00 345.89 565.00 21.00 re f Q
+q 0.886 0.910 0.925 RG 0.75 w 46.00 345.89 565.00 21.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 354.89 Td (Enterprise) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 151.00 354.89 Td (300) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 246.00 354.89 Td (R49.59) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 376.00 354.89 Td (R74.39) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 491.00 354.89 Td (90.7%) Tj ET
+BT /F1 15 Tf 0.059 0.090 0.165 rg 46.00 320.89 Td (5. Paystack Fees and Net Revenue) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 298.89 Td (Paystack South Africa lists local card pricing at 2.9% + R1 excluding VAT. This report assumes) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 284.89 Td (EZvest absorbs the fee and adds 15% VAT on the Paystack fee. If you pass fees to customers, net) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 270.89 Td (revenue improves.) Tj ET
+BT /F1 11 Tf 0.059 0.090 0.165 rg 46.00 249.89 Td (Approximate Paystack impact by plan) Tj ET
+q 0.051 0.580 0.533 rg 46.00 213.89 570.00 22.00 re f Q
+BT /F1 8.5 Tf 1 1 1 rg 51.00 221.89 Td (Plan) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 151.00 221.89 Td (Customer pays) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 246.00 221.89 Td (Paystack fee incl VAT) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 366.00 221.89 Td (Net before AI/backend) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 496.00 221.89 Td (Net after heavy AI use) Tj ET
+q 0.969 0.984 0.984 rg 46.00 191.89 570.00 21.00 re f Q
+q 0.886 0.910 0.925 RG 0.75 w 46.00 191.89 570.00 21.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 200.89 Td (Basic) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 151.00 200.89 Td (R199.00) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 246.00 200.89 Td (R7.79) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 366.00 200.89 Td (R191.21) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 496.00 200.89 Td (R178.81) Tj ET
+q 0.886 0.910 0.925 RG 0.75 w 46.00 170.89 570.00 21.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 179.89 Td (Pro) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 151.00 179.89 Td (R399.00) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 246.00 179.89 Td (R14.46) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 366.00 179.89 Td (R384.54) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 496.00 179.89 Td (R359.75) Tj ET
+q 0.969 0.984 0.984 rg 46.00 149.89 570.00 21.00 re f Q
+q 0.886 0.910 0.925 RG 0.75 w 46.00 149.89 570.00 21.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 158.89 Td (Enterprise) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 151.00 158.89 Td (R799.00) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 246.00 158.89 Td (R27.80) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 366.00 158.89 Td (R771.20) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 496.00 158.89 Td (R696.81) Tj ET
+BT /F1 15 Tf 0.059 0.090 0.165 rg 46.00 124.89 Td (6. Supabase, Hosting, and Backend Costs) Tj ET
+BT /F2 9 Tf 0.580 0.639 0.722 rg 293.64 24.00 Td (2) Tj ET
+endstream
+endobj
+3 0 obj
+<< /Length 7970 >>
+stream
+q 0.051 0.580 0.533 rg 0.00 825.89 595.28 16.00 re f Q
+BT /F2 10 Tf 0.294 0.333 0.412 rg 46.00 803.89 Td (EZvest Costing Report) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 477.28 803.89 Td (14 May 2026) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 785.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 785.89 Td (GitHub Pages: official GitHub docs state Pages is available for public repositories on GitHub Free.) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 772.89 Td (For the current static frontend, hosting can be R0/month if the repository is public and GitHub Pages) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 759.89 Td (remains acceptable for commercial use constraints.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 743.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 743.89 Td (Supabase Free: useful for testing, but free projects pause after inactivity and have lower included) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 730.89 Td (quotas. Not recommended as the long-term production plan.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 714.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 714.89 Td (Supabase Pro: current public pricing shows $25/month base with the first Micro compute covered by) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 701.89 Td (included compute credits, 100k monthly active users, 8 GB disk, 250 GB egress, 100 GB storage, and 2M) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 688.89 Td (Edge Function invocations. At USD/ZAR 16.4 this is about R410/month before VAT/exchange fees.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 672.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 672.89 Td (Supabase Edge Function overage: official docs list Pro overage at $2 per additional 1M invocations) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 659.89 Td (after the included 2M. EZvest should remain well below this for a long time if market-data caching) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 646.89 Td (stays enabled.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 630.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 630.89 Td (Custom domain through Supabase is listed at $10/month, but if you use GitHub Pages/custom DNS) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 617.89 Td (directly this may not be needed.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 601.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 601.89 Td (Market data: current code mostly uses public RSS/news feeds and Yahoo-style quote endpoints through) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 588.89 Td (your own Edge Function. Future premium market data vendors can become a major cost if you add) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 575.89 Td (real-time exchange-grade prices.) Tj ET
+BT /F1 15 Tf 0.059 0.090 0.165 rg 46.00 544.89 Td (7. Launch Budget Recommendations) Tj ET
+BT /F1 11 Tf 0.059 0.090 0.165 rg 46.00 522.89 Td (Recommended monthly budget by launch phase) Tj ET
+q 0.051 0.580 0.533 rg 46.00 486.89 630.00 22.00 re f Q
+BT /F1 8.5 Tf 1 1 1 rg 51.00 494.89 Td (Phase) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 131.00 494.89 Td (Expected usage) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 236.00 494.89 Td (Expected fixed costs) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 351.00 494.89 Td (Variable AI/payment costs) Tj ET
+BT /F1 8.5 Tf 1 1 1 rg 491.00 494.89 Td (Comment) Tj ET
+q 0.969 0.984 0.984 rg 46.00 453.89 630.00 32.00 re f Q
+q 0.886 0.910 0.925 RG 0.75 w 46.00 453.89 630.00 32.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 473.89 Td (Pre-launch) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 131.00 473.89 Td (Internal testing) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 236.00 473.89 Td (R0-R410) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 351.00 473.89 Td (R0-R200) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 491.00 473.89 Td (Free/Supabase Pro depending on reliability) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 491.00 462.89 Td (needs) Tj ET
+q 0.886 0.910 0.925 RG 0.75 w 46.00 421.89 630.00 32.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 441.89 Td (Soft launch) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 131.00 441.89 Td (0-100 paid users) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 236.00 441.89 Td (About R410) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 351.00 441.89 Td (R100-R2,000) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 491.00 441.89 Td (Claude costs stay small; payment fees matter) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 491.00 430.89 Td (more) Tj ET
+q 0.969 0.984 0.984 rg 46.00 400.89 630.00 21.00 re f Q
+q 0.886 0.910 0.925 RG 0.75 w 46.00 400.89 630.00 21.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 409.89 Td (Early revenue) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 131.00 409.89 Td (100-1,000 paid users) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 236.00 409.89 Td (R410-R1,500) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 351.00 409.89 Td (R1k-R20k) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 491.00 409.89 Td (Monitor token usage and credit burn weekly) Tj ET
+q 0.886 0.910 0.925 RG 0.75 w 46.00 368.89 630.00 32.00 re S Q
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 51.00 388.89 Td (Growth) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 131.00 388.89 Td (1,000-10,000 paid users) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 236.00 388.89 Td (R1.5k-R10k+) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 351.00 388.89 Td (R20k-R200k+) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 491.00 388.89 Td (Consider Haiku routing, batch jobs, premium) Tj ET
+BT /F2 8.5 Tf 0.059 0.090 0.165 rg 491.00 377.89 Td (data vendors, and stronger observability) Tj ET
+BT /F1 15 Tf 0.059 0.090 0.165 rg 46.00 343.89 Td (8. Future Cost Risks) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 321.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 321.89 Td (Long chat histories: chat costs can rise sharply if every message includes large prior history. Keep) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 308.89 Td (summarizing old conversation context.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 292.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 292.89 Td (Large report outputs: builder/risk/DCF modes have the highest max_tokens caps. Add per-mode cost) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 279.89 Td (telemetry dashboards before scaling.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 263.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 263.89 Td (Model upgrades: Opus is materially more expensive than Sonnet. Reserve Opus for an Enterprise-only) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 250.89 Td (feature or one-off premium reports.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 234.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 234.89 Td (Market data licensing: public feeds are cheap but limited. Real-time stock APIs, exchange data, or) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 221.89 Td (South African market data can add fixed monthly vendor costs.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 205.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 205.89 Td (Abuse and scraping: even rejected Edge Function calls can count as invocations. Add frontend) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 192.89 Td (throttles, backend rate limits, and possibly WAF/CDN rules before public marketing.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 176.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 176.89 Td (Support and refunds: payment fees, chargebacks, and customer support load are real costs even when AI) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 163.89 Td (cost is low.) Tj ET
+BT /F1 15 Tf 0.059 0.090 0.165 rg 46.00 132.89 Td (9. Practical Cost Controls to Add Next) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 110.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 110.89 Td (Route simple chat and article summaries to Haiku 4.5; keep Sonnet for full analyses. This can cut) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 97.89 Td (lightweight AI cost by roughly two-thirds.) Tj ET
+BT /F2 9 Tf 0.580 0.639 0.722 rg 293.64 24.00 Td (3) Tj ET
+endstream
+endobj
+4 0 obj
+<< /Length 4678 >>
+stream
+q 0.051 0.580 0.533 rg 0.00 825.89 595.28 16.00 re f Q
+BT /F2 10 Tf 0.294 0.333 0.412 rg 46.00 803.89 Td (EZvest Costing Report) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 477.28 803.89 Td (14 May 2026) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 785.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 785.89 Td (Keep Sonnet as the default for DCF, risk, builder, and technical reports until quality data says) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 772.89 Td (Haiku is good enough.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 756.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 756.89 Td (Set hard monthly Anthropic spend alerts at R500, R1,500, R5,000, and R10,000 during launch.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 740.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 740.89 Td (Store actual anthropic_usage rows or daily aggregates from the existing usageCost object returned by) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 727.89 Td (finbot.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 711.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 711.89 Td (Add a daily dashboard: requests, tokens, Claude cost, credits spent, revenue by tier, AI cost per) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 698.89 Td (paid user, and gross margin.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 682.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 682.89 Td (Consider lowering chat history sent to Claude from 8 turns to 4 turns plus a running summary.) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 666.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 666.89 Td (Use Batch API for non-interactive future jobs such as weekly portfolio summaries; official pricing) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 653.89 Td (lists a 50% discount.) Tj ET
+BT /F1 15 Tf 0.059 0.090 0.165 rg 46.00 622.89 Td (10. Bottom Line) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 600.89 Td (With the current credit design, Claude API cost is unlikely to be the main problem at launch.) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 586.89 Td (Payment fees and fixed backend reliability costs are more visible early. Even if a Basic user) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 572.89 Td (spends every credit on heavy reports, estimated Claude cost is roughly R12.40/month against a R199) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 558.89 Td (subscription before payment fees. The bigger future risks are model choice, long chat histories,) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 544.89 Td (abuse, and premium market data vendors.) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 523.89 Td (Suggested launch setup: Supabase Pro, GitHub Pages or equivalent static hosting, Claude Sonnet) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 509.89 Td (default for full reports, Haiku for future lightweight chat/news, Paystack fees either absorbed in) Tj ET
+BT /F2 10.5 Tf 0.294 0.333 0.412 rg 46.00 495.89 Td (pricing or transparently passed through.) Tj ET
+BT /F1 15 Tf 0.059 0.090 0.165 rg 46.00 464.89 Td (Sources) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 442.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 442.89 Td (Anthropic Claude API pricing: https://platform.claude.com/docs/en/about-claude/pricing) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 426.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 426.89 Td (Supabase pricing: https://supabase.com/pricing) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 410.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 410.89 Td (Supabase Edge Function pricing: https://supabase.com/docs/guides/functions/pricing/) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 394.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 394.89 Td (Paystack South Africa pricing: https://paystack.com/za/pricing) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 378.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 378.89 Td (Paystack transaction fee article: https://support.paystack.com/en/articles/2130306) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 362.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 362.89 Td (GitHub Pages availability:) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 349.89 Td (https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits) Tj ET
+BT /F1 10 Tf 0.051 0.580 0.533 rg 48.00 333.89 Td (-) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 333.89 Td (Local app files reviewed: supabase/functions/finbot/index.ts,) Tj ET
+BT /F2 10 Tf 0.294 0.333 0.412 rg 62.00 320.89 Td (supabase/functions/market-data/index.ts, README.md) Tj ET
+BT /F2 9 Tf 0.580 0.639 0.722 rg 293.64 24.00 Td (4) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+7 0 obj
+<< /Type /Page /Parent 11 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> /Contents 1 0 R >>
+endobj
+8 0 obj
+<< /Type /Page /Parent 11 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> /Contents 2 0 R >>
+endobj
+9 0 obj
+<< /Type /Page /Parent 11 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> /Contents 3 0 R >>
+endobj
+10 0 obj
+<< /Type /Page /Parent 11 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> /Contents 4 0 R >>
+endobj
+11 0 obj
+<< /Type /Pages /Kids [7 0 R 8 0 R 9 0 R 10 0 R] /Count 4 >>
+endobj
+12 0 obj
+<< /Type /Catalog /Pages 11 0 R >>
+endobj
+xref
+0 13
+0000000000 65535 f 
+0000000009 00000 n 
+0000007237 00000 n 
+0000016669 00000 n 
+0000024691 00000 n 
+0000029421 00000 n 
+0000029496 00000 n 
+0000029566 00000 n 
+0000029709 00000 n 
+0000029852 00000 n 
+0000029995 00000 n 
+0000030139 00000 n 
+0000030216 00000 n 
+trailer
+<< /Size 13 /Root 12 0 R >>
+startxref
+30267
+%%EOF

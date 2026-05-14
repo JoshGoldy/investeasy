@@ -2853,8 +2853,8 @@ function openStockDetail(idx) {
           + Portfolio
         </button>
         ${currentUser ? `<button onclick="openAlertModal('${stock.ticker}','${stock.name.replace(/'/g,"\\'")}',${stock.val})"
-          style="padding:13px 16px;border-radius:13px;background:${(alertsMap[stock.ticker]||[]).filter(a=>!a.triggered).length?'#f59e0b18':'#334155'};border:1.5px solid ${(alertsMap[stock.ticker]||[]).filter(a=>!a.triggered).length?'#f59e0b':'#ffffff0a'};font-size:16px;cursor:pointer;transition:all .2s" title="Set price alert">
-          ${(alertsMap[stock.ticker]||[]).filter(a=>!a.triggered).length?'🔔':'🔕'}
+          style="padding:13px 16px;border-radius:13px;background:${(alertsMap[stock.ticker]||[]).filter(a=>!a.triggered).length?'#f59e0b18':'#334155'};border:1.5px solid ${(alertsMap[stock.ticker]||[]).filter(a=>!a.triggered).length?'#f59e0b':'#ffffff0a'};font-size:16px;cursor:pointer;transition:all .2s;color:${(alertsMap[stock.ticker]||[]).filter(a=>!a.triggered).length?'#f59e0b':'#94a3b8'}" title="Set price alert">
+          ${iconMarkup((alertsMap[stock.ticker]||[]).filter(a=>!a.triggered).length ? 'notification-01' : 'notification-off-01', 'stock-detail-alert-icon')}
         </button>` : ''}
       </div>
     </div>
@@ -5060,7 +5060,7 @@ function renderSaved(filter) {
     <div style="margin-bottom:14px;border-radius:12px;border:1.5px solid var(--border);overflow:hidden">
       ${folders.length ? `
       <div style="display:flex;align-items:center;gap:2px;padding:6px 8px;overflow-x:auto;scrollbar-width:none">
-        <span style="font-size:9px;font-weight:800;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;flex-shrink:0;padding:0 6px">📁 Folder</span>
+        <span class="saved-filter-label"><img src="assets/images/icon-folder-02.svg" alt="" aria-hidden="true"> Folder</span>
         <div style="width:1px;height:14px;background:var(--border);flex-shrink:0;margin:0 4px"></div>
         <button class="saved-folder-tab ${!savedFolderFilter?'active':''}" onclick="savedFolderFilter='';renderSaved()">All</button>
         ${folders.map(f => `<button class="saved-folder-tab ${savedFolderFilter===f?'active':''}" onclick="_srFolder(${_srArg(f)})">${escHtml(f)}</button>`).join('')}
@@ -5068,7 +5068,7 @@ function renderSaved(filter) {
       ${folders.length && allTags.length ? `<div style="height:1px;background:var(--border)"></div>` : ''}
       ${allTags.length ? `
       <div style="display:flex;align-items:center;gap:2px;padding:6px 8px;flex-wrap:wrap">
-        <span style="font-size:9px;font-weight:800;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;flex-shrink:0;padding:0 6px">🏷 Tags</span>
+        <span class="saved-filter-label"><img src="assets/images/icon-tag-01.svg" alt="" aria-hidden="true"> Tags</span>
         <div style="width:1px;height:14px;background:var(--border);flex-shrink:0;margin:0 4px"></div>
         ${allTags.map(t => `<span class="saved-tag-chip saved-tag-manage ${savedTagFilter===t?'active':''}">
           <button class="saved-tag-label" onclick="_srTag(${_srArg(t)})" title="Filter by tag">${escHtml(t)}</button>
@@ -5118,7 +5118,7 @@ function renderSaved(filter) {
               </button>
             </div>
           </div>
-          ${r.folder ? `<div class="saved-card-folder">📁 ${escHtml(r.folder)}</div>` : ''}
+          ${r.folder ? `<div class="saved-card-folder"><img src="assets/images/icon-folder-02.svg" alt="" aria-hidden="true"> ${escHtml(r.folder)}</div>` : ''}
           ${tags.length ? `<div class="saved-card-tags">${tags.map(t => `<span class="saved-tag-chip" onclick="_srTag(${_srArg(t)})" title="Filter by tag">${escHtml(t)}</span>`).join('')}</div>` : ''}
           <div class="saved-preview">${escHtml(preview)}</div>
           ${r.note ? `<div class="saved-card-note-preview" onclick="openReportEditModal('${r.id}')">📝 ${escHtml(r.note.slice(0,120))}${r.note.length>120?'…':''}</div>` : ''}
@@ -7298,7 +7298,7 @@ function renderSettings() {
       <div class="settings-group">
         <div class="settings-row settings-row-stack">
           <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:#14b8a614">UI</div>
+            <div class="settings-row-icon" style="background:#14b8a614;color:#0d9488"><img src="assets/images/icon-laptop.svg" alt="" aria-hidden="true"></div>
             <div><p class="settings-row-title">Workspace Style</p><p class="settings-row-sub">Choose the experience level and visual density for the app.</p></div>
           </div>
           <div class="ui-mode-grid">
@@ -11137,9 +11137,15 @@ function renderLearn() {
     <div class="section-title" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
       <div><h2>Learning Hub</h2><p>Master investing concepts at your own pace</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="learn-nav-btn secondary" style="padding:8px 14px;font-size:12px" onclick="renderLearningPath()">🗺️ Path</button>
-        <button class="learn-nav-btn secondary" style="padding:8px 14px;font-size:12px" onclick="renderGlossary()">📖 Glossary</button>
-        <button class="learn-nav-btn secondary" style="padding:8px 14px;font-size:12px" onclick="renderBadgesPage()">🏅 Badges</button>
+        <button class="learn-nav-btn secondary learn-icon-btn" style="padding:8px 14px;font-size:12px" onclick="renderLearningPath()">
+          <img src="assets/images/icon-route-02.svg" alt="" aria-hidden="true"> Path
+        </button>
+        <button class="learn-nav-btn secondary learn-icon-btn" style="padding:8px 14px;font-size:12px" onclick="renderGlossary()">
+          <img src="assets/images/icon-book-03.svg" alt="" aria-hidden="true"> Glossary
+        </button>
+        <button class="learn-nav-btn secondary learn-icon-btn" style="padding:8px 14px;font-size:12px" onclick="renderBadgesPage()">
+          <img src="assets/images/icon-medal-06.svg" alt="" aria-hidden="true"> Badges
+        </button>
       </div>
     </div>
 
