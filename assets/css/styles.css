@@ -97,6 +97,7 @@ body[data-ui-mode="terminal"] .nav button[data-tab="learn"]{display:none!importa
 .saved-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:10px;text-align:center}
 .saved-empty-icon{font-size:48px;opacity:.35;line-height:1}
 .saved-guest-icon{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#0d9488,#10b981);color:#fff;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.finbot-guest-icon{background:#0d948822;color:#0d9488;box-shadow:inset 0 0 0 1px #0d948824}
 .saved-guest-icon-glyph{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px}
 .saved-guest-icon-glyph svg{width:46px!important;height:46px!important;stroke-width:1.85}
 .saved-lock-note{font-size:12px;color:var(--faint);line-height:1.6;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}

@@ -4432,8 +4432,7 @@ function renderFinBot() {
   if (!currentUser) {
     el.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 20px 24px">
-        <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#334155,#334155);
-                    display:flex;align-items:center;justify-content:center;color:#fff;margin-bottom:16px">${iconMarkup('bot', 'finbot-hero-icon')}</div>
+        <div class="saved-guest-icon finbot-guest-icon">${iconMarkup('bot', 'finbot-hero-icon')}</div>
         <h2 style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px">Meet FinBot</h2>
         <p style="font-size:13.5px;color:var(--muted);line-height:1.65;max-width:300px;margin-bottom:24px">
           Your personal AI financial analyst. Run deep analysis on stocks, portfolios, news, and more — all in seconds.
@@ -6341,7 +6340,7 @@ function renderPortfolioGuestWall() {
     </div>
     <p style="font-weight:700;font-size:11px;color:var(--faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;padding:0 4px">What you unlock</p>
     ${[
-      { icon:'wallet-02', col:'#0d9488', title:'Real holdings', desc:'Add stocks, ETFs, crypto and JSE shares with units and average cost.' },
+      { icon:'briefcase-dollar', col:'#0d9488', title:'Real holdings', desc:'Add stocks, ETFs, crypto and JSE shares with units and average cost.' },
       { icon:'pie-chart-09', col:'#334155', title:'Portfolio analytics', desc:'See allocation, returns, categories, concentration and diversification insights.' },
     ].map(f => `
       <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:14px;
