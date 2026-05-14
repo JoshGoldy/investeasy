@@ -1780,10 +1780,10 @@ ${list.length === 0 ? `<div style="text-align:center;padding:40px;color:var(--fa
           <span style="font-size:11px;color:${isRead?'var(--faint)':'var(--green)'};font-weight:600">${isRead?'Read ✓':'Read more →'}</span>
         </div>
         <button onclick="event.stopPropagation();confirmAndAnalyzeNews(${actualIdx})"
-          style="margin-top:8px;width:100%;padding:7px;border-radius:10px;background:#33415514;color:#334155;
-                 font-size:11px;font-weight:700;border:1px solid #33415530;cursor:pointer;
+          style="margin-top:8px;width:100%;padding:7px;border-radius:10px;background:#0d948822;color:#0d9488;
+                 font-size:11px;font-weight:700;border:1px solid #0d948824;cursor:pointer;
                  display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s"
-          onmouseenter="this.style.background='#33415522'" onmouseleave="this.style.background='#33415514'">
+          onmouseenter="this.style.background='#0d948830'" onmouseleave="this.style.background='#0d948822'">
         ${iconMarkup('bot', 'btn-icon')} Analyze with FinBot
         </button>
       </div>`;
@@ -2023,10 +2023,10 @@ function openNewsArticle(idx, fromLive) {
       <div id="news-body-box" style="margin:14px 0 16px">${bodyHtml}</div>
       <p style="font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:8px">${iconMarkup('bolt', 'inline-icon')} This analysis uses <strong style="color:var(--text)">2 credits</strong></p>
       <button onclick="confirmAndAnalyzeNews(${idx})"
-        style="width:100%;padding:14px;border-radius:var(--radius-sm);background:linear-gradient(135deg,#334155,#334155);
-               color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;margin-bottom:10px;
+        style="width:100%;padding:14px;border-radius:var(--radius-sm);background:#0d948822;
+               color:#0d9488;font-size:13px;font-weight:700;border:1px solid #0d948824;cursor:pointer;margin-bottom:10px;
                display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s"
-        onmouseenter="this.style.opacity='.9'" onmouseleave="this.style.opacity='1'">
+        onmouseenter="this.style.background='#0d948830'" onmouseleave="this.style.background='#0d948822'">
         ${iconMarkup('bot', 'btn-icon')} Analyze with FinBot
       </button>
       <a class="news-btn-primary" href="${escHtml(articleLink)}" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">
@@ -11445,7 +11445,6 @@ function renderCalendarImproved() {
       <div>
         <div class="cal-title-row">
           <h2>Economic Calendar</h2>
-          <span class="cal-status${isLive ? ' live' : ''}">${isLive ? '<span></span>Live data' : 'Demo data'}</span>
           <button class="cal-manage-alerts-btn" onclick="renderCalendar._manageAlerts()">${iconMarkup('notification-01', 'inline-icon')} Manage Alerts</button>
         </div>
         <p>Earnings dates from Yahoo Finance - Fed and macro events</p>
