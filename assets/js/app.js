@@ -665,6 +665,12 @@ const UI_ICON_PATHS = {
   bot: ['M12 4V2', 'M20 22C20 17.5817 16.4183 14 12 14C7.58172 14 4 17.5817 4 22', 'M9.375 8.25H9.25M9.5 8.25C9.5 8.38807 9.38807 8.5 9.25 8.5C9.11193 8.5 9 8.38807 9 8.25C9 8.11193 9.11193 8 9.25 8C9.38807 8 9.5 8.11193 9.5 8.25Z', 'M14.875 8.25H14.75M15 8.25C15 8.38807 14.8881 8.5 14.75 8.5C14.6119 8.5 14.5 8.38807 14.5 8.25C14.5 8.11193 14.6119 8 14.75 8C14.8881 8 15 8.11193 15 8.25Z', 'M15.1538 4H8.84615C7.59095 4 6.96334 4 6.47397 4.22025C5.91693 4.47095 5.47095 4.91693 5.22025 5.47397C5 5.96334 5 6.59095 5 7.84615C5 9.85448 5 10.8586 5.3524 11.6417C5.75353 12.5329 6.46709 13.2465 7.35835 13.6476C8.14135 14 9.14552 14 11.1538 14H12.8462C14.8545 14 15.8586 14 16.6417 13.6476C17.5329 13.2465 18.2465 12.5329 18.6476 11.6417C19 10.8586 19 9.85448 19 7.84615C19 6.59095 19 5.96334 18.7797 5.47397C18.529 4.91693 18.0831 4.47095 17.526 4.22025C17.0367 4 16.4091 4 15.1538 4Z'],
   folder: ['M3 7h5l2 2h11v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z'],
   tag: ['M20 10l-8 8-8-8V4h6l10 10z', 'M7.5 7.5h.01'],
+  "route-02": ['M18.7185 10.7151C18.5258 10.8979 18.2682 11 18.0001 11C17.732 11 17.4744 10.8979 17.2817 10.7151C15.5167 9.03169 13.1515 7.15111 14.305 4.42085C14.9286 2.94462 16.4257 2 18.0001 2C19.5745 2 21.0715 2.94462 21.6952 4.42085C22.8472 7.14767 20.4878 9.03749 18.7185 10.7151Z', 'M18.1348 6H18.0098M18.2598 6C18.2598 6.13807 18.1478 6.25 18.0098 6.25C17.8717 6.25 17.7598 6.13807 17.7598 6C17.7598 5.86193 17.8717 5.75 18.0098 5.75C18.1478 5.75 18.2598 5.86193 18.2598 6Z', 'M5 16a3 3 0 1 0 0 6a3 3 0 1 0 0-6', 'M11 7H9.5C7.567 7 6 8.34315 6 10C6 11.6569 7.567 13 9.5 13H12.5C14.433 13 16 14.3431 16 16C16 17.6569 14.433 19 12.5 19H11'],
+  "book-03": ['M8 2V18', 'M20 22H6C4.89543 22 4 21.1046 4 20M4 20C4 18.8954 4.89543 18 6 18H20V6C20 4.11438 20 3.17157 19.4142 2.58579C18.8284 2 17.8856 2 16 2H10C7.17157 2 5.75736 2 4.87868 2.87868C4 3.75736 4 5.17157 4 8V20Z', 'M19.5 18C19.5 18 18.5 18.7628 18.5 20C18.5 21.2372 19.5 22 19.5 22'],
+  "medal-06": ['M10.5 15.5C10.5 14.6716 11.1476 14 11.9464 14H12.0536C12.8524 14 13.5 14.6716 13.5 15.5C13.5 16.3284 12.8524 17 12.0536 17H11.9464C11.1476 17 10.5 16.3284 10.5 15.5Z', 'M12 9a6.5 6.5 0 1 0 0 13a6.5 6.5 0 1 0 0-13', 'M9 9.5L5.5 2', 'M15 9.5L18.5 2', 'M15 2L14 4.5', 'M12.5 9L9.5 2'],
+  "folder-02": ['M2 19V7.54902C2 6.10516 2 5.38322 2.24332 4.81647C2.5467 4.10985 3.10985 3.5467 3.81647 3.24332C4.38322 3 5.09805 3 6.54902 3H7.04311C7.64819 3 8.22075 3.27394 8.60041 3.74509L10.4175 6M10.4175 6H16C17.4001 6 18.1002 6 18.635 6.27248C19.1054 6.51217 19.4878 6.89462 19.7275 7.36502C20 7.8998 20 8.59987 20 10V11M10.4175 6H7', 'M3.15802 15.5144L3.45643 14.7717C4.19029 12.9449 4.55723 12.0316 5.3224 11.5158C6.08757 11 7.07557 11 9.05157 11H17.1119C19.8004 11 21.1446 11 21.7422 11.8787C22.3397 12.7575 21.8405 14.0002 20.842 16.4856L20.5436 17.2283C19.8097 19.0551 19.4428 19.9684 18.6776 20.4842C17.9124 21 16.9244 21 14.9484 21H6.88812C4.19961 21 2.85535 21 2.25782 20.1213C1.66029 19.2425 2.15953 17.9998 3.15802 15.5144Z'],
+  "tag-01": ['M17.5 5a1.5 1.5 0 1 0 0 3a1.5 1.5 0 1 0 0-3', 'M2.77423 11.1439C1.77108 12.2643 1.7495 13.9546 2.67016 15.1437C4.49711 17.5033 6.49674 19.5029 8.85633 21.3298C10.0454 22.2505 11.7357 22.2289 12.8561 21.2258C15.8979 18.5022 18.6835 15.6559 21.3719 12.5279C21.6377 12.2187 21.8039 11.8397 21.8412 11.4336C22.0062 9.63798 22.3452 4.46467 20.9403 3.05974C19.5353 1.65481 14.362 1.99377 12.5664 2.15876C12.1603 2.19608 11.7813 2.36233 11.472 2.62811C8.34412 5.31646 5.49781 8.10211 2.77423 11.1439Z', 'M7.00002 14.0002L10 17.0002'],
+  laptop: ['M20.4999 16.5V8.5C20.4999 6.14298 20.4999 4.96447 19.7676 4.23223C19.0354 3.5 17.8569 3.5 15.4999 3.5H8.49988C6.14286 3.5 4.96434 3.5 4.23211 4.23223C3.49988 4.96447 3.49988 6.14298 3.49988 8.5V16.5', 'M21.9841 20.5H2.01567C1.63273 20.5 1.38367 20.1088 1.55493 19.7764L3.49988 16.5H20.4999L22.4448 19.7764C22.6161 20.1088 22.367 20.5 21.9841 20.5Z'],
   lock: ['M7 11V8a5 5 0 0 1 10 0v3', 'M5 11h14v10H5z'],
   "lock-password": ['M4.26781 18.8447C4.49269 20.515 5.87613 21.8235 7.55966 21.9009C8.97627 21.966 10.4153 22 12 22C13.5847 22 15.0237 21.966 16.4403 21.9009C18.1239 21.8235 19.5073 20.515 19.7322 18.8447C19.879 17.7547 20 16.6376 20 15.5C20 14.3624 19.879 13.2453 19.7322 12.1553C19.5073 10.485 18.1239 9.17649 16.4403 9.09909C15.0237 9.03397 13.5847 9 12 9C10.4153 9 8.97627 9.03397 7.55966 9.09909C5.87613 9.17649 4.49269 10.485 4.26781 12.1553C4.12105 13.2453 4 14.3624 4 15.5C4 16.6376 4.12105 17.7547 4.26781 18.8447Z', 'M7.5 9V6.5C7.5 4.01472 9.51472 2 12 2C14.4853 2 16.5 4.01472 16.5 6.5V9', 'M12.125 15.5H12M12.25 15.5C12.25 15.6381 12.1381 15.75 12 15.75C11.8619 15.75 11.75 15.6381 11.75 15.5C11.75 15.3619 11.8619 15.25 12 15.25C12.1381 15.25 12.25 15.3619 12.25 15.5Z', 'M8.125 15.5H8M8.25 15.5C8.25 15.6381 8.13807 15.75 8 15.75C7.86193 15.75 7.75 15.6381 7.75 15.5C7.75 15.3619 7.86193 15.25 8 15.25C8.13807 15.25 8.25 15.3619 8.25 15.5Z', 'M16.125 15.5H16M16.25 15.5C16.25 15.6381 16.1381 15.75 16 15.75C15.8619 15.75 15.75 15.6381 15.75 15.5C15.75 15.3619 15.8619 15.25 16 15.25C16.1381 15.25 16.25 15.3619 16.25 15.5Z'],
   trash: ['M4 7h16', 'M9 7V4h6v3', 'M8 7l1 13h6l1-13'],
@@ -5060,7 +5066,7 @@ function renderSaved(filter) {
     <div style="margin-bottom:14px;border-radius:12px;border:1.5px solid var(--border);overflow:hidden">
       ${folders.length ? `
       <div style="display:flex;align-items:center;gap:2px;padding:6px 8px;overflow-x:auto;scrollbar-width:none">
-        <span class="saved-filter-label"><img src="assets/images/icon-folder-02.svg" alt="" aria-hidden="true"> Folder</span>
+        <span class="saved-filter-label">${iconMarkup('folder-02', 'saved-filter-icon')} Folder</span>
         <div style="width:1px;height:14px;background:var(--border);flex-shrink:0;margin:0 4px"></div>
         <button class="saved-folder-tab ${!savedFolderFilter?'active':''}" onclick="savedFolderFilter='';renderSaved()">All</button>
         ${folders.map(f => `<button class="saved-folder-tab ${savedFolderFilter===f?'active':''}" onclick="_srFolder(${_srArg(f)})">${escHtml(f)}</button>`).join('')}
@@ -5068,7 +5074,7 @@ function renderSaved(filter) {
       ${folders.length && allTags.length ? `<div style="height:1px;background:var(--border)"></div>` : ''}
       ${allTags.length ? `
       <div style="display:flex;align-items:center;gap:2px;padding:6px 8px;flex-wrap:wrap">
-        <span class="saved-filter-label"><img src="assets/images/icon-tag-01.svg" alt="" aria-hidden="true"> Tags</span>
+        <span class="saved-filter-label">${iconMarkup('tag-01', 'saved-filter-icon')} Tags</span>
         <div style="width:1px;height:14px;background:var(--border);flex-shrink:0;margin:0 4px"></div>
         ${allTags.map(t => `<span class="saved-tag-chip saved-tag-manage ${savedTagFilter===t?'active':''}">
           <button class="saved-tag-label" onclick="_srTag(${_srArg(t)})" title="Filter by tag">${escHtml(t)}</button>
@@ -5118,7 +5124,7 @@ function renderSaved(filter) {
               </button>
             </div>
           </div>
-          ${r.folder ? `<div class="saved-card-folder"><img src="assets/images/icon-folder-02.svg" alt="" aria-hidden="true"> ${escHtml(r.folder)}</div>` : ''}
+          ${r.folder ? `<div class="saved-card-folder">${iconMarkup('folder-02', 'saved-filter-icon')} ${escHtml(r.folder)}</div>` : ''}
           ${tags.length ? `<div class="saved-card-tags">${tags.map(t => `<span class="saved-tag-chip" onclick="_srTag(${_srArg(t)})" title="Filter by tag">${escHtml(t)}</span>`).join('')}</div>` : ''}
           <div class="saved-preview">${escHtml(preview)}</div>
           ${r.note ? `<div class="saved-card-note-preview" onclick="openReportEditModal('${r.id}')">📝 ${escHtml(r.note.slice(0,120))}${r.note.length>120?'…':''}</div>` : ''}
@@ -7298,7 +7304,7 @@ function renderSettings() {
       <div class="settings-group">
         <div class="settings-row settings-row-stack">
           <div class="settings-row-left">
-            <div class="settings-row-icon" style="background:#14b8a614;color:#0d9488"><img src="assets/images/icon-laptop.svg" alt="" aria-hidden="true"></div>
+            <div class="settings-row-icon" style="background:#14b8a614;color:#0d9488">${iconMarkup('laptop', 'settings-icon-glyph')}</div>
             <div><p class="settings-row-title">Workspace Style</p><p class="settings-row-sub">Choose the experience level and visual density for the app.</p></div>
           </div>
           <div class="ui-mode-grid">
@@ -11138,13 +11144,13 @@ function renderLearn() {
       <div><h2>Learning Hub</h2><p>Master investing concepts at your own pace</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="learn-nav-btn secondary learn-icon-btn" style="padding:8px 14px;font-size:12px" onclick="renderLearningPath()">
-          <img src="assets/images/icon-route-02.svg" alt="" aria-hidden="true"> Path
+          ${iconMarkup('route-02', 'learn-nav-icon')} Path
         </button>
         <button class="learn-nav-btn secondary learn-icon-btn" style="padding:8px 14px;font-size:12px" onclick="renderGlossary()">
-          <img src="assets/images/icon-book-03.svg" alt="" aria-hidden="true"> Glossary
+          ${iconMarkup('book-03', 'learn-nav-icon')} Glossary
         </button>
         <button class="learn-nav-btn secondary learn-icon-btn" style="padding:8px 14px;font-size:12px" onclick="renderBadgesPage()">
-          <img src="assets/images/icon-medal-06.svg" alt="" aria-hidden="true"> Badges
+          ${iconMarkup('medal-06', 'learn-nav-icon')} Badges
         </button>
       </div>
     </div>
