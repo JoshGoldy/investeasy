@@ -1182,25 +1182,6 @@ function setupMobileChrome() {
     document.body.appendChild(backdrop);
   }
 
-  if (!document.getElementById('mobile-finbot-bubble')) {
-    const bubble = document.createElement('button');
-    bubble.id = 'mobile-finbot-bubble';
-    bubble.type = 'button';
-    bubble.className = 'mobile-finbot-bubble';
-    bubble.setAttribute('aria-label', 'Open FinBot');
-    bubble.innerHTML = `
-      ${iconMarkup('bot', 'mobile-finbot-bubble-icon')}
-      <span class="mobile-finbot-bubble-label">FinBot</span>
-    `;
-    bubble.addEventListener('click', () => {
-      bubble.classList.remove('pulse');
-      void bubble.offsetWidth;
-      bubble.classList.add('pulse');
-      setTimeout(() => switchTab('finbot'), 120);
-    });
-    document.body.appendChild(bubble);
-  }
-
   document.addEventListener('click', (event) => {
     const nav = document.querySelector('.nav');
     const toggle = document.getElementById('mobile-nav-toggle');
