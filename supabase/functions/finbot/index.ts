@@ -70,6 +70,28 @@ function trimText(value: unknown, max = 2400) {
   return String(value || "").trim().slice(0, max);
 }
 
+function evidenceText(payload: Record<string, unknown>) {
+  if (!payload.evidence) return "";
+  let serialized = "";
+  try {
+    serialized = JSON.stringify(payload.evidence, null, 2);
+  } catch (_) {
+    serialized = String(payload.evidence || "");
+  }
+  if (!serialized.trim()) return "";
+  return [
+    "",
+    "FinBot Evidence Pack (JSON, primary source for current app data):",
+    trimText(serialized, 4200),
+    "",
+    "Accuracy rules:",
+    "- Use the evidence pack as the source of truth for current prices, holdings, dates, article details, and user-provided context.",
+    "- Do not invent missing live figures, consensus estimates, EPS, revenue, ratios, dates, or price targets.",
+    "- When the evidence does not include a figure, say it is unavailable or clearly label your assumption as an estimate.",
+    "- Mention important data gaps briefly in the answer.",
+  ].join("\n");
+}
+
 function pricingForModel(model: string) {
   const normalized = model.toLowerCase();
   const exact = MODEL_PRICING_USD_PER_MTOK[normalized];
@@ -186,7 +208,7 @@ function getPromptBody(payload: Record<string, unknown>) {
 
   return {
     system: String(payload.system || "You are FinBot, an expert financial analyst AI. Reply in Markdown.").trim(),
-    messages: [{ role: "user" as const, content: trimText(payload.user || payload.prompt || "", 3600) }],
+    messages: [{ role: "user" as const, content: trimText(`${trimText(payload.user || payload.prompt || "", 4200)}${evidenceText(payload)}`, 9000) }],
   };
 }
 
