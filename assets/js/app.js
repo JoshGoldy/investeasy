@@ -11244,6 +11244,8 @@ function renderCalendarImproved() {
   const calArg = (value) => JSON.stringify(String(value || '')).replace(/</g, '\\u003c');
   const loadWatched = () => { try { return JSON.parse(localStorage.getItem('ezvest_calendar_watched') || '[]'); } catch (_) { return []; } };
   const saveWatched = (items) => localStorage.setItem('ezvest_calendar_watched', JSON.stringify([...new Set(items)]));
+  const loadCalendarAlerts = () => { try { return JSON.parse(localStorage.getItem('ezvest_calendar_alerts') || '[]'); } catch (_) { return []; } };
+  const saveCalendarAlerts = (items) => localStorage.setItem('ezvest_calendar_alerts', JSON.stringify([...new Set(items)]));
 
   function impactFor(ev) {
     if (ev.impact) return String(ev.impact).toLowerCase();
@@ -11279,6 +11281,7 @@ function renderCalendarImproved() {
 
   function normalizeEvents(events) {
     const watched = new Set(loadWatched());
+    const alerts = new Set(loadCalendarAlerts());
     return events.map((raw, index) => {
       const ev = { ...raw };
       ev.date = ev.date || dateKey(today);
@@ -11292,6 +11295,7 @@ function renderCalendarImproved() {
       ev.assets = ev.assets || ev.tickers || [];
       ev.id = ev.id || `${ev.date}-${ev.type}-${calKey(ev.title)}-${index}`;
       ev.watched = watched.has(ev.id);
+      ev.alerted = alerts.has(ev.id);
       ev.why = ev.why || whyFor(ev);
       return ev;
     }).sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
@@ -11325,6 +11329,7 @@ function renderCalendarImproved() {
       </div>
       <div class="cal-header-actions">
         <div class="cal-view-toggle">${viewBtns}</div>
+        <button class="cal-manage-alerts-btn" onclick="renderCalendar._manageAlerts()">${iconMarkup('notification-01', 'inline-icon')} Manage Alerts</button>
         <div class="cal-filters-row">${filters.map(([id, label]) => `<button class="cal-filter-btn${id === filter ? ' active' : ''}" onclick="renderCalendar._build('${id}','${view}')">${label}</button>`).join('')}</div>
       </div>
     </div>`;
@@ -11356,8 +11361,8 @@ function renderCalendarImproved() {
         ${assets ? `<div class="cal-assets-row">${assets}</div>` : ''}
       </div>
       <div class="cal-card-actions">
-        <span class="cal-watch-btn${ev.watched ? ' active' : ''}" onclick="event.stopPropagation();renderCalendar._watch(${calArg(ev.id)})">${iconMarkup('bookmark', 'inline-icon')} ${ev.watched ? 'Watching' : 'Watch'}</span>
-        <span class="cal-alert-action" onclick="event.stopPropagation();showToast('Calendar alert saved')">${iconMarkup('notification-01', 'inline-icon')}</span>
+        <span class="cal-watch-btn${ev.watched ? ' active' : ''}" onclick="event.stopPropagation();renderCalendar._watch(${calArg(ev.id)})">${iconMarkup(ev.watched ? 'bookmark-check-01' : 'bookmark-add-01', 'inline-icon')} ${ev.watched ? 'Watching' : 'Watch'}</span>
+        <span class="cal-alert-action${ev.alerted ? ' active' : ''}" onclick="event.stopPropagation();renderCalendar._alert(${calArg(ev.id)})" title="${ev.alerted ? 'Remove alert' : 'Set alert'}">${iconMarkup(ev.alerted ? 'notification-01' : 'notification-off-01', 'inline-icon')}</span>
       </div>
     </button>`;
   }
@@ -11391,9 +11396,54 @@ function renderCalendarImproved() {
           <div><span>Forecast</span><strong>${escHtml(selected.values.forecast)}</strong></div>
           <div><span>Actual</span><strong>${escHtml(selected.values.actual)}</strong></div>
         </div>
-        <button class="cal-primary-action" onclick="renderCalendar._watch(${calArg(selected.id)})">${iconMarkup('bookmark', 'inline-icon')} ${selected.watched ? 'Remove from watch' : 'Watch event'}</button>
+        <div class="cal-panel-actions">
+          <button class="cal-primary-action" onclick="renderCalendar._watch(${calArg(selected.id)})">${iconMarkup(selected.watched ? 'bookmark-check-01' : 'bookmark-add-01', 'inline-icon')} ${selected.watched ? 'Remove from watch' : 'Watch event'}</button>
+          <button class="cal-secondary-action${selected.alerted ? ' active' : ''}" onclick="renderCalendar._alert(${calArg(selected.id)})">${iconMarkup(selected.alerted ? 'notification-01' : 'notification-off-01', 'inline-icon')} ${selected.alerted ? 'Remove alert' : 'Set alert'}</button>
+        </div>
       </div>` : ''}
     </aside>`;
+  }
+
+  function ensureCalendarAlertsModal() {
+    let modal = document.getElementById('calendar-alerts-modal-bg');
+    if (modal) return modal;
+    modal = document.createElement('div');
+    modal.id = 'calendar-alerts-modal-bg';
+    modal.className = 'news-alerts-modal-bg hidden';
+    modal.onclick = e => { if (e.target === modal) renderCalendar._closeAlerts(); };
+    modal.innerHTML = `
+      <div class="news-alerts-modal calendar-alerts-modal" onclick="event.stopPropagation()">
+        <button class="popup-close-btn alert-close-btn" onclick="renderCalendar._closeAlerts()" title="Close">${closeIcon('inline-icon')}</button>
+        <h3>${iconMarkup('notification-01', 'alert-title-icon')} Calendar Alerts</h3>
+        <p class="sub">Events you want EZvest to keep visible for you.</p>
+        <div id="calendar-alerts-list"></div>
+        <div class="cal-alert-modal-actions">
+          <button class="alert-add-btn" onclick="renderCalendar._clearAlerts()">Clear All</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    return modal;
+  }
+
+  function renderCalendarAlertsList() {
+    const list = document.getElementById('calendar-alerts-list');
+    if (!list) return;
+    const alerts = new Set(loadCalendarAlerts());
+    const events = normalizeEvents(_calCache?.events || []);
+    const alertEvents = events.filter(e => alerts.has(e.id));
+    if (!alertEvents.length) {
+      list.innerHTML = '<p style="font-size:12px;color:var(--faint);padding:8px 0">No calendar alerts yet. Use the bell on an event to add one.</p>';
+      return;
+    }
+    list.innerHTML = alertEvents.map(e => `
+      <div class="alert-item calendar-alert-item">
+        <div class="cal-alert-item-main">
+          <span class="kw">${escHtml(e.title)}</span>
+          <span class="cal-alert-item-meta">${escHtml(e.date)} - ${escHtml(e.time)} - ${escHtml(labels[e.type] || 'Event')}</span>
+        </div>
+        <span class="type-badge ${e.impact === 'high' ? 'ticker' : 'keyword'}">${escHtml(e.impact)}</span>
+        <button class="alert-remove-btn" onclick="renderCalendar._alert(${calArg(e.id)}, true)" title="Remove alert">${closeIcon('inline-icon')}</button>
+      </div>`).join('');
   }
 
   function buildLayout(events, visible, isLive, filter, view, mainHtml) {
@@ -11490,6 +11540,29 @@ function renderCalendarImproved() {
     else { watched.add(id); showToast('Added to calendar watchlist'); }
     saveWatched([...watched]);
     if (_calCache) buildUI(_calCache.events, _calCache.live, el._calFilter || 'all', _calView || 'list');
+  };
+  renderCalendar._alert = (id, fromManager = false) => {
+    const alerts = new Set(loadCalendarAlerts());
+    if (alerts.has(id)) { alerts.delete(id); showToast('Calendar alert removed'); }
+    else { alerts.add(id); showToast('Calendar alert set'); }
+    saveCalendarAlerts([...alerts]);
+    if (_calCache) buildUI(_calCache.events, _calCache.live, el._calFilter || 'all', _calView || 'list');
+    if (fromManager || document.getElementById('calendar-alerts-modal-bg')?.classList.contains('hidden') === false) renderCalendarAlertsList();
+  };
+  renderCalendar._manageAlerts = () => {
+    ensureCalendarAlertsModal().classList.remove('hidden');
+    renderCalendarAlertsList();
+  };
+  renderCalendar._closeAlerts = () => {
+    document.getElementById('calendar-alerts-modal-bg')?.classList.add('hidden');
+  };
+  renderCalendar._clearAlerts = async () => {
+    const ok = await showConfirmModal('Clear calendar alerts?', 'This removes every saved calendar event alert.', 'Clear alerts');
+    if (!ok) return;
+    saveCalendarAlerts([]);
+    showToast('Calendar alerts cleared');
+    if (_calCache) buildUI(_calCache.events, _calCache.live, el._calFilter || 'all', _calView || 'list');
+    renderCalendarAlertsList();
   };
 
   if (_calCache && (Date.now() - _calCacheTs) < 21_600_000) {
