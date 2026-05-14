@@ -1508,31 +1508,6 @@ body[data-ui-mode="terminal"] .overlap-badge{background:#13202b;border-color:#2c
   .nav button.active{border-top-color:transparent;border-left-color:var(--green);background:#dfeada}
   .nav button span{display:block;font-size:13px}
   .nav button svg{width:20px;height:20px}
-  .nav button[data-tab="finbot"]{
-    display:flex!important;
-    position:static;
-    left:auto;
-    bottom:auto;
-    transform:none;
-    width:100%;
-    height:auto;
-    min-height:auto;
-    max-width:none;
-    border-radius:16px;
-    background:none;
-    box-shadow:none;
-    border:0;
-    border-left:3px solid transparent;
-    padding:12px 14px;
-    z-index:auto;
-  }
-  .nav button[data-tab="finbot"].active{
-    background:#dfeada;
-    border-top-color:transparent;
-    border-left-color:var(--green);
-  }
-  .nav button[data-tab="finbot"] svg{width:20px;height:20px;stroke:currentColor}
-  .nav button[data-tab="finbot"]::after{display:none}
   #nav-pulse{
     display:block!important;
     margin:12px 0 4px!important;
@@ -2450,6 +2425,20 @@ body{background:var(--bg);color:var(--text)}
   box-shadow:0 10px 24px rgba(13,148,136,.20);
 }
 .nav button.active span,.nav button.active svg{color:#fff;stroke:#fff}
+.nav button[data-tab="finbot"],
+.nav button[data-tab="finbot"].active{
+  background:inherit;
+  color:inherit;
+}
+.nav button[data-tab="finbot"]:not(.active){background:none;color:var(--muted)}
+.nav button[data-tab="finbot"] svg{stroke:var(--faint)!important;color:var(--faint)!important}
+.nav button[data-tab="finbot"].active{
+  background:linear-gradient(135deg,#0d9488,#14b8a6)!important;
+  color:#fff!important;
+  box-shadow:0 10px 24px rgba(13,148,136,.20)!important;
+}
+.nav button[data-tab="finbot"].active span,
+.nav button[data-tab="finbot"].active svg{color:#fff!important;stroke:#fff!important}
 .section-title h2,.portfolio-welcome h2,.dashboard-panel-title,.settings-panel-title{color:var(--text)}
 .section-title p,.portfolio-welcome p,.dashboard-panel-subtitle{color:var(--text2)}
 .card,
