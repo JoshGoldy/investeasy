@@ -4438,7 +4438,7 @@ function renderFinBot() {
           Your personal AI financial analyst. Run deep analysis on stocks, portfolios, news, and more — all in seconds.
         </p>
         <button onclick="document.getElementById('auth-overlay').classList.remove('hidden');showAuthTab('login')"
-          style="padding:14px 32px;border-radius:14px;background:linear-gradient(135deg,#334155,#334155);color:#fff;
+          style="padding:14px 32px;border-radius:14px;background:var(--green);color:#fff;
                  font-size:14px;font-weight:800;border:none;cursor:pointer;margin-bottom:32px;width:100%;max-width:320px">
           Sign In to Use FinBot
         </button>
@@ -6340,7 +6340,7 @@ function renderPortfolioGuestWall() {
     </div>
     <p style="font-weight:700;font-size:11px;color:var(--faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;padding:0 4px">What you unlock</p>
     ${[
-      { icon:'briefcase-dollar', col:'#0d9488', title:'Real holdings', desc:'Add stocks, ETFs, crypto and JSE shares with units and average cost.' },
+      { icon:'wallet', col:'#334155', title:'Real holdings', desc:'Add stocks, ETFs, crypto and JSE shares with units and average cost.' },
       { icon:'pie-chart-09', col:'#334155', title:'Portfolio analytics', desc:'See allocation, returns, categories, concentration and diversification insights.' },
     ].map(f => `
       <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:14px;
